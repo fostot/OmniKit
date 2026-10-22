@@ -2,6 +2,8 @@ using System.Numerics;
 
 namespace OmniKit.Ui;
 
+public enum CompanionPose { Automatic, Walk, Idle, Talk }
+
 internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum, Vector2 SpriteSize)
 {
     public bool IsVisible => SpriteSize.X > 0 && SpriteSize.Y > 0;
@@ -29,16 +31,6 @@ internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum
         return new CompanionLayout(min, max, sprite * fit);
     }
 
-    public static (Vector2 Start, Vector2 End) FrameUv(int frame, int row, bool facingLeft)
-    {
-        frame = Math.Clamp(frame, 0, 3);
-        row = Math.Clamp(row, 0, 1);
-        var left = frame / 4f;
-        var right = (frame + 1) / 4f;
-        return (new Vector2(facingLeft ? right : left, row / 2f),
-            new Vector2(facingLeft ? left : right, (row + 1) / 2f));
-    }
-
     public static bool TryNormalizeArea(Vector2 start, Vector2 end, Vector2 viewportPosition,
         Vector2 viewportSize, Vector2 minimumSize, out Vector4 normalized)
     {
@@ -61,6 +53,54 @@ internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum
     private static bool Finite(Vector2 value) => float.IsFinite(value.X) && float.IsFinite(value.Y);
 }
 
+internal readonly record struct CompanionFrame(Vector2 UvStart, Vector2 UvEnd, Vector2 Position, Vector2 Size);
+
+/// <summary>Inspected atlas regions, rendered at a common scale and foot baseline.</summary>
+internal static class CompanionAtlas
+{
+    // Generated rows are not exactly quarter-height. These padded regions contain
+    // each complete pose without a neighbor, shared by both outfits of a species.
+    private static readonly Vector4[] Bimble =
+    [
+        new(54, 20, 284, 323), new(355, 29, 586, 328), new(656, 18, 897, 319), new(975, 18, 1206, 327),
+        new(48, 337, 280, 646), new(365, 340, 596, 645), new(660, 339, 899, 642), new(973, 338, 1207, 645),
+        new(76, 655, 283, 941), new(379, 655, 587, 942), new(685, 655, 893, 941), new(1000, 655, 1203, 942),
+        new(74, 946, 283, 1235), new(384, 945, 592, 1235), new(687, 946, 898, 1235), new(994, 945, 1206, 1235),
+    ];
+    private static readonly Vector4[] Moonbear =
+    [
+        new(72, 64, 279, 325), new(382, 70, 583, 327), new(684, 64, 886, 328), new(996, 64, 1200, 328),
+        new(72, 373, 279, 636), new(384, 375, 585, 636), new(687, 373, 889, 632), new(997, 373, 1202, 634),
+        new(77, 666, 277, 929), new(384, 665, 584, 929), new(684, 666, 887, 929), new(997, 666, 1198, 929),
+        new(74, 949, 279, 1216), new(383, 949, 586, 1216), new(684, 948, 889, 1216), new(996, 948, 1202, 1216),
+    ];
+
+    public static string FileName(string avatar, string outfit)
+        => $"{(avatar == "Moonbear" ? "moonbear" : "bimble")}-{(outfit == "Stargazer" ? "stargazer" : "motion")}.png";
+
+    public static int SelectFrame(CompanionPose pose, float seconds, bool animated)
+    {
+        if (!animated) return 8;
+        seconds = float.IsFinite(seconds) ? Math.Max(0, seconds) % 1000 : 0;
+        if (pose == CompanionPose.Walk) return (int)(seconds * 12) % 8;
+        if (pose == CompanionPose.Talk) return 12 + (int)(seconds * 6) % 4;
+        // A short blink at the end of each relaxed four-second idle loop.
+        return (seconds % 4) switch { < 3.6f => 8, < 3.72f => 9, < 3.84f => 10, _ => 11 };
+    }
+
+    public static CompanionFrame GetFrame(string avatar, int frame, bool facingLeft, Vector2 position, Vector2 cellSize)
+    {
+        var bear = avatar == "Moonbear";
+        var rect = (bear ? Moonbear : Bimble)[Math.Clamp(frame, 0, 15)];
+        var start = new Vector2(rect.X, rect.Y) / 1254f;
+        var end = new Vector2(rect.Z, rect.W) / 1254f;
+        if (facingLeft) (start.X, end.X) = (end.X, start.X);
+        var size = new Vector2(rect.Z - rect.X, rect.W - rect.Y) / (bear ? 330f : 380f) * cellSize;
+        return new CompanionFrame(start, end,
+            position + new Vector2((cellSize.X - size.X) * .5f, cellSize.Y * .9f - size.Y), size);
+    }
+}
+
 /// <summary>Frame-rate independent roaming with no game or renderer dependencies.</summary>
 internal sealed class CompanionMotion(int seed = 0)
 {
@@ -73,7 +113,7 @@ internal sealed class CompanionMotion(int seed = 0)
     public Vector2 Position { get; private set; }
     public bool FacingLeft { get; private set; }
     public bool Walking { get; private set; }
-    public int Frame => Walking ? (int)(walkTime * 8) % 4 : 0;
+    public int Frame => Walking ? CompanionAtlas.SelectFrame(CompanionPose.Walk, walkTime, true) : 8;
 
     public void Reset() { initialized = false; Walking = false; walkTime = 0; }
 

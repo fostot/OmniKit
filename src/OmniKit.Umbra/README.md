@@ -11,8 +11,9 @@ menu when loaded. That integration does not require this companion.
 
 1. Install and enable the main OmniKit Dalamud plugin.
 2. Open Umbra settings, then **Plugins**. Enable custom plugins if needed.
-3. Add the companion **OmniKit.Umbra.dll** as a local plugin through Umbra's own
-   plugin picker. Restart Umbra when its interface requests it.
+3. Download the release asset **OmniKit.Umbra-<version>-<shortSHA>.dll** and keep
+   it in a permanent local folder. Add it through Umbra's plugin picker.
+   Restart Umbra when its interface requests it.
 4. In Umbra's toolbar widget settings, add the **OmniKit** widget to the toolbar
    and position it as desired.
 
@@ -31,8 +32,9 @@ under the current user's `APPDATA`. Override `UmbraLibPath`, `UmbraVersion`, or
 dotnet build src/OmniKit.Umbra/OmniKit.Umbra.csproj -c Release
 ```
 
-Distribute only `OmniKit.Umbra.dll`; Umbra provides the referenced framework
-assemblies. Keep the companion at a stable local path so Umbra can load it again.
+The build outputs `OmniKit.Umbra.dll`; packaging gives the release asset its
+versioned filename. Distribute only that DLL; Umbra provides the referenced
+framework assemblies. Keep the companion at a stable local path so Umbra can load it again.
 It may need recompilation when Umbra changes its extension API.
 
 ## Integration references

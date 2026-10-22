@@ -9,9 +9,9 @@ namespace OmniKit.Ui;
 internal sealed class RoamingCompanion(Configuration config, Action openCompanion)
 {
     private readonly CompanionMotion motion = new();
-    private readonly string atlasPath = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!,
-        "assets", "companions-walk.png");
+    private readonly string assetDirectory = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets");
     private long lastTick;
+    private float animationTime;
     private bool hoveredLastFrame;
     private string lastAvatar = string.Empty;
     private bool areaDragging;
@@ -24,6 +24,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoDocking;
 
     public bool IsChoosingArea { get; private set; }
+    public CompanionPose PreviewPose { get; set; } = CompanionPose.Automatic;
 
     public void BeginChooseArea()
     {
@@ -51,19 +52,18 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             return;
         }
         var viewport = ImGui.GetMainViewport();
-        var texture = Services.Textures.GetFromFile(atlasPath).GetWrapOrDefault();
-        var aspect = texture == null ? 1f : (texture.Width / 4f) / (texture.Height / 2f);
+        const float aspect = 1f;
         if (IsChoosingArea)
         {
             DrawAreaPicker(viewport.Pos, viewport.Size, scale, aspect);
             lastTick = 0;
             return;
         }
-        if (texture == null) return;
         if (lastAvatar != config.Avatar)
         {
             lastAvatar = config.Avatar;
             motion.Reset();
+            animationTime = 0;
         }
 
         var layout = CompanionLayout.Create(viewport.Pos, viewport.Size,
@@ -72,20 +72,37 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var now = Environment.TickCount64;
         var elapsed = lastTick == 0 ? 0 : (now - lastTick) / 1000f;
         lastTick = now;
-        motion.Update(layout, elapsed, config.AnimationsEnabled && !hoveredLastFrame);
+        if (config.AnimationsEnabled)
+            animationTime = (animationTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
+        motion.Update(layout, elapsed, config.AnimationsEnabled && !hoveredLastFrame && PreviewPose == CompanionPose.Automatic);
         if (!layout.IsVisible) return;
-        var row = config.Avatar == "Moonbear" ? 1 : 0;
-        var uv = CompanionLayout.FrameUv(motion.Frame, row, motion.FacingLeft);
-        ImGui.GetForegroundDrawList().AddImage(texture.Handle, motion.Position, motion.Position + layout.SpriteSize,
-            uv.Start, uv.End);
-
-        // Tight visible-body bounds exclude the atlas's large transparent gutters.
-        // The artwork has an irregular silhouette, so this is a rectangular hit
-        // region, not per-pixel alpha hit testing.
-        var body = row == 0 ? new Vector4(.20f, .08f, .88f, .99f) : new Vector4(.24f, .10f, .90f, .90f);
-        if (motion.FacingLeft) body = new Vector4(1 - body.Z, body.Y, 1 - body.X, body.W);
-        var hitStart = motion.Position + layout.SpriteSize * new Vector2(body.X, body.Y);
-        var hitEnd = motion.Position + layout.SpriteSize * new Vector2(body.Z, body.W);
+        var pose = !config.AnimationsEnabled ? CompanionPose.Idle : PreviewPose == CompanionPose.Automatic
+            ? motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
+        var draw = ImGui.GetForegroundDrawList();
+        var hitStart = motion.Position + layout.SpriteSize * .18f;
+        var hitEnd = motion.Position + layout.SpriteSize * .82f;
+        draw.PushClipRect(layout.Minimum, layout.Maximum, true);
+        try
+        {
+            if (ProceduralCompanion.IsProcedural(config.Avatar))
+                ProceduralCompanion.Draw(draw, motion.Position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
+            else
+            {
+                var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory,
+                    CompanionAtlas.FileName(config.Avatar, config.CompanionOutfit))).GetWrapOrDefault();
+                if (texture == null) { hoveredLastFrame = false; return; }
+                var frameIndex = PreviewPose == CompanionPose.Automatic && motion.Walking ? motion.Frame
+                    : CompanionAtlas.SelectFrame(pose, animationTime, config.AnimationsEnabled);
+                var frame = CompanionAtlas.GetFrame(config.Avatar, frameIndex, motion.FacingLeft, motion.Position, layout.SpriteSize);
+                draw.AddImage(texture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd);
+                // The inspected frame bounds exclude large transparent gutters.
+                // Clicking uses a rectangle, not per-pixel silhouette detection.
+                hitStart = frame.Position;
+                hitEnd = frame.Position + frame.Size;
+            }
+            ProceduralCompanion.DrawEffects(draw, motion.Position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
+        }
+        finally { draw.PopClipRect(); }
         hoveredLastFrame = ImGui.IsMouseHoveringRect(hitStart, hitEnd, false);
         if (!hoveredLastFrame || ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
             return;

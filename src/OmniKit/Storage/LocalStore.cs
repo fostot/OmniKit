@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 2;
+    private const int SchemaVersion = 3;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -82,7 +82,7 @@ public sealed class LocalStore
         }
         using var setVersion = connection.CreateCommand();
         setVersion.Transaction = transaction;
-        setVersion.CommandText = "PRAGMA user_version = 2;";
+        setVersion.CommandText = "PRAGMA user_version = 3;";
         setVersion.ExecuteNonQuery();
         transaction.Commit();
     }
@@ -167,12 +167,13 @@ public sealed class LocalStore
             using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 8 });
             RequireFields(document.RootElement, [nameof(Snapshot.SchemaVersion), nameof(Snapshot.Settings)]);
             var schema = document.RootElement.GetProperty(nameof(Snapshot.SchemaVersion));
-            if (!schema.TryGetInt32(out var schemaVersion) || schemaVersion is not (1 or SchemaVersion) ||
+            if (!schema.TryGetInt32(out var schemaVersion) || schemaVersion is < 1 or > SchemaVersion ||
                 (expectedSchema.HasValue && schemaVersion != expectedSchema.Value))
                 throw new InvalidOperationException("Unsupported or inconsistent settings schema version.");
             var settingsElement = document.RootElement.GetProperty(nameof(Snapshot.Settings));
             var fields = typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Instance).Select(field => field.Name);
             if (schemaVersion == 1) fields = fields.Except(VersionTwoFields);
+            if (schemaVersion < 3) fields = fields.Except(VersionThreeFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -202,16 +203,28 @@ public sealed class LocalStore
 
     private static void UpgradeLegacy(Settings settings)
     {
-        if (settings.Version != 1) return;
+        if (settings.Version is < 1 or > SchemaVersion) return;
         // Old values are Win32 virtual-key codes, never bit masks. Convert on a
         // detached DTO so a failure cannot partially alter the live configuration.
-        var launcher = LegacyModifier(settings.LauncherModifier);
-        var setup = LegacyModifier(settings.SettingsModifier);
-        settings.LauncherModifier = (int)launcher;
-        settings.SettingsModifier = (int)setup;
-        settings.InteractModifier = 0;
+        if (settings.Version == 1)
+        {
+            var launcher = LegacyModifier(settings.LauncherModifier);
+            var setup = LegacyModifier(settings.SettingsModifier);
+            settings.LauncherModifier = (int)launcher;
+            settings.SettingsModifier = (int)setup;
+            settings.InteractModifier = 0;
+        }
+        if (settings.Version < 3)
+        {
+            settings.CompanionOutfit = "Navigator";
+            settings.CompanionPalette = "Moonlight";
+            settings.CompanionMagicEnabled = true;
+        }
         settings.Version = SchemaVersion;
     }
+
+    private static readonly string[] VersionThreeFields =
+        [nameof(Settings.CompanionOutfit), nameof(Settings.CompanionPalette), nameof(Settings.CompanionMagicEnabled)];
 
     private static ModifierKeys LegacyModifier(int key) => key switch
     {
@@ -247,7 +260,7 @@ public sealed class LocalStore
             (settings.SettingsModifier == settings.InteractModifier && settings.SettingsKey == settings.InteractKey))
             throw new InvalidOperationException("Launcher, settings and interaction shortcuts must not conflict.");
         if (!FiniteRange(settings.InteractionCone, 0.025f, 0.3f) ||
-            !FiniteRange(settings.InteractionDistance, 1f, 6f) ||
+            !FiniteRange(settings.InteractionDistance, Configuration.MinimumDetectionDistance, Configuration.MaximumDetectionDistance) ||
             !FiniteRange(settings.InteractionHudOffsetX, -10000f, 10000f) ||
             !FiniteRange(settings.InteractionHudOffsetY, -10000f, 10000f) ||
             !FiniteRange(settings.InteractionHudScale, .5f, 2f))
@@ -259,7 +272,8 @@ public sealed class LocalStore
             throw new InvalidOperationException("The companion area must be an ordered rectangle inside the viewport, with a supported companion size.");
         if (settings.MinerGearset is < -1 or > 99 || settings.BotanistGearset is < -1 or > 99)
             throw new InvalidOperationException("Gathering gearset indices must be -1 for automatic selection or between 0 and 99.");
-        if (settings.Avatar is not ("Bimble" or "Moonbear"))
+        if (!Configuration.AvatarNames.Contains(settings.Avatar) || !Configuration.OutfitNames.Contains(settings.CompanionOutfit) ||
+            !Configuration.PaletteNames.Contains(settings.CompanionPalette))
             throw new InvalidOperationException("Choose a supported OmniKit avatar.");
         if (string.IsNullOrEmpty(settings.WikiOverlayName) || settings.WikiOverlayName.Length > 40 ||
             settings.WikiOverlayName.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('_' or '-')))
@@ -329,6 +343,9 @@ public sealed class LocalStore
         target.AvatarEnabled = value.AvatarEnabled;
         target.AnimationsEnabled = value.AnimationsEnabled;
         target.Avatar = value.Avatar;
+        target.CompanionOutfit = value.CompanionOutfit;
+        target.CompanionPalette = value.CompanionPalette;
+        target.CompanionMagicEnabled = value.CompanionMagicEnabled;
         target.CompanionBoxLeft = value.CompanionBoxLeft;
         target.CompanionBoxTop = value.CompanionBoxTop;
         target.CompanionBoxRight = value.CompanionBoxRight;
@@ -379,6 +396,9 @@ public sealed class LocalStore
         public bool AvatarEnabled;
         public bool AnimationsEnabled;
         public string Avatar = "Bimble";
+        public string CompanionOutfit = "Navigator";
+        public string CompanionPalette = "Moonlight";
+        public bool CompanionMagicEnabled = true;
         public float CompanionBoxLeft = .72f;
         public float CompanionBoxTop = .55f;
         public float CompanionBoxRight = .95f;
@@ -418,6 +438,9 @@ public sealed class LocalStore
             AvatarEnabled = value.AvatarEnabled,
             AnimationsEnabled = value.AnimationsEnabled,
             Avatar = value.Avatar,
+            CompanionOutfit = value.CompanionOutfit,
+            CompanionPalette = value.CompanionPalette,
+            CompanionMagicEnabled = value.CompanionMagicEnabled,
             CompanionBoxLeft = value.CompanionBoxLeft,
             CompanionBoxTop = value.CompanionBoxTop,
             CompanionBoxRight = value.CompanionBoxRight,

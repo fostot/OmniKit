@@ -25,6 +25,9 @@ try
         InteractionHudScale = 1.5f,
         CompanionBoxLeft = .2f,
         CompanionSize = 120f,
+        CompanionOutfit = "Stargazer",
+        CompanionPalette = "Nebula",
+        CompanionMagicEnabled = false,
         VoiceBindings = [new VoiceBinding("show my bags", "game:123")],
     };
     Action<Configuration> callback = _ => throw new Exception("Import must not call persistence implicitly.");
@@ -48,18 +51,24 @@ try
         "InteractModifier", "InteractionHudLocked", "InteractionHudOffsetX", "InteractionHudScale",
         "CompanionBoxLeft", "CompanionBoxTop", "CompanionBoxRight", "CompanionBoxBottom", "CompanionSize",
     };
+    var versionThreeFields = new[] { "CompanionOutfit", "CompanionPalette", "CompanionMagicEnabled" };
+    var versionTwoDocument = JsonNode.Parse(exported)!;
+    versionTwoDocument["SchemaVersion"] = 2;
+    versionTwoDocument["Settings"]!["Version"] = 2;
+    foreach (var field in versionThreeFields) versionTwoDocument["Settings"]!.AsObject().Remove(field);
+    var versionTwoJson = versionTwoDocument.ToJsonString();
     var legacyDocument = JsonNode.Parse(exported)!;
     legacyDocument["SchemaVersion"] = 1;
     var legacySettings = legacyDocument["Settings"]!.AsObject();
     legacySettings["Version"] = 1;
     legacySettings["LauncherModifier"] = 18;
     legacySettings["SettingsModifier"] = 17;
-    foreach (var field in versionTwoFields) legacySettings.Remove(field);
+    foreach (var field in versionTwoFields.Concat(versionThreeFields)) legacySettings.Remove(field);
     var legacyJson = legacyDocument.ToJsonString();
 
     void CheckLegacy(Configuration migrated)
     {
-        Check(migrated.Version == 2 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
+        Check(migrated.Version == 3 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
             migrated.InteractModifier == ModifierKeys.None, "Legacy virtual-key modifiers must migrate to the correct masks.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         foreach (var field in legacySettings)
@@ -67,7 +76,7 @@ try
                 Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Migration must preserve legacy field " + field.Key);
         var defaults = new Configuration();
         var defaultSnapshot = JsonNode.Parse(store.Export(defaults))!["Settings"]!.AsObject();
-        foreach (var field in versionTwoFields)
+        foreach (var field in versionTwoFields.Concat(versionThreeFields))
             Check(JsonNode.DeepEquals(snapshot[field], defaultSnapshot[field]), "Migration must use the default for new field " + field);
     }
 
@@ -86,13 +95,13 @@ try
         AnimationsEnabled = false,
     };
     var upgradedFallback = store.Upgrade(legacyFallback);
-    Check(upgradedFallback.Version == 2 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
+    Check(upgradedFallback.Version == 3 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
         upgradedFallback.SettingsModifier == ModifierKeys.Control && upgradedFallback.InteractionHudOffsetY == -73f &&
         !upgradedFallback.AvatarEnabled && !upgradedFallback.AnimationsEnabled &&
         legacyFallback.Version == 1 && (int)legacyFallback.LauncherModifier == 18,
         "The legacy Dalamud configuration fallback must upgrade a validated copy and retain disabled features.");
 
-    string LegacyDatabase(string name, string json)
+    string LegacyDatabase(string name, string json, int schema = 1)
     {
         var directory = Path.Combine(testDirectory, name);
         Directory.CreateDirectory(directory);
@@ -101,10 +110,13 @@ try
         using var command = database.CreateCommand();
         command.CommandText = """
             CREATE TABLE OmniKitSettings (Id INTEGER PRIMARY KEY CHECK (Id = 1), SchemaVersion INTEGER NOT NULL, Json TEXT NOT NULL);
-            INSERT INTO OmniKitSettings (Id, SchemaVersion, Json) VALUES (1, 1, $json);
-            PRAGMA user_version = 1;
+            INSERT INTO OmniKitSettings (Id, SchemaVersion, Json) VALUES (1, $schema, $json);
             """;
         command.Parameters.AddWithValue("$json", json);
+        command.Parameters.AddWithValue("$schema", schema);
+        command.ExecuteNonQuery();
+        command.CommandText = "PRAGMA user_version = " + schema;
+        command.Parameters.Clear();
         command.ExecuteNonQuery();
         return directory;
     }
@@ -126,9 +138,27 @@ try
     var migratedStore = new LocalStore(legacyDirectory);
     CheckLegacy(migratedStore.Load()!);
     var migratedRow = ReadDatabase(legacyDirectory);
-    Check(migratedRow.DatabaseSchema == 2 && migratedRow.RowSchema == 2 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 2,
+    Check(migratedRow.DatabaseSchema == 3 && migratedRow.RowSchema == 3 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 3,
         "Database version, row version and JSON schema must migrate together.");
     CheckLegacy(new LocalStore(legacyDirectory).Load()!);
+
+    void CheckVersionTwo(Configuration migrated)
+    {
+        Check(migrated.Version == 3 && migrated.CompanionOutfit == "Navigator" && migrated.CompanionPalette == "Moonlight" && migrated.CompanionMagicEnabled,
+            "Version two must gain the new companion defaults.");
+        var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
+        foreach (var field in versionTwoDocument["Settings"]!.AsObject())
+            if (field.Key != "Version") Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Version two migration must preserve " + field.Key);
+    }
+    var versionTwoTarget = new Configuration();
+    store.ImportInto(versionTwoTarget, versionTwoJson);
+    CheckVersionTwo(versionTwoTarget);
+    var versionTwoFallback = JsonSerializer.Deserialize<Configuration>(versionTwoDocument["Settings"]!.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
+    CheckVersionTwo(store.Upgrade(versionTwoFallback));
+    var versionTwoDirectory = LegacyDatabase("version-two", versionTwoJson, 2);
+    CheckVersionTwo(new LocalStore(versionTwoDirectory).Load()!);
+    Check(ReadDatabase(versionTwoDirectory).DatabaseSchema == 3 && ReadDatabase(versionTwoDirectory).RowSchema == 3,
+        "Version two SQLite schema and row must migrate together.");
 
     var badLegacy = JsonNode.Parse(legacyJson)!;
     badLegacy["Settings"]!["InteractionDistance"] = 99;
@@ -176,8 +206,8 @@ try
     Invalid("null", "Null root");
     Invalid(new string(' ', 262145), "Oversize input");
     Invalid(new string('界', 100000), "Oversize UTF-8 input");
-    Invalid(exported.Replace("\"SchemaVersion\": 2", "\"SchemaVersion\": 3"), "Future schema");
-    Invalid(exported.Replace("\"SchemaVersion\": 2", "\"SchemaVersion\": 2, \"SchemaVersion\": 2"), "Duplicate root fields");
+    Invalid(exported.Replace("\"SchemaVersion\": 3", "\"SchemaVersion\": 4"), "Future schema");
+    Invalid(exported.Replace("\"SchemaVersion\": 3", "\"SchemaVersion\": 3, \"SchemaVersion\": 3"), "Duplicate root fields");
     Invalid(exported.Replace("\"Avatar\": \"Moonbear\"", "\"Avatar\": \"Moonbear\", \"Avatar\": \"Bimble\""), "Duplicate nested fields");
     Invalid(Change("UnapprovedFutureField", "should not import"), "Unknown fields");
     var missing = JsonNode.Parse(exported)!;
@@ -185,7 +215,25 @@ try
     Invalid(missing.ToJsonString(), "Missing fields");
     Invalid(Change("LauncherEnabled", "true"), "Wrong boolean type");
     Invalid(Change("Avatar", null), "Null string");
+    Invalid(Change("CompanionOutfit", "Unknown"), "Unknown outfit");
+    Invalid(Change("CompanionPalette", "Unknown"), "Unknown palette");
+    Invalid(Change("CompanionMagicEnabled", "true"), "Wrong effect flag type");
+    foreach (var avatar in Configuration.AvatarNames)
+    {
+        var avatarTarget = new Configuration();
+        store.ImportInto(avatarTarget, Change("Avatar", avatar));
+        Check(avatarTarget.Avatar == avatar, "Every supported companion must import and export.");
+    }
     Invalid(Change("InteractionDistance", 99), "Invalid interaction distance");
+    foreach (var distance in new[] { Configuration.MinimumDetectionDistance, 12f, Configuration.MaximumDetectionDistance })
+    {
+        var distanceTarget = new Configuration();
+        store.ImportInto(distanceTarget, Change("InteractionDistance", distance));
+        store.Save(distanceTarget);
+        Check(store.Load()!.InteractionDistance == distance, "The full detection distance range must survive import and database reload.");
+    }
+    Invalid(Change("InteractionDistance", Configuration.MaximumDetectionDistance + .1f), "Detection distance above maximum");
+    Invalid(Change("InteractionDistance", Configuration.MinimumDetectionDistance - .1f), "Detection distance below minimum");
     Invalid(Change("InteractionHudOffsetX", 10001), "Invalid HUD offset");
     Invalid(Change("InteractionHudScale", 0.49), "Invalid HUD scale");
     Invalid(Change("CompanionBoxLeft", .99), "Inverted companion rectangle");
@@ -269,7 +317,7 @@ try
     var futureRejected = false;
     try { _ = new LocalStore(testDirectory); } catch (InvalidOperationException) { futureRejected = true; }
     Check(futureRejected, "Future database versions must be preserved and rejected.");
-    Console.WriteLine("Storage checks passed: v1 JSON/Dalamud/SQLite migration and rollback, v2 chord/HUD/companion persistence, atomic validation, export whitelist and AI consent.");
+    Console.WriteLine("Storage checks passed: v1/v2 JSON/Dalamud/SQLite migration to v3, rollback, companion wardrobe/palette/effects persistence, atomic validation, export whitelist and AI consent.");
 }
 finally
 {

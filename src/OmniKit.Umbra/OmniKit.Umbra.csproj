@@ -7,10 +7,6 @@
     <AssemblyName>OmniKit.Umbra</AssemblyName>
     <AssemblyTitle>OmniKit for Umbra</AssemblyTitle>
     <Description>Native Umbra toolbar access to OmniKit.</Description>
-    <Version>0.1.0-dev.1</Version>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
-    <InformationalVersion>0.1.0-dev.1</InformationalVersion>
     <IsPackable>false</IsPackable>
     <DebugType>none</DebugType>
     <PathMap>$(MSBuildProjectDirectory)=/src/OmniKit.Umbra</PathMap>

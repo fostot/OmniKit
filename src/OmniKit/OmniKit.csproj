@@ -1,10 +1,5 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
   <PropertyGroup>
-    <Version>0.1.0</Version>
-    <AssemblyVersion>0.1.0.1</AssemblyVersion>
-    <FileVersion>0.1.0.1</FileVersion>
-    <InformationalVersion>0.1.0-dev.2</InformationalVersion>
-    <Author>OmniKit contributors</Author>
     <Name>OmniKit</Name>
     <Punchline>Your everyday toolkit for XIV.</Punchline>
     <Description>A searchable game launcher and optional camera-directed interaction assistant, with native Umbra integration.</Description>

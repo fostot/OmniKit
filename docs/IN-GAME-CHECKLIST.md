@@ -3,7 +3,8 @@
 These checks require the actual game. A compiler or isolated state test cannot
 establish them. None is marked passed until observed.
 
-- Install from the custom feed; confirm load/unload and first-run setup.
+- Install or update from the custom feed; confirm load/unload, first-run setup,
+  author Zero and the compiled version/hash shown in the footer.
 - At minimum window size and UI scale 1.0 / 1.5 / 2.0, inspect every settings
   section, expanded control, import dialog, welcome page, search and long answer.
   Block release acceptance on overlap, clipping or controls outside scroll regions.
@@ -21,6 +22,10 @@ establish them. None is marked passed until observed.
   before opening gathering. Finish gathering and verify restoration. Manually
   change gear/job and confirm restoration cancels. Test missing items, a hidden
   node, timeout and disabled auto-switch/restore. No harvesting should occur.
+- Switch all five companions, both outfits and six aura/shape colors. Check
+  walking, blinking and explicit mouth preview, including both facing directions.
+  Draw a roaming area and confirm the complete companion and magic stay inside.
+  Verify click-to-talk, resize, animation off, magic off and companion off.
 - Enable voice, activate Speak, and verify one-utterance microphone capture stops
   on completion/cancel/disable/unload. Practice a phrase, save a binding, test it,
   and verify ambiguous/unrecognized speech does not trigger an arbitrary action.

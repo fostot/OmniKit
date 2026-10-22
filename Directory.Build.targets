@@ -1,0 +1,37 @@
+<Project>
+  <Target Name="ComputeOmniKitVersion" BeforeTargets="BeforeBuild;GetAssemblyVersion;GetAssemblyAttributes"
+          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory).git')" Text="OmniKit requires a Git checkout with full history to calculate its commit version." />
+    <Exec Command="git -C &quot;$(MSBuildThisFileDirectory).&quot; rev-parse --is-shallow-repository" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_OmniKitShallow" />
+    </Exec>
+    <Error Condition="'$(_OmniKitShallow)' != 'false'" Text="OmniKit versioning requires complete Git history. Unshallow the checkout before building." />
+    <Exec Command="git -C &quot;$(MSBuildThisFileDirectory).&quot; rev-list --count HEAD" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OmniKitCommitCount" />
+    </Exec>
+    <Exec Command="git -C &quot;$(MSBuildThisFileDirectory).&quot; rev-parse HEAD" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OmniKitCommitSha" />
+    </Exec>
+    <Exec Command="git -C &quot;$(MSBuildThisFileDirectory).&quot; rev-parse --short=7 HEAD" ConsoleToMSBuild="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OmniKitShortSha" />
+    </Exec>
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(OmniKitCommitCount)', '^[0-9]+$'))" Text="Git did not return a valid commit count." />
+    <Error Condition="$(OmniKitCommitCount) &gt; 65534" Text="The commit count exceeds the .NET assembly revision capacity. Do not truncate or wrap it; choose a new numeric version mapping explicitly." />
+    <PropertyGroup>
+      <OmniKitArtifactVersion>$(OmniKitBaseVersion).$([System.Int32]::Parse('$(OmniKitCommitCount)').ToString('D4'))</OmniKitArtifactVersion>
+      <AssemblyVersion>$(OmniKitBaseVersion).$(OmniKitCommitCount)</AssemblyVersion>
+      <FileVersion>$(AssemblyVersion)</FileVersion>
+      <InformationalVersion>$(OmniKitArtifactVersion) ($(OmniKitShortSha))</InformationalVersion>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="OmniKit.CommitSha" Value="$(OmniKitCommitSha)" />
+      <AssemblyMetadata Include="OmniKit.CommitCount" Value="$(OmniKitCommitCount)" />
+    </ItemGroup>
+    <Message Text="OmniKit $(InformationalVersion)" Importance="High" />
+  </Target>
+  <Target Name="WriteOmniKitBuildMetadata" AfterTargets="Build" DependsOnTargets="ComputeOmniKitVersion"
+          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+    <WriteLinesToFile File="$(TargetDir)$(AssemblyName).build.json" Overwrite="true" Encoding="UTF-8"
+      Lines="{&quot;BaseVersion&quot;:&quot;$(OmniKitBaseVersion)&quot;,&quot;CommitCount&quot;:$(OmniKitCommitCount),&quot;CommitSha&quot;:&quot;$(OmniKitCommitSha)&quot;,&quot;ShortSha&quot;:&quot;$(OmniKitShortSha)&quot;,&quot;ArtifactVersion&quot;:&quot;$(OmniKitArtifactVersion)&quot;,&quot;AssemblyVersion&quot;:&quot;$(AssemblyVersion)&quot;,&quot;DisplayVersion&quot;:&quot;$(InformationalVersion)&quot;,&quot;Author&quot;:&quot;Zero&quot;}" />
+  </Target>
+</Project>

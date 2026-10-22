@@ -484,7 +484,9 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         var center = viewportPosition + viewportSize * 0.5f;
         var cone = float.IsFinite(config.InteractionCone) ? Math.Clamp(config.InteractionCone, 0.025f, 0.3f) : 0.1f;
         var radius = Math.Min(viewportSize.X, viewportSize.Y) * cone;
-        var maxDistance = float.IsFinite(config.InteractionDistance) ? Math.Clamp(config.InteractionDistance, 1f, 6f) : 3.5f;
+        var maxDistance = float.IsFinite(config.InteractionDistance)
+            ? Math.Clamp(config.InteractionDistance, Configuration.MinimumDetectionDistance, Configuration.MaximumDetectionDistance)
+            : Configuration.DefaultDetectionDistance;
         Vector3 cameraPosition = camera->SceneCamera.Position;
         Candidate? best = null;
         var bestScore = float.MaxValue;

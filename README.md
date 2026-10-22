@@ -1,8 +1,12 @@
 # OmniKit
 
-Your everyday toolkit for XIV, with Bimble the moon bunny (or a moon bear).
+Your everyday toolkit for XIV by Zero, with Bimble the moon bunny (or a moon bear).
 
-**Early preview: 0.1.0-dev.2 · Dalamud API 15 · Windows x64.**
+**Early preview · Dalamud API 15 · Windows x64.**
+Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
+reachable Git commit count, padded to at least four digits. See
+[versioning](docs/VERSIONING.md) for the exact format and release workflow.
+
 Build and isolated tests are separate from game validation. The compact launcher
 layout still needs in-game acceptance. See [feature status](docs/FEATURES.md)
 for the full scope and [game checklist](docs/IN-GAME-CHECKLIST.md) for acceptance.
@@ -26,10 +30,12 @@ optional AI chat. Both shortcuts are changeable. A desktop launcher can also own
 Alt + Space; change one shortcut if they overlap. Soft interaction, voice and AI
 start off until you enable them.
 
-Settings have five tabs: **Launcher**, **Interact**, **HUD**, **Companion** and
-**Data**. Companion groups **Appearance**, **Voice** and **AI**. Click a shortcut
+Settings have six tabs: **Launcher**, **Interact**, **HUD**, **Companion**, **Data**
+and **About**. About shows the complete version, author and copyable full source
+commit. Companion groups **Appearance**, **Voice** and **AI**. Click a shortcut
 button to record it: hold Ctrl, Alt and/or Shift, press the main key, then release
-all keys. Escape cancels recording.
+all keys. Escape cancels recording. The compact settings panel has teal controls,
+small corner rounding and a footer showing the built version and **by Zero**.
 
 ## What this preview includes
 
@@ -40,6 +46,9 @@ all keys. Escape cancels recording.
   including a preview while actions are paused. Shift + right-click it for
   Move, Lock/Unlock, Hide or Settings. No valid
   target means the key is left alone. One press requests one native interaction.
+  **Interact → Detection distance** adjusts detection from 1–30 yalms. The default
+  for new settings is 6; existing saved distances stay unchanged. This does not
+  extend the game's allowed interaction reach.
 - Optional gathering gear changes and restoration after an observed gathering
   session, with cancellation when you change gear yourself. Save your gearsets in
   FFXIV first. This does not reveal hidden nodes or choose gathering items.
@@ -48,9 +57,14 @@ all keys. Escape cancels recording.
 - Optional Responses-compatible AI text chat with endpoint-bound encrypted key
   storage. AI receives the submitted question, not game state or plugin files.
   Replies cannot execute commands. The local matcher does not need AI.
-- A walking 2D moon bunny or bear. In **Companion → Appearance**, choose **Draw
-  roaming area** and drag a box over the game. Click the companion to talk;
-  disable animation to keep it still, or hide it altogether.
+- Bimble and Moonbear with **Navigator** (navy/gold) and **Stargazer**
+  (violet/silver) outfit atlases, plus vector companions **Moonblob**, **Wink**
+  and **Nova**. Six aura/shape palettes are available: Moonlight, Aurora,
+  Nebula, Rose, Ember and Starlight. In **Companion → Appearance**, draw a
+  roaming area, preview an animation, or turn off magic accents, animation or
+  the companion. Clicking the companion opens its conversation. Each outfit
+  atlas has 16 poses: 8 walking, 4 idle/blink and 4 mouth poses. Mouth movement
+  is an explicit preview; synthesized speech and lip sync are not implemented.
 - SQLite preferences and JSON export/import, including saved chords, HUD position
   and the companion area. Older settings migrate to the new format.
 - Native Umbra menu integration, an optional Umbra toolbar widget, and optional
@@ -61,10 +75,12 @@ all keys. Escape cancels recording.
 OmniKit automatically appears in Umbra's **Plugins** menu through its standard
 Dalamud main/configuration windows.
 
-For a dedicated toolbar button, download `OmniKit.Umbra.dll` from the release,
-keep it in a permanent local folder, and load it through **Umbra Settings →
+For a dedicated toolbar button, download the release asset named
+`OmniKit.Umbra-<version>-<shortSHA>.dll`, keep it in a permanent local folder,
+and load that file through **Umbra Settings →
 Plugins**. Then add the **OmniKit** toolbar widget. It uses Umbra's own styling and
-icons. See the [companion instructions](src/OmniKit.Umbra/README.md).
+icons. Earlier dev.1/dev.2 releases used the filename `OmniKit.Umbra.dll`.
+See the [companion instructions](src/OmniKit.Umbra/README.md).
 
 ## Wiki inside the game
 
@@ -94,15 +110,23 @@ Keys use separate Windows DPAPI storage, bound to their provider endpoint.
 Exports never include keys, recordings or conversations. Exports can contain
 your custom provider address and voice phrases, so review them before sharing.
 Import always disables AI in the interface until you explicitly enable it again.
-Schema v2 converts older Ctrl/Alt/Shift virtual-key values into complete chord
-masks while retaining existing preferences. Failed database migrations keep the
-previous snapshot.
+Schema v3 adds outfit, palette and magic preferences. It migrates v1 and v2
+settings while preserving existing preferences, including saved chords. Legacy
+v1 Ctrl/Alt/Shift virtual-key values are converted to chord masks. Failed
+database migrations keep the previous snapshot.
 
 ## Build and test
 
 Install .NET SDK 10 and Dalamud API 15 references in the normal XIVLauncher dev
 directory. Umbra's companion requires Umbra 3.1.18.0 references. Override the
 `DalamudLibPath` / `UmbraLibPath` build properties for a different local location.
+Build from a full Git checkout with Git available. Shallow history and source
+archives without Git metadata are unsupported; there is no manual version
+override. For release artifacts, commit the reviewed source before building so
+the embedded count and hash identify the files actually packaged.
+`Directory.Build.props` owns the shared base version and author;
+`Directory.Build.targets` derives versions and source metadata for both plugin
+assemblies. Keep their project files free of duplicate hardcoded version fields.
 
 ```powershell
 dotnet build src/OmniKit/OmniKit.csproj -c Release
@@ -111,15 +135,23 @@ dotnet run --project tests/SearchTests/SearchTests.csproj -c Release
 dotnet run --project tests/GatheringStateTests.csproj -c Release
 dotnet run --project tests/StorageTests/StorageTests.csproj -c Release
 dotnet run --project tests/HotkeyTests/HotkeyTests.csproj -c Release
+pwsh -NoProfile -File tests/VersioningTests.ps1
 pwsh scripts/Package.ps1
 ```
 
 Release packages contain only reviewed runtime files and assets. Local databases,
 credentials, build intermediates and user exports are not source or backup content.
-The core uses base version `0.1.0`, development revision `0.1.0-dev.2` and numeric
-assembly/file version `0.1.0.1`. The unchanged Umbra companion remains at assembly
-version `0.1.0.0`. Packaging verifies source and build versions and refuses an
-existing distribution revision; previous release artifacts stay unchanged.
+The base remains `0.1.0`. Release labels use a padded commit count, while .NET
+and Dalamud use its numeric form: illustrative label `0.1.0.0003 (abc1234)` maps
+to numeric version `0.1.0.3`. Rebuilding the same source commit does not increment
+the version. A later repository-feed commit does not change the earlier
+artifact's identity: its release tag must still point to the source commit.
+The prior `0.1.0-dev.1` and `0.1.0-dev.2` releases remain unchanged. See the
+[versioning workflow](docs/VERSIONING.md) before packaging or publishing.
+New release assets are `OmniKit-<version>-<shortSHA>.zip` and
+`OmniKit.Umbra-<version>-<shortSHA>.dll`. The core ZIP still contains the normal
+`OmniKit.dll` and its build metadata. The versioning integration test uses only
+synthetic repositories under ignored `.local` and retains them for inspection.
 See [IPC integration](docs/INTEGRATION.md) for exposing additional plugin actions.
 
 ## References and artwork

@@ -1,3 +1,62 @@
+# 0.1.0.0003: compact settings, companion choices and commit-derived versioning
+
+The settings and companion panels now use a compact frameless layout with teal
+controls and 2 px corner rounding. They open at 540 × 400 logical pixels and
+support a minimum of 480 × 330. Settings have six native tabs, including About,
+and the Appearance, Voice and AI companion subtabs. The footer shows the complete
+version label from the compiled assembly and identifies the author as Zero.
+About includes the full source commit and a Copy build details button.
+
+Detection distance is now directly visible in Interact, adjustable from 1–30
+yalms. New settings default to 6; existing saved distances are preserved. This
+changes target detection, while native game checks still determine usable reach.
+
+Appearance controls support Bimble and Moonbear in Navigator (navy/gold) and
+Stargazer (violet/silver) outfits, backed by separate atlases. Each atlas has
+16 poses: 8 walking, 4 idle/blink and 4 mouth poses. The vector companions
+Moonblob, Wink and Nova offer six aura/shape palettes: Moonlight, Aurora,
+Nebula, Rose, Ember and Starlight. Magic accents and animation have independent
+off switches. Mouth movement is available through explicit animation preview;
+this release does not synthesize speech or provide audio-driven lip sync.
+
+Settings schema v3 adds outfit, palette and magic preferences. Existing v1 and
+v2 JSON and SQLite snapshots migrate with their saved preferences intact,
+including v2 keyboard chords. Migration converts legacy v1 modifier codes only
+once, then adds defaults for the new appearance fields.
+
+All four atlases passed transparency, frame-bounds and composited appearance
+inspection. Motion/layout checks passed, as did offscreen vector rendering,
+disabled-animation checks and native settings/dropdown/About layout checks.
+The user reported that basic soft interaction works in game at close range.
+The updated appearance and distance controls still require in-game acceptance;
+isolated checks do not establish live keyboard focus or gameplay behavior.
+
+New artifacts use `major.minor.patch.commitCount`, displayed with a short source
+hash, such as the illustrative `0.1.0.0003 (abc1234)`. The base remains `0.1.0`.
+The last component counts commits reachable from the artifact's source commit;
+it is padded to at least four digits and does not increase when that same source
+is rebuilt. .NET and Dalamud use the unpadded numeric equivalent, such as
+`0.1.0.3`.
+
+Builds require a full Git checkout. The release tag points to the source commit
+used to build the artifact, even if publishing its repository feed creates a
+later metadata commit. The final count and hash are determined only after the
+source commit is finalized. See [versioning](VERSIONING.md) for the workflow.
+
+The shared MSBuild targets apply the public author `Zero` and derive metadata
+for both plugin assemblies. Release assets now include their padded version and
+short source hash: `OmniKit-<version>-<shortSHA>.zip` and
+`OmniKit.Umbra-<version>-<shortSHA>.dll`.
+
+Integration checks passed using the actual targets: a first-commit build, an
+incremental second-commit build after a metadata-only change, and rejection of
+missing or shallow Git history. The checks inspect emitted JSON, DLL versions
+and embedded source attributes using synthetic local repositories.
+
+The prior `0.1.0-dev.1` and `0.1.0-dev.2` release identities and artifacts remain
+unchanged. This metadata change does not replace the pending in-game acceptance
+checks recorded below.
+
 # 0.1.0-dev.2
 
 The launcher now opens as a compact search field and settings gear. Results

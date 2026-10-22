@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+    <OmniKitBaseVersion>0.1.0</OmniKitBaseVersion>
+    <Version>$(OmniKitBaseVersion)</Version>
+    <Author>Zero</Author>
+    <Authors>Zero</Authors>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+</Project>

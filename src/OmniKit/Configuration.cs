@@ -8,7 +8,13 @@ namespace OmniKit;
 [Serializable]
 public sealed class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; } = 2;
+    public const float MinimumDetectionDistance = 1f;
+    public const float MaximumDetectionDistance = 30f;
+    public const float DefaultDetectionDistance = 6f;
+    public int Version { get; set; } = 3;
+    public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" });
+    public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
+    public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
     public bool SetupCompleted = false;
     public bool LauncherEnabled = true;
     public VirtualKey LauncherKey = VirtualKey.SPACE;
@@ -20,7 +26,7 @@ public sealed class Configuration : IPluginConfiguration
     public VirtualKey InteractKey = VirtualKey.F;
     public ModifierKeys InteractModifier = ModifierKeys.None;
     public float InteractionCone = 0.10f;
-    public float InteractionDistance = 3.5f;
+    public float InteractionDistance = DefaultDetectionDistance;
     public float InteractionHudOffsetY = 120f;
     public bool InteractionHudLocked = true;
     public float InteractionHudOffsetX = 0f;
@@ -32,6 +38,9 @@ public sealed class Configuration : IPluginConfiguration
     public bool AvatarEnabled = true;
     public bool AnimationsEnabled = true;
     public string Avatar = "Bimble";
+    public string CompanionOutfit = "Navigator";
+    public string CompanionPalette = "Moonlight";
+    public bool CompanionMagicEnabled = true;
     public float CompanionBoxLeft = .72f;
     public float CompanionBoxTop = .55f;
     public float CompanionBoxRight = .95f;

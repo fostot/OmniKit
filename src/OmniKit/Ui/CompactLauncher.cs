@@ -35,7 +35,7 @@ internal sealed class CompactLauncher
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 12) * scale);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 10 * scale);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2 * scale);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 1);
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(.085f, .092f, .11f, .99f));
         ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(.30f, .32f, .37f, .8f));
@@ -53,7 +53,7 @@ internal sealed class CompactLauncher
                 var draw = ImGui.GetWindowDrawList();
                 var iconWidth = 36 * scale;
                 var searchCenter = origin + new Vector2(15 * scale, barHeight / 2 - 2 * scale);
-                var tint = ImGui.ColorConvertFloat4ToU32(new Vector4(.84f, .70f, .44f, 1));
+                var tint = ImGui.ColorConvertFloat4ToU32(new Vector4(.48f, .78f, .74f, 1));
                 draw.AddCircle(searchCenter, 7 * scale, tint, 24, 2 * scale);
                 draw.AddLine(searchCenter + new Vector2(5, 5) * scale, searchCenter + new Vector2(11, 11) * scale, tint, 2 * scale);
                 ImGui.SetCursorScreenPos(origin + new Vector2(iconWidth, 0));
