@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Keys;
@@ -8,6 +7,7 @@ using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Component.BGCollision;
+using OmniKit.Input;
 using NativeEventHandler = FFXIVClientStructs.FFXIV.Client.Game.Event.EventHandler;
 using NativeFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using NativeGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
@@ -39,19 +39,36 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     private Vector2 viewportPosition;
     private Vector2 viewportSize;
     private bool uiCapturesInput;
-    private bool wasKeyDown;
-    private bool keyInitialized;
-    private bool consumedPress;
-    private VirtualKey lastKey;
+    private readonly SoftInteractionPress interactionPress = new();
     private bool disposed;
     private bool faulted;
     private long lastScan;
     private long lastDraw;
     private bool lastInputBlocked;
+    private bool observationInitialized;
+    private uint observationTerritory;
+    private long observationReadyAt;
+    private bool hudPopupOpen;
+    private bool hudDragging;
+    private bool hudPositionDirty;
+    private Vector2 hudDragStartMouse;
+    private Vector2 hudDragStartOffset;
+    private Vector2 hudBoundsPosition;
+    private Vector2 hudBoundsSize;
+
+    private const string HudWindowId = "##OmniKitVisibleTargetControls";
+    private const string HudPopupId = "##OmniKitVisibleTargetMenu";
+    private const ImGuiWindowFlags HudWindowFlags = ImGuiWindowFlags.NoDecoration
+        | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollWithMouse
+        | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground
+        | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus
+        | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoDocking;
 
     public string? CandidateName => candidate?.Name;
     public string? Hint { get; private set; }
+    public bool ActionPaused { get; private set; } = true;
     public GatheringGearService Gathering { get; } = new(config);
+    public event Action? ConfigureHudRequested;
 
     public void Update(bool inputBlocked)
     {
@@ -63,24 +80,16 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         // Use the physical state for the edge latch. Clearing IKeyState must not
         // manufacture a new press on the next frame, including OS key-repeat frames.
         var key = config.InteractKey;
-        var down = IsPhysicalKeyDown(key);
-        if (!keyInitialized || key != lastKey)
-        {
-            keyInitialized = true;
-            lastKey = key;
-            wasKeyDown = down;
-            consumedPress = false;
-        }
-
-        var pressed = down && !wasKeyDown;
-        wasKeyDown = down;
-        if (!down)
-            consumedPress = false;
+        var down = HotkeyChord.IsKeyDown(key);
+        var pressed = interactionPress.Sample((int)key, (int)config.InteractModifier, down);
 
         if (!config.SoftInteractEnabled || faulted)
         {
             Gathering.Dispose();
             candidate = null;
+            observationInitialized = false;
+            ActionPaused = true;
+            interactionPress.Pause();
             if (!faulted)
                 Hint = "Soft interaction is off.";
             return;
@@ -88,27 +97,25 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
         try
         {
-            Gathering.Update(inputBlocked || uiCapturesInput);
-            if (!IsUsableKey(key))
+            if (GetObservationUnavailableReason() is { } unavailable)
             {
-                Clear("Choose a keyboard key other than a modifier.");
+                // Cancel delayed equipment/interaction work without inspecting stale
+                // world objects while zoning, logged out, or lacking a safe camera.
+                Gathering.Dispose();
+                Clear(unavailable);
                 return;
             }
 
-            if (IsBlocked(inputBlocked))
-            {
-                Clear("Paused while a menu, text input, cutscene, or busy state is active.");
-                return;
-            }
+            var pauseReason = GetActionPauseReason(inputBlocked, allowReleasedModifiers: true);
+            Gathering.Update(pauseReason != null);
+            // A pending gathering callback may itself enter a busy game state.
+            pauseReason = GetActionPauseReason(inputBlocked, allowReleasedModifiers: !down);
+            ActionPaused = pauseReason != null;
+            if (ActionPaused)
+                interactionPress.Pause();
 
-            // Modified shortcuts belong to the game or other plugins.
-            if (IsPhysicalKeyDown(VirtualKey.CONTROL) || IsPhysicalKeyDown(VirtualKey.MENU)
-                || IsPhysicalKeyDown(VirtualKey.SHIFT))
-            {
-                Clear("Release modifier keys to interact.");
-                return;
-            }
-
+            // Observation is independent of action permission. Menus, typing and
+            // modifier keys pause the key, but keep the camera detector reviewable.
             var now = Environment.TickCount64;
             if (pressed || now - lastScan >= 33)
             {
@@ -118,12 +125,18 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
             if (candidate is not { } selected)
             {
-                Hint = "Look toward a nearby interactable NPC or object.";
+                Hint = pauseReason ?? "Look toward a nearby interactable NPC or object.";
                 return;
             }
 
-            Hint = $"{key}: interact with {selected.Name}";
-            if (pressed)
+            if (ActionPaused)
+            {
+                Hint = pauseReason;
+                return;
+            }
+
+            Hint = $"{HotkeyChord.Format(key, config.InteractModifier)}: interact with {selected.Name}";
+            if (pressed && HotkeyChord.IsDown(key, config.InteractModifier))
             {
                 // FindCandidate was rerun on this exact key edge. Resolve by ID again
                 // so an object-table slot recycled during a zone change is never used.
@@ -139,11 +152,11 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                     return;
 
                 Services.Keys[key] = false;
-                consumedPress = true;
+                interactionPress.Consume();
                 if (!Gathering.TryPrepare(current, () => InteractIfStillEligible(selected)))
                     InteractIfStillEligible(selected);
             }
-            else if (down && consumedPress)
+            else if (down && interactionPress.Consumed)
             {
                 // Swallow repeats only while still eligible and unblocked. The same
                 // physical hold can never generate a second native interaction.
@@ -170,34 +183,185 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         viewportSize = viewport.Size;
         lastDraw = Environment.TickCount64;
         uiCapturesInput = ImGui.GetIO().WantCaptureKeyboard || ImGui.GetIO().WantTextInput
-            || ImGui.IsAnyItemActive();
+            || ImGui.IsAnyItemActive() || hudPopupOpen || hudDragging;
+
+        // Save a completed drag once, including when the candidate disappeared
+        // before release. Do not write the configuration on every mouse movement.
+        if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+        {
+            hudDragging = false;
+            if (hudPositionDirty)
+            {
+                hudPositionDirty = false;
+                SaveHudConfiguration();
+            }
+        }
 
         if (!config.SoftInteractEnabled || !config.InteractionHudEnabled || faulted
-            || uiCapturesInput || candidate is not { } selected)
+            || candidate is not { } selected)
+        {
+            CloseHudMenu();
+            hudDragging = false;
+            return;
+        }
+
+        // The normal locked HUD is draw-list text without an input window. Its
+        // text-bounds editor is created only for deliberate HUD interaction.
+        var draw = ImGui.GetForegroundDrawList();
+        var hudScale = float.IsFinite(config.InteractionHudScale)
+            ? Math.Clamp(config.InteractionHudScale, 0.5f, 2f) : 1f;
+        var paused = ActionPaused || uiCapturesInput;
+        var prefix = paused ? string.Empty : $"[{HotkeyChord.Format(config.InteractKey, config.InteractModifier)}]  ";
+        var suffix = paused ? "  · Preview" : string.Empty;
+        var name = selected.Name;
+        var availableWidth = Math.Max(1f, viewportSize.X - 24f);
+        // Even at a very large font scale the chord/preview marker and ellipsis
+        // must fit inside the viewport. Keep the target name as the main text.
+        hudScale = Math.Min(hudScale, availableWidth / Math.Max(1, ImGui.CalcTextSize(prefix + "…" + suffix).X));
+        var fontSize = ImGui.GetFontSize() * hudScale;
+        var scale = Math.Clamp(fontSize / 17f, 0.5f, 6.25f);
+        var nameWidth = Math.Max(0, availableWidth - ImGui.CalcTextSize(prefix + suffix).X * hudScale);
+        while (name.Length > 1 && ImGui.CalcTextSize(name).X * hudScale > nameWidth)
+            name = name[..^2].TrimEnd('…') + "…";
+
+        var text = prefix + name + suffix;
+        var textSize = ImGui.CalcTextSize(text) * hudScale;
+        var center = viewportPosition + viewportSize * 0.5f;
+        var offset = new Vector2(
+            float.IsFinite(config.InteractionHudOffsetX) ? config.InteractionHudOffsetX : 0f,
+            float.IsFinite(config.InteractionHudOffsetY) ? config.InteractionHudOffsetY : 120f);
+        var topLeft = ClampHudPosition(center + offset - new Vector2(textSize.X * 0.5f, 0), textSize);
+        DrawHudControls(ref topLeft, textSize, center);
+        if (!config.InteractionHudEnabled)
             return;
 
-        // A draw-list overlay has no hit box and cannot steal focus from the game.
-        // Native highlight/target fields are untouched, so other plugins retain theirs.
-        var draw = ImGui.GetBackgroundDrawList();
-        var scale = Math.Clamp(ImGui.GetFontSize() / 17f, 0.75f, 2.5f);
-        var text = $"[{config.InteractKey}]  {selected.Name}";
-        var availableWidth = Math.Max(80f, viewportSize.X * 0.75f - 32f * scale);
-        while (text.Length > 8 && ImGui.CalcTextSize(text).X > availableWidth)
-            text = text[..^2].TrimEnd('…') + "…";
+        var font = ImGui.GetFont();
+        draw.AddText(font, fontSize, topLeft + new Vector2(1.5f) * scale, 0xE6000000, text, 0);
+        draw.AddText(font, fontSize, topLeft, 0xFF9BC9DD, prefix, 0);
+        var namePosition = topLeft + new Vector2(ImGui.CalcTextSize(prefix).X * hudScale, 0);
+        draw.AddText(font, fontSize, namePosition, 0xFFF0F3F6, name, 0);
+        draw.AddText(font, fontSize, namePosition + new Vector2(ImGui.CalcTextSize(name).X * hudScale, 0),
+            0xFFBEC4CA, suffix, 0);
+    }
 
-        var textSize = ImGui.CalcTextSize(text);
-        var padding = new Vector2(14, 9) * scale;
-        var boxSize = textSize + padding * 2;
-        var center = viewportPosition + viewportSize * 0.5f;
-        var offset = float.IsFinite(config.InteractionHudOffsetY) ? config.InteractionHudOffsetY : 120f;
-        var topLeft = new Vector2(center.X - boxSize.X * 0.5f, center.Y + offset);
-        topLeft = Vector2.Clamp(topLeft, viewportPosition + new Vector2(8),
-            Vector2.Max(viewportPosition + new Vector2(8), viewportPosition + viewportSize - boxSize - new Vector2(8)));
+    private void DrawHudControls(ref Vector2 topLeft, Vector2 textSize, Vector2 center)
+    {
+        var shift = (HotkeyChord.CurrentModifiers & ModifierKeys.Shift) != 0;
+        var hovered = ImGui.IsMouseHoveringRect(topLeft, topLeft + textSize, false);
+        if (config.InteractionHudLocked)
+            hudDragging = false;
+        if (config.InteractionHudLocked && !(shift && hovered) && !hudPopupOpen && !hudDragging)
+            return;
 
-        draw.AddRectFilled(topLeft, topLeft + boxSize, 0xEB25201C, 7f * scale);
-        draw.AddRect(topLeft, topLeft + boxSize, 0xC59BC9DD, 7f * scale);
-        draw.AddText(topLeft + padding, 0xFFF0F3F6, text);
-        draw.AddCircle(selected.ScreenPosition, 6f * scale, 0xE39BC9DD, 20, 1.5f * scale);
+        hudBoundsPosition = topLeft;
+        hudBoundsSize = textSize;
+        var visible = BeginHudWindow(topLeft, textSize);
+        try
+        {
+            if (!visible) return;
+            var buttons = ImGuiButtonFlags.MouseButtonRight;
+            if (!config.InteractionHudLocked) buttons |= ImGuiButtonFlags.MouseButtonLeft;
+            ImGui.InvisibleButton("##visible-target-text", textSize, buttons);
+            if (shift && hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right) && !hudPopupOpen)
+            {
+                ImGui.OpenPopup(HudPopupId, ImGuiPopupFlags.None);
+                // Keep the menu off the foreground HUD text when there is space.
+                ImGui.SetNextWindowPos(topLeft + new Vector2(0, textSize.Y + 6), ImGuiCond.Appearing);
+            }
+
+            if (!config.InteractionHudLocked && !hudPopupOpen && ImGui.IsItemActive()
+                && ImGui.IsMouseDown(ImGuiMouseButton.Left) && !hudDragging)
+            {
+                hudDragging = true;
+                hudDragStartMouse = ImGui.GetMousePos();
+                // Start from the actual clamped position, not an off-screen setting.
+                hudDragStartOffset = topLeft - center + new Vector2(textSize.X * 0.5f, 0);
+            }
+            if (hudDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left))
+            {
+                var moved = hudDragStartOffset + ImGui.GetMousePos() - hudDragStartMouse;
+                topLeft = ClampHudPosition(center + moved - new Vector2(textSize.X * 0.5f, 0), textSize);
+                var actualOffset = topLeft - center + new Vector2(textSize.X * 0.5f, 0);
+                if (config.InteractionHudOffsetX != actualOffset.X || config.InteractionHudOffsetY != actualOffset.Y)
+                {
+                    config.InteractionHudOffsetX = actualOffset.X;
+                    config.InteractionHudOffsetY = actualOffset.Y;
+                    hudPositionDirty = true;
+                }
+            }
+
+            if (ImGui.BeginPopup(HudPopupId, ImGuiWindowFlags.None))
+            {
+                hudDragging = false;
+                if (ImGui.MenuItem(config.InteractionHudLocked ? "Unlock" : "Lock", false, true))
+                {
+                    config.InteractionHudLocked = !config.InteractionHudLocked;
+                    SaveHudConfiguration();
+                }
+                if (ImGui.MenuItem("Move", false, true))
+                {
+                    config.InteractionHudLocked = false;
+                    SaveHudConfiguration();
+                }
+                if (ImGui.MenuItem("Modify", false, true))
+                    ConfigureHudRequested?.Invoke();
+                if (ImGui.MenuItem("Hide", false, true))
+                {
+                    config.InteractionHudEnabled = false;
+                    SaveHudConfiguration();
+                }
+                ImGui.EndPopup();
+            }
+            hudPopupOpen = ImGui.IsPopupOpen(HudPopupId, ImGuiPopupFlags.None);
+            uiCapturesInput |= hudPopupOpen || hudDragging;
+        }
+        finally
+        {
+            ImGui.End();
+        }
+    }
+
+    private static bool BeginHudWindow(Vector2 position, Vector2 size, bool noInputs = false)
+    {
+        ImGui.SetNextWindowPos(position, ImGuiCond.Always);
+        ImGui.SetNextWindowSize(Vector2.Max(size, Vector2.One), ImGuiCond.Always);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, Vector2.One);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);
+        var visible = ImGui.Begin(HudWindowId, HudWindowFlags | (noInputs ? ImGuiWindowFlags.NoInputs : ImGuiWindowFlags.None));
+        // Window layout has captured these values. Restore defaults before drawing
+        // the context menu so its controls retain their normal visible gutters.
+        ImGui.PopStyleVar(3);
+        return visible;
+    }
+
+    private void CloseHudMenu()
+    {
+        if (!hudPopupOpen) return;
+        // Dismiss the popup in its owning ID scope. No target means no input hitbox
+        // or empty HUD window, including this one-frame popup cleanup.
+        BeginHudWindow(hudBoundsPosition, hudBoundsSize, noInputs: true);
+        if (ImGui.BeginPopup(HudPopupId, ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs))
+        {
+            ImGui.CloseCurrentPopup();
+            ImGui.EndPopup();
+        }
+        ImGui.End();
+        hudPopupOpen = false;
+    }
+
+    private Vector2 ClampHudPosition(Vector2 position, Vector2 size) => Vector2.Clamp(position,
+        viewportPosition + new Vector2(8),
+        Vector2.Max(viewportPosition + new Vector2(8), viewportPosition + viewportSize - size - new Vector2(8)));
+
+    private void SaveHudConfiguration()
+    {
+        try { config.Save(); }
+        catch (Exception exception)
+        {
+            Hint = "The HUD change could not be saved.";
+            Services.Log.Error("HUD settings could not be saved ({ErrorType}).", exception.GetType().Name);
+        }
     }
 
     public void Dispose()
@@ -206,12 +370,15 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         Gathering.Dispose();
         candidate = null;
         Hint = null;
+        ActionPaused = true;
         // No hooks, target mutations, or persistent keyboard capture to restore.
     }
 
     private bool InteractIfStillEligible(Candidate expected)
     {
-        if (disposed || faulted || !config.SoftInteractEnabled || IsBlocked(lastInputBlocked))
+        if (disposed || faulted || !config.SoftInteractEnabled
+            || GetObservationUnavailableReason() != null
+            || GetActionPauseReason(lastInputBlocked, allowReleasedModifiers: true) != null)
             return false;
         var actual = FindCandidate();
         if (actual == null || actual.Id != expected.Id || actual.Address != expected.Address)
@@ -226,30 +393,83 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         return true;
     }
 
-    private bool IsBlocked(bool inputBlocked)
+    private string? GetObservationUnavailableReason()
     {
-        if (inputBlocked || uiCapturesInput || !Services.ClientState.IsLoggedIn
-            || Services.ClientState.IsGPosing || Services.GameGui.GameUiHidden
-            || Services.Objects.LocalPlayer == null || viewportSize.X < 1 || viewportSize.Y < 1
-            || Environment.TickCount64 - lastDraw > 250)
-            return true;
-
-        foreach (var flag in BlockingConditions)
-            if (Services.Conditions[flag])
-                return true;
+        // These managed state checks precede object/camera access. UI capture alone
+        // is safe for observation and deliberately does not appear in this guard.
+        if (!Services.ClientState.IsLoggedIn)
+            return ObservationUnavailable("Detection unavailable while logged out.");
+        if (Services.Conditions[ConditionFlag.BetweenAreas] || Services.Conditions[ConditionFlag.BetweenAreas51])
+            return ObservationUnavailable("Detection unavailable while changing areas.");
+        if (Services.ClientState.IsGPosing || Services.Conditions[ConditionFlag.WatchingCutscene]
+            || Services.Conditions[ConditionFlag.WatchingCutscene78]
+            || Services.Conditions[ConditionFlag.OccupiedInCutSceneEvent])
+            return ObservationUnavailable("Detection unavailable during a cutscene or group pose.");
+        if (viewportSize.X < 1 || viewportSize.Y < 1 || Environment.TickCount64 - lastDraw > 250)
+            return ObservationUnavailable("Detection waiting for the game viewport.");
 
         var framework = NativeFramework.Instance();
-        if (framework == null || framework->WindowInactive || framework->IsExiting
-            || framework->BGCollisionModule == null || framework->BGCollisionModule->ShuttingDown
+        if (framework == null || framework->IsExiting)
+            return ObservationUnavailable("Detection unavailable while the game is closing or initializing.");
+        if (framework->BGCollisionModule == null || framework->BGCollisionModule->ShuttingDown
             || framework->BGCollisionModule->LoadInProgressCounter != 0)
-            return true;
+            return ObservationUnavailable("Detection waiting for the area's collision data.");
+        var player = Services.Objects.LocalPlayer;
+        if (player == null || !player.IsValid())
+            return ObservationUnavailable("Detection waiting for the local player.");
+        var cameras = CameraManager.Instance();
+        if (TargetSystem.Instance() == null || cameras == null || cameras->GetActiveCamera() == null)
+            return ObservationUnavailable("Detection waiting for a usable game camera.");
+
+        var now = Environment.TickCount64;
+        var territory = Services.ClientState.TerritoryType;
+        if (!observationInitialized || territory != observationTerritory)
+        {
+            observationInitialized = true;
+            observationTerritory = territory;
+            observationReadyAt = now + 250;
+        }
+        return now < observationReadyAt ? "Detection waiting for the area to stabilize." : null;
+    }
+
+    private string ObservationUnavailable(string reason)
+    {
+        observationInitialized = false;
+        return reason;
+    }
+
+    private string? GetActionPauseReason(bool inputBlocked, bool allowReleasedModifiers = false)
+    {
+        if (inputBlocked)
+            return "Interaction paused while OmniKit is open; camera detection remains active.";
+        if (hudPopupOpen || hudDragging)
+            return "Interaction paused while editing the visible-target HUD.";
+        if (uiCapturesInput)
+            return "Interaction paused while a plugin is using keyboard input; camera detection remains active.";
+        if (Services.GameGui.GameUiHidden)
+            return "Interaction paused while the game UI is hidden.";
+        if (!IsUsableKey(config.InteractKey))
+            return "Interaction paused: choose a keyboard key other than a modifier.";
+        if (!HotkeyChord.IsValidModifiers(config.InteractModifier)
+            || HotkeyChord.IsKeyDown(VirtualKey.LWIN) || HotkeyChord.IsKeyDown(VirtualKey.RWIN))
+            return "Interaction paused while a system shortcut is active or the shortcut is invalid.";
+        var modifiers = HotkeyChord.CurrentModifiers;
+        if (modifiers != config.InteractModifier && !(allowReleasedModifiers && modifiers == ModifierKeys.None))
+            return $"Interaction paused: use {HotkeyChord.Format(config.InteractKey, config.InteractModifier)} without extra modifiers.";
+        foreach (var flag in BlockingConditions)
+            if (Services.Conditions[flag])
+                return "Interaction paused while the character is busy; camera detection remains active.";
+        var framework = NativeFramework.Instance();
+        if (framework == null || framework->WindowInactive || framework->IsExiting)
+            return "Interaction paused while the game is not focused.";
 
         var ui = RaptureAtkModule.Instance();
         if (ui == null || ui->IsTextInputActive() || ui->AtkUnitManager == null)
-            return true;
+            return "Interaction paused while game text input or UI initialization is active.";
 
         var focused = ui->AtkUnitManager->FocusedAddon;
-        return focused != null && focused->IsVisible;
+        return focused != null && focused->IsVisible
+            ? "Interaction paused while a game menu is focused; camera detection remains active." : null;
     }
 
     private Candidate? FindCandidate()
@@ -306,7 +526,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             var name = obj.Name.TextValue;
             if (string.IsNullOrWhiteSpace(name))
                 name = "Interact";
-            best = new Candidate(obj.GameObjectId, obj.Address, name, screenPosition);
+            best = new Candidate(obj.GameObjectId, obj.Address, name);
             bestScore = score;
         }
 
@@ -350,22 +570,16 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         or ObjectKind.GatheringPoint or ObjectKind.Retainer or ObjectKind.HousingEventObject
         or ObjectKind.ReactionEventObject;
 
-    private static bool IsUsableKey(VirtualKey key) => (int)key > 7
-        && key is not (VirtualKey.SHIFT or VirtualKey.CONTROL or VirtualKey.MENU
-            or VirtualKey.LSHIFT or VirtualKey.RSHIFT or VirtualKey.LCONTROL
-            or VirtualKey.RCONTROL or VirtualKey.LMENU or VirtualKey.RMENU)
+    private static bool IsUsableKey(VirtualKey key) => HotkeyChord.IsValidKey(key)
         && Services.Keys.IsVirtualKeyValid((int)key);
 
     private void Clear(string reason)
     {
         candidate = null;
         Hint = reason;
+        ActionPaused = true;
+        interactionPress.Pause();
     }
 
-    private static bool IsPhysicalKeyDown(VirtualKey key) => (GetAsyncKeyState((int)key) & 0x8000) != 0;
-
-    [DllImport("user32.dll", ExactSpelling = true)]
-    private static extern short GetAsyncKeyState(int virtualKey);
-
-    private sealed record Candidate(ulong Id, nint Address, string Name, Vector2 ScreenPosition);
+    private sealed record Candidate(ulong Id, nint Address, string Name);
 }

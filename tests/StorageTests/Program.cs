@@ -1,7 +1,9 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Dalamud.Game.ClientState.Keys;
 using Microsoft.Data.Sqlite;
 using OmniKit;
+using OmniKit.Input;
 using OmniKit.Storage;
 
 var testDirectory = Path.Combine(Path.GetTempPath(), "OmniKit-storage-test-" + Guid.NewGuid().ToString("N"));
@@ -16,6 +18,13 @@ try
         InteractionDistance = 4.5f,
         MinerGearset = 2,
         Avatar = "Moonbear",
+        AvatarEnabled = false,
+        InteractModifier = ModifierKeys.Control | ModifierKeys.Shift,
+        InteractionHudLocked = false,
+        InteractionHudOffsetX = -220f,
+        InteractionHudScale = 1.5f,
+        CompanionBoxLeft = .2f,
+        CompanionSize = 120f,
         VoiceBindings = [new VoiceBinding("show my bags", "game:123")],
     };
     Action<Configuration> callback = _ => throw new Exception("Import must not call persistence implicitly.");
@@ -33,6 +42,116 @@ try
     loaded.InteractionDistance = 5;
     store.Save(loaded);
     Check(store.Load()!.InteractionDistance == 5, "A later save must atomically replace the prior snapshot.");
+
+    var versionTwoFields = new[]
+    {
+        "InteractModifier", "InteractionHudLocked", "InteractionHudOffsetX", "InteractionHudScale",
+        "CompanionBoxLeft", "CompanionBoxTop", "CompanionBoxRight", "CompanionBoxBottom", "CompanionSize",
+    };
+    var legacyDocument = JsonNode.Parse(exported)!;
+    legacyDocument["SchemaVersion"] = 1;
+    var legacySettings = legacyDocument["Settings"]!.AsObject();
+    legacySettings["Version"] = 1;
+    legacySettings["LauncherModifier"] = 18;
+    legacySettings["SettingsModifier"] = 17;
+    foreach (var field in versionTwoFields) legacySettings.Remove(field);
+    var legacyJson = legacyDocument.ToJsonString();
+
+    void CheckLegacy(Configuration migrated)
+    {
+        Check(migrated.Version == 2 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
+            migrated.InteractModifier == ModifierKeys.None, "Legacy virtual-key modifiers must migrate to the correct masks.");
+        var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
+        foreach (var field in legacySettings)
+            if (field.Key is not ("Version" or "LauncherModifier" or "SettingsModifier"))
+                Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Migration must preserve legacy field " + field.Key);
+        var defaults = new Configuration();
+        var defaultSnapshot = JsonNode.Parse(store.Export(defaults))!["Settings"]!.AsObject();
+        foreach (var field in versionTwoFields)
+            Check(JsonNode.DeepEquals(snapshot[field], defaultSnapshot[field]), "Migration must use the default for new field " + field);
+    }
+
+    var legacyTarget = new Configuration();
+    store.ImportInto(legacyTarget, legacyJson);
+    CheckLegacy(legacyTarget);
+    var deserializedLegacy = JsonSerializer.Deserialize<Configuration>(legacySettings.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
+    CheckLegacy(store.Upgrade(deserializedLegacy));
+    var legacyFallback = new Configuration
+    {
+        Version = 1,
+        LauncherModifier = (ModifierKeys)18,
+        SettingsModifier = (ModifierKeys)17,
+        InteractionHudOffsetY = -73f,
+        AvatarEnabled = false,
+        AnimationsEnabled = false,
+    };
+    var upgradedFallback = store.Upgrade(legacyFallback);
+    Check(upgradedFallback.Version == 2 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
+        upgradedFallback.SettingsModifier == ModifierKeys.Control && upgradedFallback.InteractionHudOffsetY == -73f &&
+        !upgradedFallback.AvatarEnabled && !upgradedFallback.AnimationsEnabled &&
+        legacyFallback.Version == 1 && (int)legacyFallback.LauncherModifier == 18,
+        "The legacy Dalamud configuration fallback must upgrade a validated copy and retain disabled features.");
+
+    string LegacyDatabase(string name, string json)
+    {
+        var directory = Path.Combine(testDirectory, name);
+        Directory.CreateDirectory(directory);
+        using var database = new SqliteConnection($"Data Source={Path.Combine(directory, "omnikit.db")};Pooling=False");
+        database.Open();
+        using var command = database.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE OmniKitSettings (Id INTEGER PRIMARY KEY CHECK (Id = 1), SchemaVersion INTEGER NOT NULL, Json TEXT NOT NULL);
+            INSERT INTO OmniKitSettings (Id, SchemaVersion, Json) VALUES (1, 1, $json);
+            PRAGMA user_version = 1;
+            """;
+        command.Parameters.AddWithValue("$json", json);
+        command.ExecuteNonQuery();
+        return directory;
+    }
+
+    (int DatabaseSchema, int RowSchema, string Json) ReadDatabase(string directory)
+    {
+        using var database = new SqliteConnection($"Data Source={Path.Combine(directory, "omnikit.db")};Pooling=False");
+        database.Open();
+        using var command = database.CreateCommand();
+        command.CommandText = "PRAGMA user_version;";
+        var schema = Convert.ToInt32(command.ExecuteScalar());
+        command.CommandText = "SELECT SchemaVersion, Json FROM OmniKitSettings WHERE Id = 1;";
+        using var row = command.ExecuteReader();
+        Check(row.Read(), "The saved row must remain present.");
+        return (schema, row.GetInt32(0), row.GetString(1));
+    }
+
+    var legacyDirectory = LegacyDatabase("legacy-valid", legacyJson);
+    var migratedStore = new LocalStore(legacyDirectory);
+    CheckLegacy(migratedStore.Load()!);
+    var migratedRow = ReadDatabase(legacyDirectory);
+    Check(migratedRow.DatabaseSchema == 2 && migratedRow.RowSchema == 2 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 2,
+        "Database version, row version and JSON schema must migrate together.");
+    CheckLegacy(new LocalStore(legacyDirectory).Load()!);
+
+    var badLegacy = JsonNode.Parse(legacyJson)!;
+    badLegacy["Settings"]!["InteractionDistance"] = 99;
+    var badLegacyJson = badLegacy.ToJsonString();
+    var failedDirectory = LegacyDatabase("legacy-invalid", badLegacyJson);
+    var migrationRejected = false;
+    try { _ = new LocalStore(failedDirectory); } catch (InvalidOperationException) { migrationRejected = true; }
+    var preservedRow = ReadDatabase(failedDirectory);
+    Check(migrationRejected && preservedRow.DatabaseSchema == 1 && preservedRow.RowSchema == 1 && preservedRow.Json == badLegacyJson,
+        "A failing migration must roll back the database version and preserve the original row verbatim.");
+    var writeFailureDirectory = LegacyDatabase("legacy-write-error", legacyJson);
+    using (var database = new SqliteConnection($"Data Source={Path.Combine(writeFailureDirectory, "omnikit.db")};Pooling=False"))
+    {
+        database.Open();
+        using var command = database.CreateCommand();
+        command.CommandText = "CREATE TRIGGER RejectMigration BEFORE UPDATE ON OmniKitSettings BEGIN SELECT RAISE(ABORT, 'Simulated write error'); END;";
+        command.ExecuteNonQuery();
+    }
+    var writeRejected = false;
+    try { _ = new LocalStore(writeFailureDirectory); } catch (SqliteException) { writeRejected = true; }
+    var writeFailureRow = ReadDatabase(writeFailureDirectory);
+    Check(writeRejected && writeFailureRow.DatabaseSchema == 1 && writeFailureRow.RowSchema == 1 && writeFailureRow.Json == legacyJson,
+        "A database write failure during migration must preserve the legacy schema and complete original snapshot.");
 
     void Invalid(string json, string description)
     {
@@ -57,8 +176,8 @@ try
     Invalid("null", "Null root");
     Invalid(new string(' ', 262145), "Oversize input");
     Invalid(new string('界', 100000), "Oversize UTF-8 input");
-    Invalid(exported.Replace("\"SchemaVersion\": 1", "\"SchemaVersion\": 2"), "Future schema");
-    Invalid(exported.Replace("\"SchemaVersion\": 1", "\"SchemaVersion\": 1, \"SchemaVersion\": 1"), "Duplicate root fields");
+    Invalid(exported.Replace("\"SchemaVersion\": 2", "\"SchemaVersion\": 3"), "Future schema");
+    Invalid(exported.Replace("\"SchemaVersion\": 2", "\"SchemaVersion\": 2, \"SchemaVersion\": 2"), "Duplicate root fields");
     Invalid(exported.Replace("\"Avatar\": \"Moonbear\"", "\"Avatar\": \"Moonbear\", \"Avatar\": \"Bimble\""), "Duplicate nested fields");
     Invalid(Change("UnapprovedFutureField", "should not import"), "Unknown fields");
     var missing = JsonNode.Parse(exported)!;
@@ -67,17 +186,35 @@ try
     Invalid(Change("LauncherEnabled", "true"), "Wrong boolean type");
     Invalid(Change("Avatar", null), "Null string");
     Invalid(Change("InteractionDistance", 99), "Invalid interaction distance");
+    Invalid(Change("InteractionHudOffsetX", 10001), "Invalid HUD offset");
+    Invalid(Change("InteractionHudScale", 0.49), "Invalid HUD scale");
+    Invalid(Change("CompanionBoxLeft", .99), "Inverted companion rectangle");
+    Invalid(Change("CompanionBoxBottom", .5), "Inverted companion rectangle height");
+    Invalid(Change("CompanionBoxRight", 1.1), "Companion rectangle outside viewport");
+    Invalid(Change("CompanionSize", 193), "Invalid companion size");
     Invalid(Change("MinerGearset", 100), "Invalid gearset index");
     Invalid(Change("WikiOverlayName", "an invalid overlay"), "Invalid wiki overlay name");
     Invalid(Change("InteractKey", 1), "Mouse key binding");
+    Invalid(Change("InteractKey", 65536 + 69), "Overflowed key code");
     Invalid(Change("SettingsKey", 17), "Modifier-only key binding");
     Invalid(Change("LauncherModifier", 65), "Invalid modifier");
     Invalid(Change("LauncherModifier", 162), "Unsupported side-specific modifier");
+    Invalid(Change("InteractModifier", 8), "Unknown modifier bit");
+    Invalid(Change("Version", 1), "Mixed configuration and snapshot versions");
+    Invalid(badLegacyJson, "Invalid legacy import");
+    var badLegacyModifier = JsonNode.Parse(legacyJson)!;
+    badLegacyModifier["Settings"]!["SettingsModifier"] = 65;
+    Invalid(badLegacyModifier.ToJsonString(), "Invalid legacy modifier");
     Invalid(Change("InteractKey", 162), "Side-specific modifier as interact key");
     var collision = JsonNode.Parse(exported)!;
     collision["Settings"]!["LauncherKey"] = (int)VirtualKey.F;
-    collision["Settings"]!["LauncherModifier"] = 0;
+    collision["Settings"]!["LauncherModifier"] = (int)(ModifierKeys.Control | ModifierKeys.Shift);
     Invalid(collision.ToJsonString(), "Shortcut collision");
+    collision["Settings"]!["LauncherModifier"] = (int)ModifierKeys.Control;
+    var distinctChords = new Configuration();
+    store.ImportInto(distinctChords, collision.ToJsonString());
+    Check(distinctChords.LauncherKey == distinctChords.InteractKey && distinctChords.LauncherModifier != distinctChords.InteractModifier,
+        "The same main key is valid with distinct exact modifier masks.");
     Invalid(Change("AiEndpoint", "https://user:secret@example.invalid/v1/responses"), "Credential-bearing endpoint");
     Invalid(Change("AiEndpoint", "https://example.invalid/v1/responses?key=secret"), "Query-bearing endpoint");
     Invalid(Change("AiEndpoint", "http://example.invalid/v1/responses"), "Remote unencrypted endpoint");
@@ -132,7 +269,7 @@ try
     var futureRejected = false;
     try { _ = new LocalStore(testDirectory); } catch (InvalidOperationException) { futureRejected = true; }
     Check(futureRejected, "Future database versions must be preserved and rejected.");
-    Console.WriteLine("Storage checks passed: SQLite persistence, atomic validation, export whitelist, schema/type/range/key/URL/voice checks and AI consent.");
+    Console.WriteLine("Storage checks passed: v1 JSON/Dalamud/SQLite migration and rollback, v2 chord/HUD/companion persistence, atomic validation, export whitelist and AI consent.");
 }
 finally
 {

@@ -9,6 +9,7 @@ using OmniKit.Integration;
 using OmniKit.Interaction;
 using OmniKit.Search;
 using OmniKit.Storage;
+using OmniKit.Input;
 
 namespace OmniKit.Ui;
 
@@ -23,12 +24,16 @@ internal sealed class PluginUi : IDisposable
     private readonly ActionCatalog catalog;
     private readonly WikiBrowser wiki;
     private readonly FileDialogManager fileDialogs = new();
+    private readonly CompactLauncher launcher = new();
+    private readonly HotkeyCapture hotkeys = new();
+    private readonly RoamingCompanion roaming;
     private bool mainOpen;
+    private bool companionOpen;
     private bool settingsOpen;
     private bool focusSearch;
-    private bool askMode;
     private bool practiceVoice;
     private string query = "";
+    private string question = "";
     private string answer = "";
     private string status = "";
     private string settingsSearch = "";
@@ -42,15 +47,25 @@ internal sealed class PluginUi : IDisposable
     private bool confirmImport;
     private bool gearFeedback;
     private int section;
-    private int selected;
+    private int companionTab;
+    private bool selectSettingsTab;
+    private int shownCompanionTab = -1;
     private long refreshedAt;
     private SearchEntry[] entries = [];
     private Task<string>? pendingAnswer;
     private CancellationTokenSource? request;
-    private static readonly string[] Sections = ["Shortcuts", "Interact & gear", "Companion", "Data"];
+    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data"];
     private static readonly Vector4 Gold = new(.84f, .70f, .44f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
-    public bool IsOpen => mainOpen || settingsOpen;
+    public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea;
+    public bool CapturingBinding => hotkeys.IsCapturing;
+    public void SuppressBindingKeys()
+    {
+        if (!hotkeys.IsCapturing) return;
+        foreach (var key in Enum.GetValues<VirtualKey>())
+            if ((int)key > 7 && Services.Keys.IsVirtualKeyValid((int)key) && HotkeyChord.IsKeyDown(key))
+                Services.Keys[key] = false;
+    }
     public bool CapturesText { get; private set; }
     public bool SearchHasFocus { get; private set; }
 
@@ -62,16 +77,22 @@ internal sealed class PluginUi : IDisposable
         providerEndpoint = config.AiEndpoint;
         catalog = new ActionCatalog(OpenSettings);
         wiki = new WikiBrowser(config);
-        mainOpen = !config.SetupCompleted;
+        roaming = new RoamingCompanion(config, () => OpenCompanion());
+        companionOpen = !config.SetupCompleted;
+        interaction.ConfigureHudRequested += OpenHudSettings;
         focusSearch = true;
     }
 
-    public void OpenMain() { mainOpen = true; focusSearch = true; Refresh(); }
+    public void OpenMain() { query = ""; status = ""; gearFeedback = false; mainOpen = true; launcher.Focus(); Refresh(); }
     public void ToggleMain() { if (mainOpen) mainOpen = false; else OpenMain(); }
-    public void OpenSettings() { settingsOpen = true; Refresh(); }
+    public void OpenSettings() { hotkeys.Cancel(); settingsOpen = true; selectSettingsTab = true; Refresh(); }
+    private void OpenHudSettings() { section = 2; selectSettingsTab = true; OpenSettings(); }
+    private void OpenCompanion(string text = "") { question = text; companionOpen = true; mainOpen = false; focusSearch = true; }
     private void Refresh()
     {
-        entries = catalog.GetEntries().Concat(GearsetActions.GetEntries()).Concat(sources.GetEntries()).ToArray();
+        entries = catalog.GetEntries().Concat(GearsetActions.GetEntries()).Concat(sources.GetEntries())
+            .Append(new SearchEntry("omnikit:companion", "Ask your companion", "Open your moon companion", "ask question chat ai bimble moonbear companion", "OmniKit", () => OpenCompanion()))
+            .Concat(config.VoiceEnabled ? new[] { new SearchEntry("omnikit:speak", "Speak a command", "Listen for one phrase", "voice microphone speak command", "OmniKit", () => StartVoice(false)) } : []).ToArray();
         refreshedAt = Environment.TickCount64;
     }
 
@@ -93,8 +114,8 @@ internal sealed class PluginUi : IDisposable
             status = "Heard: " + heard + ". Choose an action below, then save the phrase.";
             return;
         }
+        if (companionOpen) { question = heard; status = "Heard your question. Press Ask companion to send it, or Search wiki to look it up."; return; }
         query = heard; mainOpen = true;
-        if (askMode) { status = "Heard your question. Press Ask companion to send it, or Search wiki to look it up."; return; }
         var binding = config.VoiceBindings.FirstOrDefault(b => SearchEngine.Normalize(b.Phrase) == SearchEngine.Normalize(heard));
         if (binding != null)
         {
@@ -106,7 +127,7 @@ internal sealed class PluginUi : IDisposable
         var matches = SearchEngine.Find(entries, query);
         if (SearchEngine.Normalize(query).StartsWith("job ", StringComparison.Ordinal) && matches.Count == 1
             && matches[0].Id.StartsWith("gearset:", StringComparison.Ordinal)) Activate(matches[0]);
-        else status = "Heard: " + heard + ". Choose a result, or select Ask.";
+        else status = "Heard: " + heard + ". Choose a result.";
     }
 
     public void Draw()
@@ -114,18 +135,19 @@ internal sealed class PluginUi : IDisposable
         CapturesText = ImGui.GetIO().WantTextInput;
         if (!mainOpen) SearchHasFocus = false;
         fileDialogs.Draw();
-        if (!IsOpen) return;
+        roaming.Draw(ImGuiHelpers.GlobalScale);
+        if (!IsOpen) { SearchHasFocus = false; return; }
         PushTheme();
-        try { if (mainOpen) DrawMain(); if (settingsOpen) DrawSettings(); }
+        try { if (mainOpen) DrawMain(); if (companionOpen) DrawCompanionWindow(); if (settingsOpen) DrawSettings(); }
         finally { ImGui.PopStyleColor(11); ImGui.PopStyleVar(5); }
     }
 
     private static void PushTheme()
     {
         var s = ImGuiHelpers.GlobalScale;
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(22, 18) * s);
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(10, 10) * s);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(10, 8) * s);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(14, 12) * s);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8, 7) * s);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 5) * s);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 12 * s);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 6 * s);
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(.095f, .105f, .13f, .98f));
@@ -150,28 +172,28 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawMain()
     {
-        WindowSize(new(690, 580), new(600, 480));
-        if (!ImGui.Begin("OmniKit###OmniKit.Main", ref mainOpen, ImGuiWindowFlags.NoCollapse)) { ImGui.End(); return; }
+        launcher.Draw(ref mainOpen, ref query, entries, ImGuiHelpers.GlobalScale, Activate,
+            () => { mainOpen = false; OpenSettings(); }, OpenCompanion, OpenWiki, gearFeedback ? status : "");
+        SearchHasFocus = launcher.SearchHasFocus;
+    }
+
+    private void DrawCompanionWindow()
+    {
+        WindowSize(new(560, 490), new(480, 380));
+        if (!ImGui.Begin("Moon companion###OmniKit.Companion", ref companionOpen, ImGuiWindowFlags.NoCollapse)) { ImGui.End(); return; }
         try
         {
             Header(config.SetupCompleted ? "Your XIV toolkit" : "A little help from the moon");
             if (!config.SetupCompleted) { DrawWelcome(); return; }
-            if (ImGui.Button(askMode ? "Search" : "Search selected")) askMode = false;
-            ImGui.SameLine(); if (ImGui.Button(askMode ? "Ask selected" : "Ask")) askMode = true;
-            ImGui.SameLine(); if (ImGui.Button("Settings")) OpenSettings();
             if (config.VoiceEnabled)
             {
-                ImGui.SameLine();
                 if (ImGui.Button(voice.IsListening ? "Stop listening" : "Speak"))
                 { if (voice.IsListening) voice.Cancel(); else StartVoice(false); }
             }
             ImGui.SetNextItemWidth(-1);
             if (focusSearch) { ImGui.SetKeyboardFocusHere(); focusSearch = false; }
-            var submit = ImGui.InputTextWithHint("##query", askMode ? "Ask about XIV..." : "Try community, job paladin, or inventory...",
-                ref query, 4000, ImGuiInputTextFlags.EnterReturnsTrue);
-            SearchHasFocus = ImGui.IsItemActive();
-            if (ImGui.IsItemEdited()) { selected = 0; gearFeedback = false; }
-            if (askMode) DrawAnswer(submit); else DrawResults(submit);
+            var submit = ImGui.InputTextWithHint("##question", "Ask about XIV...", ref question, 4000, ImGuiInputTextFlags.EnterReturnsTrue);
+            DrawAnswer(submit);
             ImGui.BeginChild("main-status", new Vector2(0, 0));
             ImGui.TextWrapped(voice.IsListening ? voice.Status : "Local commands work without AI.  /omnikit settings");
             if (status.Length > 0) ImGui.TextWrapped(status);
@@ -210,55 +232,13 @@ internal sealed class PluginUi : IDisposable
         ImGui.TextWrapped("OmniKit has a local command matcher. It recognizes names, common words like guild or community, and your saved voice shortcuts. It opens game windows and plugins, switches saved gearsets, and runs the interact HUD. No AI account is needed.");
         ImGui.TextColored(Muted, "It does not invent answers or hold an open-ended conversation.");
         if (ImGui.Button("Use without AI", new Vector2(-1, 0)))
-        { config.AiEnabled = false; config.SetupCompleted = true; Save(); focusSearch = true; }
+        { config.AiEnabled = false; config.SetupCompleted = true; Save(); companionOpen = false; OpenMain(); }
         ImGui.Spacing(); ImGui.TextColored(Gold, "Add an AI companion");
         ImGui.TextWrapped("AI adds flexible explanations and conversation about XIV. Questions you submit are sent to your chosen provider, which may charge for use. Local commands still run on your PC. AI replies cannot control the game.");
         if (ImGui.Button("Set up AI", new Vector2(-1, 0)))
-        { config.AiEnabled = false; config.SetupCompleted = true; Save(); section = 2; OpenSettings(); }
+        { config.AiEnabled = false; config.SetupCompleted = true; Save(); companionOpen = false; section = 3; companionTab = 2; OpenSettings(); }
         ImGui.TextWrapped("This preview supports an API key or a compatible local server. Account sign-in is planned; a ChatGPT or Claude subscription is not an API key.");
         ImGui.EndChild();
-    }
-
-    private void DrawResults(bool submit)
-    {
-        var results = SearchEngine.Find(entries, query);
-        selected = Math.Clamp(selected, 0, Math.Max(0, results.Count - 1));
-        if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
-        {
-            if (ImGui.IsKeyPressed(ImGuiKey.DownArrow)) selected = Math.Min(selected + 1, results.Count - 1);
-            if (ImGui.IsKeyPressed(ImGuiKey.UpArrow)) selected = Math.Max(selected - 1, 0);
-        }
-        if (submit && results.Count > 0) Activate(results[selected]);
-        var footer = ImGui.GetTextLineHeightWithSpacing() * (status.Length > 0 ? 4 : 2);
-        ImGui.BeginChild("results", new Vector2(0, -footer));
-        if (results.Count == 0)
-        {
-            ImGui.TextWrapped("No matching command. Try a shorter name, or search a XIV wiki.");
-            if (query.Trim().Length > 0 && ImGui.Button("Search XIV wiki in browser")) OpenWiki(query);
-        }
-        for (var i = 0; i < results.Count; i++)
-        {
-            var entry = results[i];
-            ImGui.PushID(entry.Id);
-            var start = ImGui.GetCursorScreenPos();
-            var width = ImGui.GetContentRegionAvail().X;
-            var rowHeight = ImGui.GetTextLineHeight() * 2 + 16 * ImGuiHelpers.GlobalScale;
-            if (ImGui.Selectable("##action", selected == i, ImGuiSelectableFlags.None, new Vector2(0, rowHeight))) Activate(entry);
-            var draw = ImGui.GetWindowDrawList();
-            var inset = new Vector2(10, 5) * ImGuiHelpers.GlobalScale;
-            draw.AddText(start + inset, ImGui.GetColorU32(ImGuiCol.Text), Fit(entry.Title, width - 24));
-            draw.AddText(start + inset + new Vector2(0, ImGui.GetTextLineHeight() + 3), ImGui.ColorConvertFloat4ToU32(Muted), Fit(entry.Source + "  /  " + entry.Description, width - 24));
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip(entry.Title + "\n" + entry.Description);
-            ImGui.PopID();
-        }
-        ImGui.EndChild();
-    }
-
-    private static string Fit(string value, float width)
-    {
-        if (ImGui.CalcTextSize(value).X <= width) return value;
-        while (value.Length > 1 && ImGui.CalcTextSize(value + "...").X > width) value = value[..^1];
-        return value + "...";
     }
 
     private void Activate(SearchEntry entry)
@@ -280,17 +260,17 @@ internal sealed class PluginUi : IDisposable
         if (!config.AiEnabled)
         {
             ImGui.TextWrapped("AI is off. Search and voice shortcuts still work locally.");
-            if (ImGui.Button("Connect AI")) { section = 2; OpenSettings(); }
+            if (ImGui.Button("Connect AI")) { section = 3; companionTab = 2; selectSettingsTab = true; OpenSettings(); }
         }
         else
         {
-            ImGui.BeginDisabled(pendingAnswer != null || string.IsNullOrWhiteSpace(query));
+            ImGui.BeginDisabled(pendingAnswer != null || string.IsNullOrWhiteSpace(question));
             if (ImGui.Button("Ask companion") || (submit && pendingAnswer == null))
-            { request = new CancellationTokenSource(); pendingAnswer = chat.AskAsync(query, request.Token); answer = "Thinking..."; }
+            { request = new CancellationTokenSource(); pendingAnswer = chat.AskAsync(question, request.Token); answer = "Thinking..."; }
             ImGui.EndDisabled();
             if (pendingAnswer != null) { ImGui.SameLine(); if (ImGui.Button("Cancel")) request?.Cancel(); }
         }
-        ImGui.SameLine(); if (ImGui.Button("Search wiki")) OpenWiki(query);
+        ImGui.SameLine(); if (ImGui.Button("Search wiki")) OpenWiki(question);
         var footer = ImGui.GetTextLineHeightWithSpacing() * (status.Length > 0 ? 4 : 2);
         ImGui.BeginChild("answer", new Vector2(0, -footer));
         ImGui.TextWrapped(answer.Length == 0 ? "Ask a question, or look it up on the XIV wiki. Wiki links currently open in your browser." : answer);
@@ -311,57 +291,67 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawSettings()
     {
-        WindowSize(new(700, 660), new(620, 500));
-        if (!ImGui.Begin("OmniKit Settings###OmniKit.Settings", ref settingsOpen, ImGuiWindowFlags.NoCollapse)) { ImGui.End(); return; }
+        WindowSize(new(590, 460), new(520, 360));
+        // New identity discards the oversized window size saved by the first preview.
+        if (!ImGui.Begin("OmniKit Settings###OmniKit.Settings.Compact", ref settingsOpen, ImGuiWindowFlags.NoCollapse)) { ImGui.End(); return; }
         try
         {
-            ImGui.TextColored(Gold, "MAKE IT YOURS");
-            ImGui.TextColored(Muted, "Changes save automatically on this PC.");
             ImGui.SetNextItemWidth(-1);
-            if (ImGui.InputTextWithHint("##settings-search", "Find a setting: key, voice, gear, AI, export...", ref settingsSearch, 100))
+            if (ImGui.InputTextWithHint("##settings-search", "Find a setting...", ref settingsSearch, 100))
             {
+                hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
-                if (new[] { "interact", "hud", "gather", "gear", "target" }.Any(filter.Contains)) section = 1;
-                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train" }.Any(filter.Contains)) section = 2;
-                else if (new[] { "data", "export", "import", "json", "source", "umbra" }.Any(filter.Contains)) section = 3;
+                if (filter.Contains("hud") || filter.Contains("target")) section = 2;
+                else if (new[] { "interact", "gather", "gear" }.Any(filter.Contains)) section = 1;
+                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box" }.Any(filter.Contains))
+                { section = 3; companionTab = filter.Contains("ai") || filter.Contains("brain") ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
+                else if (new[] { "data", "export", "import", "json", "source", "umbra", "wiki" }.Any(filter.Contains)) section = 4;
                 else if (filter.Contains("key") || filter.Contains("shortcut")) section = 0;
+                selectSettingsTab = true;
             }
-            for (var i = 0; i < Sections.Length; i++)
+            if (ImGui.BeginTabBar("settings-tabs", ImGuiTabBarFlags.FittingPolicyScroll))
             {
-                if (i > 0) ImGui.SameLine();
-                if (ImGui.Button((section == i ? "• " : "") + Sections[i])) section = i;
+                var requestedSection = selectSettingsTab ? section : -1;
+                for (var i = 0; i < Sections.Length; i++)
+                {
+                    var flags = requestedSection == i ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
+                    if (!ImGui.BeginTabItem(Sections[i], flags)) continue;
+                    if (section != i) hotkeys.Cancel();
+                    section = i;
+                    ImGui.BeginChild("settings-body-" + i, new Vector2(0, -ImGui.GetTextLineHeightWithSpacing() * 2));
+                    switch (i)
+                    {
+                        case 0: DrawShortcuts(); break;
+                        case 1: DrawInteraction(); break;
+                        case 2: DrawHudSettings(); break;
+                        case 3: DrawCompanion(); break;
+                        case 4: DrawData(); break;
+                    }
+                    ImGui.EndChild(); ImGui.EndTabItem();
+                }
+                ImGui.EndTabBar(); selectSettingsTab = false;
             }
-            ImGui.Spacing();
-            ImGui.BeginChild("settings-body", new Vector2(0, -ImGui.GetTextLineHeightWithSpacing() * 3));
-            switch (section)
-            {
-                case 0: DrawShortcuts(); break;
-                case 1: DrawInteraction(); break;
-                case 2: DrawCompanion(); break;
-                case 3: DrawData(); break;
-            }
-            ImGui.EndChild();
             ImGui.BeginChild("settings-status", new Vector2(0, 0));
-            ImGui.TextWrapped(status.Length > 0 ? status : "Tip: every feature here is optional. Start with Search, then turn on what helps.");
+            ImGui.TextWrapped(status.Length > 0 ? status : "Changes save automatically.");
             ImGui.EndChild();
         }
-        finally { ImGui.End(); }
+        finally { ImGui.End(); if (!settingsOpen) hotkeys.Cancel(); }
     }
 
     private void DrawShortcuts()
     {
         Heading("Open OmniKit");
         if (ImGui.Checkbox("Enable launcher shortcut", ref config.LauncherEnabled)) Save();
-        var old = (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier, config.InteractKey);
-        var changed = KeyPicker("Search menu", ref config.LauncherKey, ref config.LauncherModifier);
-        changed |= KeyPicker("Settings", ref config.SettingsKey, ref config.SettingsModifier);
+        var old = (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier);
+        var changed = hotkeys.Draw("Search menu", ref config.LauncherKey, ref config.LauncherModifier);
+        changed |= hotkeys.Draw("Open settings", ref config.SettingsKey, ref config.SettingsModifier);
         if (changed)
         {
             if ((config.LauncherKey == config.SettingsKey && config.LauncherModifier == config.SettingsModifier)
-                || (config.LauncherModifier == 0 && config.LauncherKey == config.InteractKey)
-                || (config.SettingsModifier == 0 && config.SettingsKey == config.InteractKey))
+                || (config.LauncherModifier == config.InteractModifier && config.LauncherKey == config.InteractKey)
+                || (config.SettingsModifier == config.InteractModifier && config.SettingsKey == config.InteractKey))
             {
-                (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier, config.InteractKey) = old;
+                (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier) = old;
                 status = "Choose different shortcuts for Search, Settings, and Interact.";
             }
             else Save();
@@ -376,24 +366,19 @@ internal sealed class PluginUi : IDisposable
     private void DrawInteraction()
     {
         Heading("Look, then interact");
-        if (ImGui.Checkbox("Enable soft interaction", ref config.SoftInteractEnabled)) Save();
+        if (ImGui.Checkbox("Enable soft interaction", ref config.SoftInteractEnabled)) { hotkeys.Cancel(); Save(); }
         ImGui.TextWrapped("Look toward a nearby NPC or usable object, then press your interact key. Nothing happens automatically just because you look at it.");
         if (!config.SoftInteractEnabled) return;
-        var old = config.InteractKey;
-        if (KeyCombo("Interact key", ref config.InteractKey))
+        var old = (config.InteractKey, config.InteractModifier);
+        if (hotkeys.Draw("Interact key", ref config.InteractKey, ref config.InteractModifier))
         {
-            if ((config.LauncherModifier == 0 && config.InteractKey == config.LauncherKey) || (config.SettingsModifier == 0 && config.InteractKey == config.SettingsKey))
-            { config.InteractKey = old; status = "The interact key needs its own shortcut."; }
+            if ((config.LauncherModifier == config.InteractModifier && config.InteractKey == config.LauncherKey) || (config.SettingsModifier == config.InteractModifier && config.InteractKey == config.SettingsKey))
+            { (config.InteractKey, config.InteractModifier) = old; status = "The interact key needs its own shortcut."; }
             else Save();
         }
-        if (ImGui.Checkbox("Show the current target on screen", ref config.InteractionHudEnabled)) Save();
-        if (config.InteractionHudEnabled)
+        VisibleTarget();
+        if (ImGui.CollapsingHeader("Gathering outfits"))
         {
-            if (ImGui.SliderFloat("Prompt height", ref config.InteractionHudOffsetY, -400, 400, "%.0f")) Save();
-            ImGui.TextColored(Muted, "Negative moves it up. Positive moves it down.");
-        }
-        ImGui.TextWrapped(interaction.CandidateName is { } target ? "Current target: " + target : interaction.Hint ?? "Look at a nearby interactable object to find a target.");
-        Heading("Gathering outfits");
         if (ImGui.Checkbox("Switch to gathering gear when I interact", ref config.GatheringAutoSwitch)) Save();
         if (config.GatheringAutoSwitch)
         {
@@ -404,12 +389,35 @@ internal sealed class PluginUi : IDisposable
             ImGui.TextWrapped("Returning stops if you change your gear or job yourself. OmniKit does not choose items or gather for you.");
             ImGui.TextWrapped(interaction.Gathering.Status);
         }
+        }
         if (ImGui.CollapsingHeader("Fine-tune targeting"))
         {
             if (ImGui.SliderFloat("Aim area", ref config.InteractionCone, .025f, .30f, "%.3f")) Save();
             if (ImGui.SliderFloat("Maximum distance", ref config.InteractionDistance, 1, 6, "%.1f yalms")) Save();
             ImGui.TextWrapped("A smaller aim area is more precise. The game still checks whether you can use the target.");
         }
+    }
+
+    private void VisibleTarget()
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, Gold);
+        ImGui.TextWrapped("Visible target: " + (interaction.CandidateName ?? "None"));
+        ImGui.PopStyleColor();
+        ImGui.TextWrapped(interaction.Hint ?? "Look toward a nearby usable object.");
+    }
+
+    private void DrawHudSettings()
+    {
+        if (ImGui.Checkbox("Show visible target on screen", ref config.InteractionHudEnabled)) Save();
+        ImGui.TextWrapped("Styled text only. It stays visible through menus and disappears when there is no target.");
+        VisibleTarget();
+        if (!config.InteractionHudEnabled) return;
+        if (ImGui.Checkbox("Lock position", ref config.InteractionHudLocked)) Save();
+        ImGui.TextWrapped("Shift + right-click the visible text for Move, Lock, Hide, or these settings.");
+        if (ImGui.SliderFloat("Text size", ref config.InteractionHudScale, .5f, 2, "%.2f")) Save();
+        if (ImGui.SliderFloat("Horizontal offset", ref config.InteractionHudOffsetX, -800, 800, "%.0f")) Save();
+        if (ImGui.SliderFloat("Vertical offset", ref config.InteractionHudOffsetY, -500, 500, "%.0f")) Save();
+        if (ImGui.Button("Reset HUD position")) { config.InteractionHudOffsetX = 0; config.InteractionHudOffsetY = 120; Save(); }
     }
 
     private void GearCombo(string label, ref int value, string job)
@@ -430,6 +438,21 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawCompanion()
     {
+        if (!ImGui.BeginTabBar("companion-options")) return;
+        foreach (var (index, title) in new[] { (0, "Appearance"), (1, "Voice"), (2, "AI") })
+        {
+            var flags = shownCompanionTab != companionTab && companionTab == index ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
+            if (!ImGui.BeginTabItem(title, flags)) continue;
+            shownCompanionTab = index;
+            switch (index) { case 0: DrawAppearance(); break; case 1: DrawVoiceSettings(); break; case 2: DrawAiSettings(); break; }
+            ImGui.EndTabItem();
+        }
+        ImGui.EndTabBar();
+        companionTab = shownCompanionTab;
+    }
+
+    private void DrawAppearance()
+    {
         Heading("Your moon companion");
         if (ImGui.Checkbox("Show companion", ref config.AvatarEnabled)) Save();
         if (config.AvatarEnabled)
@@ -441,17 +464,30 @@ internal sealed class PluginUi : IDisposable
                 ImGui.EndCombo();
             }
             if (ImGui.Checkbox("Animate companion", ref config.AnimationsEnabled)) Save();
+            if (ImGui.SliderFloat("Companion size", ref config.CompanionSize, 48, 192, "%.0f")) Save();
+            if (ImGui.Button("Draw roaming area")) { roaming.BeginChooseArea(); settingsOpen = false; }
+            ImGui.TextWrapped("Drag a box over the game. Your companion walks inside it. Escape cancels. Click the companion to talk.");
         }
+        if (ImGui.Button("Open companion conversation")) OpenCompanion();
+    }
+
+    private void DrawVoiceSettings()
+    {
         Heading("Voice shortcuts");
         if (ImGui.Checkbox("Enable voice input", ref config.VoiceEnabled)) Save();
         ImGui.TextWrapped("Speech recognition runs on Windows. The microphone opens only when you press Speak or Practice, then stops after one phrase. Typing always works.");
         if (config.VoiceEnabled) DrawVoiceBindings();
+    }
+
+    private void DrawAiSettings()
+    {
         Heading("Optional AI");
         ImGui.TextWrapped("Your local command matcher works without AI: names, common words, saved voice phrases, jobs and game actions. AI adds open-ended answers about XIV. Only questions you submit with Ask are sent to the provider.");
         if (ImGui.Checkbox("Use AI for questions", ref config.AiEnabled))
         { if (!config.AiEnabled) request?.Cancel(); Save(); }
         if (!config.AiEnabled) return;
-        ImGui.TextWrapped("1. Choose your provider and model.\n2. Paste its API key and save it.\n3. Open Search, select Ask, and try a question.");
+        ImGui.TextWrapped("1. Choose your provider and model.\n2. Paste its API key and save it.\n3. Open your companion and ask a question.");
+        if (ImGui.Button("Open companion")) OpenCompanion();
         ImGui.TextWrapped("API use may cost money. Account sign-in is not available in this preview.");
         ImGui.SetNextItemWidth(-1);
         if (ImGui.InputTextWithHint("##model", "Provider model name", ref config.AiModel, 200)) Save();
@@ -548,7 +584,7 @@ internal sealed class PluginUi : IDisposable
                     using var input = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                     if (input.Length > 262144) throw new IOException();
                     using var reader = new StreamReader(input);
-                    importJson = reader.ReadToEnd(); confirmImport = true; settingsOpen = true; section = 3;
+                    importJson = reader.ReadToEnd(); confirmImport = true; settingsOpen = true; section = 4; selectSettingsTab = true;
                 }
                 catch { status = "Could not read that JSON file. Choose an OmniKit export under 256 KB."; }
             });
@@ -561,9 +597,13 @@ internal sealed class PluginUi : IDisposable
             {
                 try
                 {
-                    store.ImportInto(config, importJson); config.AiEnabled = false; providerEndpoint = config.AiEndpoint;
+                    var imported = store.Upgrade(config);
+                    store.ImportInto(imported, importJson); imported.AiEnabled = false;
+                    store.Save(imported);
+                    store.ImportInto(config, store.Export(imported));
+                    providerEndpoint = config.AiEndpoint;
                     request?.Cancel(); voice.Cancel();
-                    if (Save()) { status = "Settings imported. AI is off until you enable it."; importJson = ""; }
+                    status = "Settings imported. AI is off until you enable it."; importJson = "";
                 }
                 catch { status = "Import rejected. Use an OmniKit export with valid settings. Your settings were kept."; }
                 ImGui.CloseCurrentPopup();
@@ -585,38 +625,10 @@ internal sealed class PluginUi : IDisposable
             { config.WikiOverlayName = name; Save(); }
             if (ImGui.Button("Test wiki overlay")) OpenWiki("gathering");
         }
-        if (ImGui.Button("Open setup again")) { config.SetupCompleted = false; Save(); OpenMain(); }
+        if (ImGui.Button("Open setup again")) { config.SetupCompleted = false; Save(); OpenCompanion(); }
     }
 
     private static void Heading(string title) { ImGui.Spacing(); ImGui.TextColored(Gold, title); ImGui.Spacing(); }
-
-    private static bool KeyPicker(string label, ref VirtualKey key, ref VirtualKey modifier)
-    {
-        ImGui.PushID(label); ImGui.TextUnformatted(label);
-        var changed = false;
-        ImGui.SetNextItemWidth(150 * ImGuiHelpers.GlobalScale);
-        var name = modifier == VirtualKey.MENU ? "Alt" : modifier == VirtualKey.CONTROL ? "Ctrl" : modifier == VirtualKey.SHIFT ? "Shift" : "No modifier";
-        if (ImGui.BeginCombo("##modifier", name))
-        {
-            foreach (var item in new[] { ((VirtualKey)0, "No modifier"), (VirtualKey.CONTROL, "Ctrl"), (VirtualKey.MENU, "Alt"), (VirtualKey.SHIFT, "Shift") })
-                if (ImGui.Selectable(item.Item2, modifier == item.Item1)) { modifier = item.Item1; changed = true; }
-            ImGui.EndCombo();
-        }
-        ImGui.SameLine(); changed |= KeyCombo("##key", ref key);
-        ImGui.PopID(); return changed;
-    }
-
-    private static bool KeyCombo(string label, ref VirtualKey key)
-    {
-        var changed = false; ImGui.SetNextItemWidth(150 * ImGuiHelpers.GlobalScale);
-        if (!ImGui.BeginCombo(label, key.ToString())) return false;
-        foreach (var code in Enumerable.Range(0x30, 10).Concat(Enumerable.Range(0x41, 26)).Concat(Enumerable.Range(0x70, 24)).Concat(new[] { 0x20, 0x09, 0x2D, 0x2E, 0x24, 0x23, 0x21, 0x22 }))
-        {
-            var value = (VirtualKey)code;
-            if (ImGui.Selectable(value.ToString(), value == key)) { key = value; changed = true; }
-        }
-        ImGui.EndCombo(); return changed;
-    }
 
     private bool Save()
     {
@@ -624,5 +636,9 @@ internal sealed class PluginUi : IDisposable
         catch { status = "Could not save settings. Check the values and local storage access."; return false; }
     }
 
-    public void Dispose() { request?.Cancel(); request?.Dispose(); apiKey = ""; }
+    public void Dispose()
+    {
+        interaction.ConfigureHudRequested -= OpenHudSettings;
+        hotkeys.Cancel(); roaming.CancelChooseArea(); request?.Cancel(); request?.Dispose(); apiKey = "";
+    }
 }

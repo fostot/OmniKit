@@ -2,9 +2,9 @@
 
 Your everyday toolkit for XIV, with Bimble the moon bunny (or a moon bear).
 
-**Early preview: 0.1.0-dev.1 · Dalamud API 15 · Windows x64.**
-Build and isolated tests are separate from game validation. This preview has not
-yet been observed running inside FFXIV. See [feature status](docs/FEATURES.md)
+**Early preview: 0.1.0-dev.2 · Dalamud API 15 · Windows x64.**
+Build and isolated tests are separate from game validation. The compact launcher
+layout still needs in-game acceptance. See [feature status](docs/FEATURES.md)
 for the full scope and [game checklist](docs/IN-GAME-CHECKLIST.md) for acceptance.
 
 ## Install
@@ -17,19 +17,28 @@ for the full scope and [game checklist](docs/IN-GAME-CHECKLIST.md) for acceptanc
    ```
 
 3. Open `/xlplugins`, search **OmniKit**, and install it.
-4. Press **Alt + Space**, or type `/omnikit`. First run explains the local features
-   and lets you choose **Use without AI** or **Set up AI**.
+4. Press **Alt + Space**, or type `/omnikit`. The launcher opens as a search field
+   and settings gear. Type to see matching results; clear the query to collapse it.
 
-Open settings with **Ctrl + F10** or `/omnikit settings`. Both shortcuts are
-changeable. A desktop launcher can also own Alt + Space; change one shortcut if
-they overlap. Soft interaction, voice and AI start off until you enable them.
+Open settings with the gear, **Ctrl + F10** or `/omnikit settings`. From settings,
+open the separate companion window for welcome guidance, voice controls and
+optional AI chat. Both shortcuts are changeable. A desktop launcher can also own
+Alt + Space; change one shortcut if they overlap. Soft interaction, voice and AI
+start off until you enable them.
+
+Settings have five tabs: **Launcher**, **Interact**, **HUD**, **Companion** and
+**Data**. Companion groups **Appearance**, **Voice** and **AI**. Click a shortcut
+button to record it: hold Ctrl, Alt and/or Shift, press the main key, then release
+all keys. Escape cancels recording.
 
 ## What this preview includes
 
 - Search game windows, loaded plugins, community recruitment and saved gearsets.
   Try `guild`, `community`, `free company`, `inventory` or `job paladin`.
 - Optional camera-directed interaction: look toward an eligible nearby object
-  and press the configured key. The optional HUD names the candidate. No valid
+  and press the configured chord. The optional text HUD names the candidate,
+  including a preview while actions are paused. Shift + right-click it for
+  Move, Lock/Unlock, Hide or Settings. No valid
   target means the key is left alone. One press requests one native interaction.
 - Optional gathering gear changes and restoration after an observed gathering
   session, with cancellation when you change gear yourself. Save your gearsets in
@@ -39,7 +48,11 @@ they overlap. Soft interaction, voice and AI start off until you enable them.
 - Optional Responses-compatible AI text chat with endpoint-bound encrypted key
   storage. AI receives the submitted question, not game state or plugin files.
   Replies cannot execute commands. The local matcher does not need AI.
-- SQLite preferences, JSON export/import, selectable avatars and optional motion.
+- A walking 2D moon bunny or bear. In **Companion → Appearance**, choose **Draw
+  roaming area** and drag a box over the game. Click the companion to talk;
+  disable animation to keep it still, or hide it altogether.
+- SQLite preferences and JSON export/import, including saved chords, HUD position
+  and the companion area. Older settings migrate to the new format.
 - Native Umbra menu integration, an optional Umbra toolbar widget, and optional
   in-game wiki navigation through Browsingway.
 
@@ -81,6 +94,9 @@ Keys use separate Windows DPAPI storage, bound to their provider endpoint.
 Exports never include keys, recordings or conversations. Exports can contain
 your custom provider address and voice phrases, so review them before sharing.
 Import always disables AI in the interface until you explicitly enable it again.
+Schema v2 converts older Ctrl/Alt/Shift virtual-key values into complete chord
+masks while retaining existing preferences. Failed database migrations keep the
+previous snapshot.
 
 ## Build and test
 
@@ -94,11 +110,16 @@ dotnet build src/OmniKit.Umbra/OmniKit.Umbra.csproj -c Release
 dotnet run --project tests/SearchTests/SearchTests.csproj -c Release
 dotnet run --project tests/GatheringStateTests.csproj -c Release
 dotnet run --project tests/StorageTests/StorageTests.csproj -c Release
+dotnet run --project tests/HotkeyTests/HotkeyTests.csproj -c Release
 pwsh scripts/Package.ps1
 ```
 
 Release packages contain only reviewed runtime files and assets. Local databases,
 credentials, build intermediates and user exports are not source or backup content.
+The core uses base version `0.1.0`, development revision `0.1.0-dev.2` and numeric
+assembly/file version `0.1.0.1`. The unchanged Umbra companion remains at assembly
+version `0.1.0.0`. Packaging verifies source and build versions and refuses an
+existing distribution revision; previous release artifacts stay unchanged.
 See [IPC integration](docs/INTEGRATION.md) for exposing additional plugin actions.
 
 ## References and artwork

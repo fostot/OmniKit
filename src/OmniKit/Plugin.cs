@@ -25,7 +25,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         pluginInterface.Create<Services>();
         store = new LocalStore(pluginInterface.ConfigDirectory.FullName);
-        Configuration = store.Load() ?? pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        Configuration = store.Load() ?? store.Upgrade(pluginInterface.GetPluginConfig() as Configuration ?? new Configuration());
         Configuration.Persist = store.Save;
         Configuration.Save();
         sources = new SourceRegistry();
@@ -51,7 +51,8 @@ public sealed class Plugin : IDalamudPlugin
     private void Update(IFramework framework)
     {
         if (disposed) return;
-        shortcuts.Update(Configuration, ui.CapturesText, ui.SearchHasFocus, ui.ToggleMain, OpenSettings);
+        ui.SuppressBindingKeys();
+        shortcuts.Update(Configuration, ui.CapturesText, ui.SearchHasFocus, ui.ToggleMain, OpenSettings, ui.CapturingBinding);
         ui.Update();
         interaction.Update(ui.IsOpen);
     }

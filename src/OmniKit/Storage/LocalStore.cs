@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dalamud.Game.ClientState.Keys;
 using Microsoft.Data.Sqlite;
+using OmniKit.Input;
 using OmniKit.Search;
 
 namespace OmniKit.Storage;
@@ -14,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -42,7 +43,7 @@ public sealed class LocalStore
         using var version = connection.CreateCommand();
         version.CommandText = "PRAGMA user_version;";
         var existingVersion = Convert.ToInt32(version.ExecuteScalar());
-        if (existingVersion != 0 && existingVersion != SchemaVersion)
+        if (existingVersion is < 0 or > SchemaVersion)
             throw new InvalidOperationException("This settings database uses an unsupported schema. The database was preserved.");
         using var transaction = connection.BeginTransaction();
         using var schema = connection.CreateCommand();
@@ -53,9 +54,36 @@ public sealed class LocalStore
                 SchemaVersion INTEGER NOT NULL,
                 Json TEXT NOT NULL
             );
-            PRAGMA user_version = 1;
             """;
         schema.ExecuteNonQuery();
+        if (existingVersion < SchemaVersion)
+        {
+            using var read = connection.CreateCommand();
+            read.Transaction = transaction;
+            read.CommandText = "SELECT SchemaVersion, Json FROM OmniKitSettings WHERE Id = 1;";
+            string? migratedJson = null;
+            using (var row = read.ExecuteReader())
+            {
+                if (row.Read())
+                {
+                    var settings = Parse(row.GetString(1), row.GetInt32(0));
+                    migratedJson = JsonSerializer.Serialize(new Snapshot { Settings = settings }, JsonOptions);
+                }
+            }
+            if (migratedJson != null)
+            {
+                using var update = connection.CreateCommand();
+                update.Transaction = transaction;
+                update.CommandText = "UPDATE OmniKitSettings SET SchemaVersion = $schema, Json = $json WHERE Id = 1;";
+                update.Parameters.AddWithValue("$schema", SchemaVersion);
+                update.Parameters.AddWithValue("$json", migratedJson);
+                update.ExecuteNonQuery();
+            }
+        }
+        using var setVersion = connection.CreateCommand();
+        setVersion.Transaction = transaction;
+        setVersion.CommandText = "PRAGMA user_version = 2;";
+        setVersion.ExecuteNonQuery();
         transaction.Commit();
     }
 
@@ -71,7 +99,7 @@ public sealed class LocalStore
             if (row.GetInt32(0) != SchemaVersion)
                 throw new InvalidOperationException("This saved configuration uses an unsupported schema. The database was preserved.");
             var configuration = new Configuration();
-            Apply(configuration, Parse(row.GetString(1)));
+            Apply(configuration, Parse(row.GetString(1), row.GetInt32(0)));
             return configuration;
         }
     }
@@ -101,8 +129,21 @@ public sealed class LocalStore
     {
         ArgumentNullException.ThrowIfNull(configuration);
         var settings = Settings.From(configuration);
+        UpgradeLegacy(settings);
         Validate(settings);
         return JsonSerializer.Serialize(new Snapshot { Settings = settings }, JsonOptions);
+    }
+
+    /// <summary>Upgrade the legacy Dalamud configuration fallback without changing its source object.</summary>
+    public Configuration Upgrade(Configuration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var settings = Settings.From(configuration);
+        UpgradeLegacy(settings);
+        Validate(settings);
+        var result = new Configuration();
+        Apply(result, settings);
+        return result;
     }
 
     public void ImportInto(Configuration target, string json)
@@ -117,7 +158,7 @@ public sealed class LocalStore
         Apply(target, settings);
     }
 
-    private static Settings Parse(string json)
+    private static Settings Parse(string json, int? expectedSchema = null)
     {
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaximumJsonBytes || Encoding.UTF8.GetByteCount(json) > MaximumJsonBytes)
             throw new InvalidOperationException("Settings must be a non-empty JSON document no larger than 256 KiB.");
@@ -125,16 +166,23 @@ public sealed class LocalStore
         {
             using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 8 });
             RequireFields(document.RootElement, [nameof(Snapshot.SchemaVersion), nameof(Snapshot.Settings)]);
+            var schema = document.RootElement.GetProperty(nameof(Snapshot.SchemaVersion));
+            if (!schema.TryGetInt32(out var schemaVersion) || schemaVersion is not (1 or SchemaVersion) ||
+                (expectedSchema.HasValue && schemaVersion != expectedSchema.Value))
+                throw new InvalidOperationException("Unsupported or inconsistent settings schema version.");
             var settingsElement = document.RootElement.GetProperty(nameof(Snapshot.Settings));
-            RequireFields(settingsElement, typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Instance).Select(field => field.Name));
+            var fields = typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Instance).Select(field => field.Name);
+            if (schemaVersion == 1) fields = fields.Except(VersionTwoFields);
+            RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
                 throw new InvalidOperationException("Voice bindings must be an array containing at most 100 entries.");
             foreach (var binding in bindings.EnumerateArray())
                 RequireFields(binding, [nameof(VoiceBinding.Phrase), nameof(VoiceBinding.ActionId)]);
             var snapshot = JsonSerializer.Deserialize<Snapshot>(json, JsonOptions);
-            if (snapshot is null || snapshot.SchemaVersion != SchemaVersion)
+            if (snapshot is null || snapshot.Settings.Version != schemaVersion)
                 throw new InvalidOperationException("Unsupported settings schema version.");
+            UpgradeLegacy(snapshot.Settings);
             Validate(snapshot.Settings);
             return snapshot.Settings;
         }
@@ -143,6 +191,36 @@ public sealed class LocalStore
             throw new InvalidOperationException("Settings JSON contains invalid syntax or a value of the wrong type.");
         }
     }
+
+    private static readonly string[] VersionTwoFields =
+    [
+        nameof(Settings.InteractModifier), nameof(Settings.InteractionHudLocked),
+        nameof(Settings.InteractionHudOffsetX), nameof(Settings.InteractionHudScale),
+        nameof(Settings.CompanionBoxLeft), nameof(Settings.CompanionBoxTop), nameof(Settings.CompanionBoxRight),
+        nameof(Settings.CompanionBoxBottom), nameof(Settings.CompanionSize),
+    ];
+
+    private static void UpgradeLegacy(Settings settings)
+    {
+        if (settings.Version != 1) return;
+        // Old values are Win32 virtual-key codes, never bit masks. Convert on a
+        // detached DTO so a failure cannot partially alter the live configuration.
+        var launcher = LegacyModifier(settings.LauncherModifier);
+        var setup = LegacyModifier(settings.SettingsModifier);
+        settings.LauncherModifier = (int)launcher;
+        settings.SettingsModifier = (int)setup;
+        settings.InteractModifier = 0;
+        settings.Version = SchemaVersion;
+    }
+
+    private static ModifierKeys LegacyModifier(int key) => key switch
+    {
+        0 => ModifierKeys.None,
+        16 => ModifierKeys.Shift,
+        17 => ModifierKeys.Control,
+        18 => ModifierKeys.Alt,
+        _ => throw new InvalidOperationException("Legacy settings contain an unsupported modifier key."),
+    };
 
     private static void RequireFields(JsonElement value, IEnumerable<string> fields)
     {
@@ -158,19 +236,27 @@ public sealed class LocalStore
 
     private static void Validate(Settings settings)
     {
-        if (settings is null || settings.Version != 1)
+        if (settings is null || settings.Version != SchemaVersion)
             throw new InvalidOperationException("Unsupported configuration version.");
         if (!ValidKey(settings.LauncherKey) || !ValidKey(settings.SettingsKey) || !ValidKey(settings.InteractKey) ||
-            !ValidModifier(settings.LauncherModifier) || !ValidModifier(settings.SettingsModifier))
+            !HotkeyChord.IsValidModifiers((ModifierKeys)settings.LauncherModifier) || !HotkeyChord.IsValidModifiers((ModifierKeys)settings.SettingsModifier) ||
+            !HotkeyChord.IsValidModifiers((ModifierKeys)settings.InteractModifier))
             throw new InvalidOperationException("Choose valid keyboard keys and supported modifiers.");
-        if ((settings.LauncherKey == settings.SettingsKey && ModifierGroup(settings.LauncherModifier) == ModifierGroup(settings.SettingsModifier)) ||
-            (settings.LauncherModifier == 0 && settings.LauncherKey == settings.InteractKey) ||
-            (settings.SettingsModifier == 0 && settings.SettingsKey == settings.InteractKey))
+        if ((settings.LauncherKey == settings.SettingsKey && settings.LauncherModifier == settings.SettingsModifier) ||
+            (settings.LauncherModifier == settings.InteractModifier && settings.LauncherKey == settings.InteractKey) ||
+            (settings.SettingsModifier == settings.InteractModifier && settings.SettingsKey == settings.InteractKey))
             throw new InvalidOperationException("Launcher, settings and interaction shortcuts must not conflict.");
         if (!FiniteRange(settings.InteractionCone, 0.025f, 0.3f) ||
             !FiniteRange(settings.InteractionDistance, 1f, 6f) ||
-            !FiniteRange(settings.InteractionHudOffsetY, -400f, 400f))
+            !FiniteRange(settings.InteractionHudOffsetX, -10000f, 10000f) ||
+            !FiniteRange(settings.InteractionHudOffsetY, -10000f, 10000f) ||
+            !FiniteRange(settings.InteractionHudScale, .5f, 2f))
             throw new InvalidOperationException("Interaction sensitivity, distance or HUD position is outside the supported range.");
+        if (!FiniteRange(settings.CompanionBoxLeft, 0f, 1f) || !FiniteRange(settings.CompanionBoxRight, 0f, 1f) ||
+            !FiniteRange(settings.CompanionBoxTop, 0f, 1f) || !FiniteRange(settings.CompanionBoxBottom, 0f, 1f) ||
+            settings.CompanionBoxLeft >= settings.CompanionBoxRight || settings.CompanionBoxTop >= settings.CompanionBoxBottom ||
+            !FiniteRange(settings.CompanionSize, 48f, 192f))
+            throw new InvalidOperationException("The companion area must be an ordered rectangle inside the viewport, with a supported companion size.");
         if (settings.MinerGearset is < -1 or > 99 || settings.BotanistGearset is < -1 or > 99)
             throw new InvalidOperationException("Gathering gearset indices must be -1 for automatic selection or between 0 and 99.");
         if (settings.Avatar is not ("Bimble" or "Moonbear"))
@@ -196,11 +282,7 @@ public sealed class LocalStore
         }
     }
 
-    private static bool ValidKey(int key) => key is > 7 and < 255 &&
-        Enum.IsDefined((VirtualKey)key) && !ValidModifier(key) && key is not (91 or 92 or >= 160 and <= 165);
-
-    private static bool ValidModifier(int key) => key is 0 or 16 or 17 or 18;
-    private static int ModifierGroup(int key) => key switch { 160 or 161 => 16, 162 or 163 => 17, 164 or 165 => 18, _ => key };
+    private static bool ValidKey(int key) => key is > 7 and < 255 && HotkeyChord.IsValidKey((VirtualKey)key);
     private static bool FiniteRange(float value, float minimum, float maximum) => float.IsFinite(value) && value >= minimum && value <= maximum;
 
     private static bool ValidEndpoint(string? value, out Uri? endpoint)
@@ -227,15 +309,19 @@ public sealed class LocalStore
         target.SetupCompleted = value.SetupCompleted;
         target.LauncherEnabled = value.LauncherEnabled;
         target.LauncherKey = (VirtualKey)value.LauncherKey;
-        target.LauncherModifier = (VirtualKey)value.LauncherModifier;
+        target.LauncherModifier = (ModifierKeys)value.LauncherModifier;
         target.SettingsKey = (VirtualKey)value.SettingsKey;
-        target.SettingsModifier = (VirtualKey)value.SettingsModifier;
+        target.SettingsModifier = (ModifierKeys)value.SettingsModifier;
         target.SoftInteractEnabled = value.SoftInteractEnabled;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
         target.InteractKey = (VirtualKey)value.InteractKey;
+        target.InteractModifier = (ModifierKeys)value.InteractModifier;
         target.InteractionCone = value.InteractionCone;
         target.InteractionDistance = value.InteractionDistance;
         target.InteractionHudOffsetY = value.InteractionHudOffsetY;
+        target.InteractionHudLocked = value.InteractionHudLocked;
+        target.InteractionHudOffsetX = value.InteractionHudOffsetX;
+        target.InteractionHudScale = value.InteractionHudScale;
         target.GatheringAutoSwitch = value.GatheringAutoSwitch;
         target.GatheringRestore = value.GatheringRestore;
         target.MinerGearset = value.MinerGearset;
@@ -243,6 +329,11 @@ public sealed class LocalStore
         target.AvatarEnabled = value.AvatarEnabled;
         target.AnimationsEnabled = value.AnimationsEnabled;
         target.Avatar = value.Avatar;
+        target.CompanionBoxLeft = value.CompanionBoxLeft;
+        target.CompanionBoxTop = value.CompanionBoxTop;
+        target.CompanionBoxRight = value.CompanionBoxRight;
+        target.CompanionBoxBottom = value.CompanionBoxBottom;
+        target.CompanionSize = value.CompanionSize;
         target.WikiInGame = value.WikiInGame;
         target.WikiOverlayName = value.WikiOverlayName;
         target.VoiceEnabled = value.VoiceEnabled;
@@ -274,9 +365,13 @@ public sealed class LocalStore
         public bool SoftInteractEnabled;
         public bool InteractionHudEnabled;
         public int InteractKey;
+        public int InteractModifier;
         public float InteractionCone;
         public float InteractionDistance;
         public float InteractionHudOffsetY;
+        public bool InteractionHudLocked = true;
+        public float InteractionHudOffsetX;
+        public float InteractionHudScale = 1f;
         public bool GatheringAutoSwitch;
         public bool GatheringRestore;
         public int MinerGearset;
@@ -284,6 +379,11 @@ public sealed class LocalStore
         public bool AvatarEnabled;
         public bool AnimationsEnabled;
         public string Avatar = "Bimble";
+        public float CompanionBoxLeft = .72f;
+        public float CompanionBoxTop = .55f;
+        public float CompanionBoxRight = .95f;
+        public float CompanionBoxBottom = .92f;
+        public float CompanionSize = 96f;
         public bool WikiInGame;
         public string WikiOverlayName = "omnikit";
         public bool VoiceEnabled;
@@ -304,9 +404,13 @@ public sealed class LocalStore
             SoftInteractEnabled = value.SoftInteractEnabled,
             InteractionHudEnabled = value.InteractionHudEnabled,
             InteractKey = (int)value.InteractKey,
+            InteractModifier = (int)value.InteractModifier,
             InteractionCone = value.InteractionCone,
             InteractionDistance = value.InteractionDistance,
             InteractionHudOffsetY = value.InteractionHudOffsetY,
+            InteractionHudLocked = value.InteractionHudLocked,
+            InteractionHudOffsetX = value.InteractionHudOffsetX,
+            InteractionHudScale = value.InteractionHudScale,
             GatheringAutoSwitch = value.GatheringAutoSwitch,
             GatheringRestore = value.GatheringRestore,
             MinerGearset = value.MinerGearset,
@@ -314,6 +418,11 @@ public sealed class LocalStore
             AvatarEnabled = value.AvatarEnabled,
             AnimationsEnabled = value.AnimationsEnabled,
             Avatar = value.Avatar,
+            CompanionBoxLeft = value.CompanionBoxLeft,
+            CompanionBoxTop = value.CompanionBoxTop,
+            CompanionBoxRight = value.CompanionBoxRight,
+            CompanionBoxBottom = value.CompanionBoxBottom,
+            CompanionSize = value.CompanionSize,
             WikiInGame = value.WikiInGame,
             WikiOverlayName = value.WikiOverlayName,
             VoiceEnabled = value.VoiceEnabled,

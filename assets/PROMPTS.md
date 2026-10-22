@@ -34,3 +34,25 @@ Constraints: no text, letters, logos or watermark; no other characters, props, f
 ## Inspection
 
 Both generation previews were visually inspected for species, cream fur, matching midnight-blue lunar outfits, friendly faces, bust composition, and absence of text/logos/background scenery. Both local files were passed to `view_image`; that tool's RGBA preview rendered unexpectedly dark in this session, although sampled original PNG pixels confirmed transparent exterior pixels and opaque colored subject pixels. Check 64–96 px readability in the consuming UI. Bimble's tallest ear has a tight top margin, so preserve its full square with contain sizing and avoid circular cropping.
+
+## Walking atlas (`companions-walk.png`)
+
+Created with the built-in image generation tool, using the two portraits as
+character references. Transparent alpha is preserved. The final atlas is copied
+unchanged into the project; the renderer selects four columns and two rows with
+UV coordinates. Bunny frames occupy the first row, bear frames the second.
+The initial atlas was rejected for tight/crossing cell bounds. One targeted
+repair produced the included full-body atlas with visible stride/passing poses.
+This is a four-frame 2D cycle, not a 3D model or an acoustic/AI animation system.
+
+Initial prompt:
+
+```text
+Create a production 2D animation SPRITE ATLAS from these two character references, preserving their original identity, cream fur, friendly dark eyes, midnight-blue lunar capelets and restrained gold/silver crescent details. References define designs, but output must show FULL BODY including legs and feet. One transparent PNG with EXACTLY 4 equal-width columns and 2 equal-height rows, precisely aligned invisible regular grid. Top row: Bimble bunny in FOUR sequential frames of a looping side-view walk toward the RIGHT: left foot forward contact, passing pose, right foot forward contact, opposite passing pose. Bottom row: moon bear in the SAME four walk-cycle phases facing RIGHT. Each cell contains ONLY ONE complete isolated character. Same scale and same character position within every cell, identical foot baseline at 86% cell height; character center at50% cell width, silhouette entirely within central70%cell width and central80%height, generous transparent gutters. Bunny has long ears with all tips fully contained. Both are small cute upright biped companions, legs clearly visible below short cape, arms swinging softly with opposite legs, slight cape/ear follow-through; four distinct coherent walking poses, consistent proportions, no duplicates. Crisp clean readable simplified hand-painted storybook JRPG character sprites at96px displayedsize, matching references without over-fine fur or busy accessories. Absolutely transparent background, no shadows on ground, no floor, no landscape, no panels, no visible grid lines, no text, labels, numbers, logos, borders, badges, extra characters or cropped body parts. This output is a usable sprite atlas, NOT a concept sheet or portrait collage.
+```
+
+Repair prompt:
+
+```text
+Repair this sprite atlas for use in a real 4-column x 2-row animation grid. Preserve both character designs/style. CRITICAL FIX: every single sprite MUST fit entirely INSIDE its own equal rectangular cell, with at least15%EMPTY TRANSPARENT MARGIN on ALL FOUR sides including ear tips and feet. Reduce character size by30% inside eachcell. No part of any sprite may touch image edges or cross cellboundaries. Eachcellcharactersamephysicalsize/anchor/baseline. Toprowbunny4walkframes; bottomrowbear4walkframes. Improve the WALK CYCLE: frame1 clearly leftfootextendedforwardrightfootback, frame2 feetpassingundertorsoonelegbent, frame3 clearly rightfootforwardleftfootback and oppositearmswing, frame4 oppositepassingpose. Both faceRIGHT, completefullbodies, feetandlegsvisible; earsfollowthroughslightly. Genuine alternation, NOT fournearidenticalforwardstrides. Exactly8charactersinvisibleregulargrid, NO extras/no labels/no floor/noborders. Trulytransparentbackground. Mostimportant allsilhouettesentirelycontainedwithconsistentgutter.
+```
