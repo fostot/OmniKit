@@ -1,0 +1,2065 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "Pixel coordinates, top-left origin; rectangle right/bottom exclusive; anchors absolute in source sheet.",
+  "frameOrder": {
+    "Walk": [
+      0,
+      7
+    ],
+    "Idle": [
+      8,
+      11
+    ],
+    "Talk": [
+      12,
+      15
+    ],
+    "Carry": [
+      16,
+      17
+    ],
+    "Fall": [
+      18,
+      19
+    ],
+    "Land": [
+      20,
+      21
+    ],
+    "Push": [
+      22,
+      23
+    ]
+  },
+  "rendering": "Use one common scale per character for all poses. Translate each crop relative to its anchor; do not stretch individual crops to fill the destination. These are irregular inspected regions, not a uniform UV grid.",
+  "atlases": [
+    {
+      "character": "moonblob",
+      "file": "moonblob-motion.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "format": "RGBA",
+      "sha256": "445e0f5eef7fe4383082e97216eb0848c312bd9be8a00a1ed63bb7a7c42bb353",
+      "layoutOrder": [
+        4,
+        6
+      ],
+      "commonSourceScalePx": 281,
+      "anchorMeaning": "Visual horizontal center and lower body/foot baseline from alpha >=96, manually reviewed in contact sheet.",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 254,
+        "transparentPixels": 494500,
+        "partialAlphaPixels": 1078364
+      },
+      "frames": [
+        {
+          "index": 0,
+          "rect": [
+            32,
+            42,
+            251,
+            238
+          ],
+          "anchor": [
+            142.0,
+            232
+          ],
+          "alphaBounds16": [
+            37,
+            47,
+            246,
+            233
+          ],
+          "bodyBounds96": [
+            38,
+            48,
+            246,
+            232
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 1,
+          "rect": [
+            281,
+            39,
+            490,
+            240
+          ],
+          "anchor": [
+            385.5,
+            234
+          ],
+          "alphaBounds16": [
+            286,
+            44,
+            485,
+            235
+          ],
+          "bodyBounds96": [
+            287,
+            45,
+            484,
+            234
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 2,
+          "rect": [
+            520,
+            74,
+            742,
+            238
+          ],
+          "anchor": [
+            631.0,
+            232
+          ],
+          "alphaBounds16": [
+            525,
+            79,
+            737,
+            233
+          ],
+          "bodyBounds96": [
+            526,
+            80,
+            736,
+            232
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 3,
+          "rect": [
+            775,
+            46,
+            991,
+            238
+          ],
+          "anchor": [
+            882.5,
+            233
+          ],
+          "alphaBounds16": [
+            780,
+            51,
+            986,
+            233
+          ],
+          "bodyBounds96": [
+            780,
+            52,
+            985,
+            233
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 4,
+          "rect": [
+            31,
+            278,
+            245,
+            478
+          ],
+          "anchor": [
+            138.5,
+            472
+          ],
+          "alphaBounds16": [
+            36,
+            283,
+            240,
+            473
+          ],
+          "bodyBounds96": [
+            37,
+            284,
+            240,
+            472
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 5,
+          "rect": [
+            283,
+            290,
+            502,
+            474
+          ],
+          "anchor": [
+            392.5,
+            469
+          ],
+          "alphaBounds16": [
+            288,
+            295,
+            497,
+            469
+          ],
+          "bodyBounds96": [
+            288,
+            296,
+            497,
+            469
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 6,
+          "rect": [
+            528,
+            283,
+            742,
+            478
+          ],
+          "anchor": [
+            635.5,
+            472
+          ],
+          "alphaBounds16": [
+            533,
+            288,
+            737,
+            473
+          ],
+          "bodyBounds96": [
+            534,
+            289,
+            737,
+            472
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 7,
+          "rect": [
+            776,
+            299,
+            990,
+            475
+          ],
+          "anchor": [
+            882.5,
+            469
+          ],
+          "alphaBounds16": [
+            781,
+            304,
+            985,
+            470
+          ],
+          "bodyBounds96": [
+            781,
+            305,
+            984,
+            469
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 8,
+          "rect": [
+            24,
+            521,
+            253,
+            707
+          ],
+          "anchor": [
+            138.5,
+            702
+          ],
+          "alphaBounds16": [
+            29,
+            526,
+            248,
+            702
+          ],
+          "bodyBounds96": [
+            30,
+            526,
+            247,
+            702
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 9,
+          "rect": [
+            274,
+            519,
+            504,
+            709
+          ],
+          "anchor": [
+            389.0,
+            704
+          ],
+          "alphaBounds16": [
+            279,
+            524,
+            499,
+            704
+          ],
+          "bodyBounds96": [
+            280,
+            525,
+            498,
+            704
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 10,
+          "rect": [
+            521,
+            520,
+            749,
+            708
+          ],
+          "anchor": [
+            634.5,
+            702
+          ],
+          "alphaBounds16": [
+            526,
+            525,
+            744,
+            703
+          ],
+          "bodyBounds96": [
+            526,
+            526,
+            743,
+            702
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 11,
+          "rect": [
+            767,
+            521,
+            999,
+            707
+          ],
+          "anchor": [
+            883.5,
+            701
+          ],
+          "alphaBounds16": [
+            772,
+            526,
+            994,
+            702
+          ],
+          "bodyBounds96": [
+            773,
+            527,
+            994,
+            701
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 12,
+          "rect": [
+            23,
+            749,
+            258,
+            940
+          ],
+          "anchor": [
+            140.5,
+            935
+          ],
+          "alphaBounds16": [
+            28,
+            754,
+            253,
+            935
+          ],
+          "bodyBounds96": [
+            29,
+            755,
+            252,
+            935
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 13,
+          "rect": [
+            274,
+            747,
+            505,
+            941
+          ],
+          "anchor": [
+            389.5,
+            935
+          ],
+          "alphaBounds16": [
+            279,
+            752,
+            500,
+            936
+          ],
+          "bodyBounds96": [
+            280,
+            753,
+            499,
+            935
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 6
+        },
+        {
+          "index": 14,
+          "rect": [
+            519,
+            745,
+            751,
+            936
+          ],
+          "anchor": [
+            634.5,
+            931
+          ],
+          "alphaBounds16": [
+            524,
+            750,
+            746,
+            931
+          ],
+          "bodyBounds96": [
+            525,
+            751,
+            744,
+            931
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 15,
+          "rect": [
+            773,
+            750,
+            1008,
+            940
+          ],
+          "anchor": [
+            890.5,
+            934
+          ],
+          "alphaBounds16": [
+            778,
+            755,
+            1003,
+            935
+          ],
+          "bodyBounds96": [
+            779,
+            757,
+            1002,
+            934
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 16,
+          "rect": [
+            50,
+            957,
+            229,
+            1208
+          ],
+          "anchor": [
+            139.5,
+            1202
+          ],
+          "alphaBounds16": [
+            55,
+            962,
+            224,
+            1203
+          ],
+          "bodyBounds96": [
+            56,
+            963,
+            223,
+            1202
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 17,
+          "rect": [
+            292,
+            972,
+            475,
+            1210
+          ],
+          "anchor": [
+            383.5,
+            1204
+          ],
+          "alphaBounds16": [
+            297,
+            977,
+            470,
+            1205
+          ],
+          "bodyBounds96": [
+            298,
+            978,
+            469,
+            1204
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 18,
+          "rect": [
+            521,
+            1010,
+            756,
+            1202
+          ],
+          "anchor": [
+            638.5,
+            1196
+          ],
+          "alphaBounds16": [
+            526,
+            1015,
+            751,
+            1197
+          ],
+          "bodyBounds96": [
+            527,
+            1016,
+            750,
+            1196
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 19,
+          "rect": [
+            792,
+            972,
+            972,
+            1222
+          ],
+          "anchor": [
+            882.0,
+            1217
+          ],
+          "alphaBounds16": [
+            797,
+            977,
+            967,
+            1217
+          ],
+          "bodyBounds96": [
+            798,
+            977,
+            966,
+            1217
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 20,
+          "rect": [
+            24,
+            1292,
+            260,
+            1449
+          ],
+          "anchor": [
+            142.0,
+            1444
+          ],
+          "alphaBounds16": [
+            29,
+            1297,
+            255,
+            1444
+          ],
+          "bodyBounds96": [
+            30,
+            1298,
+            254,
+            1444
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 21,
+          "rect": [
+            278,
+            1239,
+            500,
+            1455
+          ],
+          "anchor": [
+            389.0,
+            1450
+          ],
+          "alphaBounds16": [
+            283,
+            1244,
+            495,
+            1450
+          ],
+          "bodyBounds96": [
+            284,
+            1244,
+            494,
+            1450
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 22,
+          "rect": [
+            516,
+            1259,
+            754,
+            1456
+          ],
+          "anchor": [
+            635.5,
+            1450
+          ],
+          "alphaBounds16": [
+            521,
+            1264,
+            749,
+            1451
+          ],
+          "bodyBounds96": [
+            523,
+            1265,
+            748,
+            1450
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 23,
+          "rect": [
+            768,
+            1266,
+            995,
+            1459
+          ],
+          "anchor": [
+            882.0,
+            1453
+          ],
+          "alphaBounds16": [
+            773,
+            1271,
+            990,
+            1454
+          ],
+          "bodyBounds96": [
+            774,
+            1271,
+            990,
+            1453
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        }
+      ],
+      "destinationAnchorNormalized": [
+        0.5,
+        0.9
+      ]
+    },
+    {
+      "character": "wink",
+      "file": "wink-motion.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "format": "RGBA",
+      "sha256": "d2d0baae0bfc5421dc8680110b4baf103a52611249f2b77c4a2b4dd141b8dd98",
+      "layoutOrder": [
+        4,
+        6
+      ],
+      "commonSourceScalePx": 290,
+      "anchorMeaning": "Visual horizontal center and lower body/foot baseline from alpha >=96, manually reviewed in contact sheet.",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 253,
+        "transparentPixels": 191351,
+        "partialAlphaPixels": 1381513
+      },
+      "frames": [
+        {
+          "index": 0,
+          "rect": [
+            9,
+            35,
+            250,
+            239
+          ],
+          "anchor": [
+            129.0,
+            231
+          ],
+          "alphaBounds16": [
+            14,
+            40,
+            245,
+            234
+          ],
+          "bodyBounds96": [
+            17,
+            42,
+            241,
+            231
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 1,
+          "rect": [
+            283,
+            16,
+            505,
+            250
+          ],
+          "anchor": [
+            393.5,
+            241
+          ],
+          "alphaBounds16": [
+            288,
+            21,
+            500,
+            245
+          ],
+          "bodyBounds96": [
+            291,
+            23,
+            496,
+            241
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 2,
+          "rect": [
+            522,
+            65,
+            767,
+            237
+          ],
+          "anchor": [
+            644.5,
+            229
+          ],
+          "alphaBounds16": [
+            527,
+            70,
+            762,
+            232
+          ],
+          "bodyBounds96": [
+            531,
+            74,
+            758,
+            229
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 3,
+          "rect": [
+            781,
+            42,
+            1013,
+            233
+          ],
+          "anchor": [
+            897.5,
+            224
+          ],
+          "alphaBounds16": [
+            786,
+            47,
+            1008,
+            228
+          ],
+          "bodyBounds96": [
+            791,
+            49,
+            1004,
+            224
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 4,
+          "rect": [
+            20,
+            261,
+            262,
+            484
+          ],
+          "anchor": [
+            143.0,
+            475
+          ],
+          "alphaBounds16": [
+            25,
+            266,
+            257,
+            479
+          ],
+          "bodyBounds96": [
+            31,
+            269,
+            255,
+            475
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 5,
+          "rect": [
+            270,
+            328,
+            508,
+            488
+          ],
+          "anchor": [
+            389.0,
+            481
+          ],
+          "alphaBounds16": [
+            275,
+            333,
+            503,
+            483
+          ],
+          "bodyBounds96": [
+            280,
+            336,
+            498,
+            481
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 6,
+          "rect": [
+            525,
+            293,
+            759,
+            481
+          ],
+          "anchor": [
+            643.0,
+            470
+          ],
+          "alphaBounds16": [
+            530,
+            298,
+            754,
+            476
+          ],
+          "bodyBounds96": [
+            536,
+            304,
+            750,
+            470
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 7,
+          "rect": [
+            779,
+            281,
+            1006,
+            485
+          ],
+          "anchor": [
+            891.5,
+            476
+          ],
+          "alphaBounds16": [
+            784,
+            286,
+            1001,
+            480
+          ],
+          "bodyBounds96": [
+            788,
+            288,
+            995,
+            476
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 8,
+          "rect": [
+            23,
+            522,
+            257,
+            723
+          ],
+          "anchor": [
+            139.0,
+            713
+          ],
+          "alphaBounds16": [
+            28,
+            527,
+            252,
+            718
+          ],
+          "bodyBounds96": [
+            32,
+            530,
+            246,
+            713
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 9,
+          "rect": [
+            268,
+            524,
+            507,
+            719
+          ],
+          "anchor": [
+            388.0,
+            709
+          ],
+          "alphaBounds16": [
+            273,
+            529,
+            502,
+            714
+          ],
+          "bodyBounds96": [
+            279,
+            533,
+            497,
+            709
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 10,
+          "rect": [
+            527,
+            522,
+            761,
+            710
+          ],
+          "anchor": [
+            644.5,
+            703
+          ],
+          "alphaBounds16": [
+            532,
+            527,
+            756,
+            705
+          ],
+          "bodyBounds96": [
+            537,
+            531,
+            752,
+            703
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 11,
+          "rect": [
+            778,
+            526,
+            1003,
+            718
+          ],
+          "anchor": [
+            889.5,
+            708
+          ],
+          "alphaBounds16": [
+            783,
+            531,
+            998,
+            713
+          ],
+          "bodyBounds96": [
+            786,
+            537,
+            993,
+            708
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 12,
+          "rect": [
+            28,
+            761,
+            253,
+            955
+          ],
+          "anchor": [
+            140.5,
+            945
+          ],
+          "alphaBounds16": [
+            33,
+            766,
+            248,
+            950
+          ],
+          "bodyBounds96": [
+            38,
+            769,
+            243,
+            945
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 13,
+          "rect": [
+            283,
+            761,
+            507,
+            956
+          ],
+          "anchor": [
+            394.0,
+            946
+          ],
+          "alphaBounds16": [
+            288,
+            766,
+            502,
+            951
+          ],
+          "bodyBounds96": [
+            291,
+            768,
+            497,
+            946
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 14,
+          "rect": [
+            524,
+            762,
+            761,
+            952
+          ],
+          "anchor": [
+            643.0,
+            944
+          ],
+          "alphaBounds16": [
+            529,
+            767,
+            756,
+            947
+          ],
+          "bodyBounds96": [
+            533,
+            770,
+            753,
+            944
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 15,
+          "rect": [
+            781,
+            748,
+            1007,
+            956
+          ],
+          "anchor": [
+            894.0,
+            946
+          ],
+          "alphaBounds16": [
+            786,
+            753,
+            1002,
+            951
+          ],
+          "bodyBounds96": [
+            791,
+            755,
+            997,
+            946
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 16,
+          "rect": [
+            34,
+            963,
+            236,
+            1226
+          ],
+          "anchor": [
+            134.5,
+            1216
+          ],
+          "alphaBounds16": [
+            39,
+            968,
+            231,
+            1221
+          ],
+          "bodyBounds96": [
+            43,
+            970,
+            226,
+            1216
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 17,
+          "rect": [
+            299,
+            963,
+            484,
+            1221
+          ],
+          "anchor": [
+            390.5,
+            1213
+          ],
+          "alphaBounds16": [
+            304,
+            968,
+            479,
+            1216
+          ],
+          "bodyBounds96": [
+            307,
+            971,
+            474,
+            1213
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 18,
+          "rect": [
+            538,
+            976,
+            763,
+            1222
+          ],
+          "anchor": [
+            649.5,
+            1215
+          ],
+          "alphaBounds16": [
+            543,
+            981,
+            758,
+            1217
+          ],
+          "bodyBounds96": [
+            546,
+            999,
+            753,
+            1215
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 7
+        },
+        {
+          "index": 19,
+          "rect": [
+            808,
+            971,
+            987,
+            1221
+          ],
+          "anchor": [
+            897.0,
+            1213
+          ],
+          "alphaBounds16": [
+            813,
+            976,
+            982,
+            1216
+          ],
+          "bodyBounds96": [
+            817,
+            981,
+            977,
+            1213
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 5
+        },
+        {
+          "index": 20,
+          "rect": [
+            18,
+            1307,
+            293,
+            1476
+          ],
+          "anchor": [
+            156.5,
+            1467
+          ],
+          "alphaBounds16": [
+            23,
+            1312,
+            288,
+            1471
+          ],
+          "bodyBounds96": [
+            27,
+            1315,
+            286,
+            1467
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 4
+        },
+        {
+          "index": 21,
+          "rect": [
+            298,
+            1240,
+            493,
+            1490
+          ],
+          "anchor": [
+            394.0,
+            1481
+          ],
+          "alphaBounds16": [
+            303,
+            1245,
+            488,
+            1485
+          ],
+          "bodyBounds96": [
+            306,
+            1248,
+            482,
+            1481
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 22,
+          "rect": [
+            538,
+            1260,
+            757,
+            1477
+          ],
+          "anchor": [
+            647.0,
+            1468
+          ],
+          "alphaBounds16": [
+            543,
+            1265,
+            752,
+            1472
+          ],
+          "bodyBounds96": [
+            545,
+            1270,
+            749,
+            1468
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 23,
+          "rect": [
+            786,
+            1258,
+            1000,
+            1483
+          ],
+          "anchor": [
+            892.0,
+            1473
+          ],
+          "alphaBounds16": [
+            791,
+            1263,
+            995,
+            1478
+          ],
+          "bodyBounds96": [
+            793,
+            1265,
+            991,
+            1473
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        }
+      ],
+      "destinationAnchorNormalized": [
+        0.5,
+        0.9
+      ]
+    },
+    {
+      "character": "nova",
+      "file": "nova-motion.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "format": "RGBA",
+      "sha256": "6248bf83f55759c07911d76a4d6d253bbc1d1e3905d9347f470be20b484ab75c",
+      "layoutOrder": [
+        4,
+        6
+      ],
+      "commonSourceScalePx": 293,
+      "anchorMeaning": "Visual horizontal center and lower body/foot baseline from alpha >=96, manually reviewed in contact sheet.",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 253,
+        "transparentPixels": 655495,
+        "partialAlphaPixels": 917369
+      },
+      "frames": [
+        {
+          "index": 0,
+          "rect": [
+            23,
+            21,
+            243,
+            238
+          ],
+          "anchor": [
+            133.0,
+            231
+          ],
+          "alphaBounds16": [
+            28,
+            26,
+            238,
+            233
+          ],
+          "bodyBounds96": [
+            29,
+            28,
+            237,
+            231
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 1,
+          "rect": [
+            280,
+            12,
+            498,
+            241
+          ],
+          "anchor": [
+            389.0,
+            235
+          ],
+          "alphaBounds16": [
+            285,
+            17,
+            493,
+            236
+          ],
+          "bodyBounds96": [
+            287,
+            18,
+            491,
+            235
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 1
+        },
+        {
+          "index": 2,
+          "rect": [
+            519,
+            73,
+            753,
+            253
+          ],
+          "anchor": [
+            636.0,
+            247
+          ],
+          "alphaBounds16": [
+            524,
+            78,
+            748,
+            248
+          ],
+          "bodyBounds96": [
+            526,
+            79,
+            746,
+            247
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 3,
+          "rect": [
+            785,
+            26,
+            1000,
+            246
+          ],
+          "anchor": [
+            892.5,
+            239
+          ],
+          "alphaBounds16": [
+            790,
+            31,
+            995,
+            241
+          ],
+          "bodyBounds96": [
+            792,
+            32,
+            993,
+            239
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 4,
+          "rect": [
+            27,
+            267,
+            250,
+            486
+          ],
+          "anchor": [
+            138.5,
+            480
+          ],
+          "alphaBounds16": [
+            32,
+            272,
+            245,
+            481
+          ],
+          "bodyBounds96": [
+            34,
+            273,
+            243,
+            480
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 5,
+          "rect": [
+            283,
+            287,
+            511,
+            478
+          ],
+          "anchor": [
+            397.0,
+            472
+          ],
+          "alphaBounds16": [
+            288,
+            292,
+            506,
+            473
+          ],
+          "bodyBounds96": [
+            290,
+            294,
+            504,
+            472
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 6,
+          "rect": [
+            525,
+            280,
+            744,
+            487
+          ],
+          "anchor": [
+            634.5,
+            481
+          ],
+          "alphaBounds16": [
+            530,
+            285,
+            739,
+            482
+          ],
+          "bodyBounds96": [
+            531,
+            286,
+            738,
+            481
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 7,
+          "rect": [
+            774,
+            280,
+            1000,
+            489
+          ],
+          "anchor": [
+            887.0,
+            483
+          ],
+          "alphaBounds16": [
+            779,
+            285,
+            995,
+            484
+          ],
+          "bodyBounds96": [
+            780,
+            287,
+            994,
+            483
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 8,
+          "rect": [
+            19,
+            507,
+            252,
+            729
+          ],
+          "anchor": [
+            135.0,
+            723
+          ],
+          "alphaBounds16": [
+            24,
+            512,
+            247,
+            724
+          ],
+          "bodyBounds96": [
+            25,
+            514,
+            245,
+            723
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 9,
+          "rect": [
+            269,
+            512,
+            504,
+            729
+          ],
+          "anchor": [
+            386.5,
+            722
+          ],
+          "alphaBounds16": [
+            274,
+            517,
+            499,
+            724
+          ],
+          "bodyBounds96": [
+            276,
+            519,
+            497,
+            722
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 10,
+          "rect": [
+            526,
+            522,
+            756,
+            729
+          ],
+          "anchor": [
+            641.5,
+            723
+          ],
+          "alphaBounds16": [
+            531,
+            527,
+            751,
+            724
+          ],
+          "bodyBounds96": [
+            533,
+            528,
+            750,
+            723
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 1
+        },
+        {
+          "index": 11,
+          "rect": [
+            779,
+            519,
+            1002,
+            731
+          ],
+          "anchor": [
+            891.0,
+            725
+          ],
+          "alphaBounds16": [
+            784,
+            524,
+            997,
+            726
+          ],
+          "bodyBounds96": [
+            786,
+            526,
+            996,
+            725
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 12,
+          "rect": [
+            18,
+            753,
+            251,
+            967
+          ],
+          "anchor": [
+            134.5,
+            960
+          ],
+          "alphaBounds16": [
+            23,
+            758,
+            246,
+            962
+          ],
+          "bodyBounds96": [
+            25,
+            759,
+            244,
+            960
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 13,
+          "rect": [
+            274,
+            756,
+            500,
+            966
+          ],
+          "anchor": [
+            387.5,
+            960
+          ],
+          "alphaBounds16": [
+            279,
+            761,
+            495,
+            961
+          ],
+          "bodyBounds96": [
+            281,
+            763,
+            494,
+            960
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 14,
+          "rect": [
+            522,
+            753,
+            753,
+            964
+          ],
+          "anchor": [
+            637.5,
+            958
+          ],
+          "alphaBounds16": [
+            527,
+            758,
+            748,
+            959
+          ],
+          "bodyBounds96": [
+            529,
+            760,
+            746,
+            958
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 15,
+          "rect": [
+            775,
+            753,
+            1002,
+            964
+          ],
+          "anchor": [
+            888.5,
+            958
+          ],
+          "alphaBounds16": [
+            780,
+            758,
+            997,
+            959
+          ],
+          "bodyBounds96": [
+            781,
+            759,
+            996,
+            958
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 16,
+          "rect": [
+            39,
+            968,
+            235,
+            1231
+          ],
+          "anchor": [
+            137.0,
+            1224
+          ],
+          "alphaBounds16": [
+            44,
+            973,
+            230,
+            1226
+          ],
+          "bodyBounds96": [
+            46,
+            975,
+            228,
+            1224
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 17,
+          "rect": [
+            300,
+            983,
+            496,
+            1221
+          ],
+          "anchor": [
+            397.5,
+            1214
+          ],
+          "alphaBounds16": [
+            305,
+            988,
+            491,
+            1216
+          ],
+          "bodyBounds96": [
+            306,
+            989,
+            489,
+            1214
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 18,
+          "rect": [
+            546,
+            999,
+            760,
+            1220
+          ],
+          "anchor": [
+            653.5,
+            1214
+          ],
+          "alphaBounds16": [
+            551,
+            1004,
+            755,
+            1215
+          ],
+          "bodyBounds96": [
+            553,
+            1006,
+            754,
+            1214
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 19,
+          "rect": [
+            809,
+            979,
+            979,
+            1232
+          ],
+          "anchor": [
+            894.0,
+            1226
+          ],
+          "alphaBounds16": [
+            814,
+            984,
+            974,
+            1227
+          ],
+          "bodyBounds96": [
+            815,
+            986,
+            973,
+            1226
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 20,
+          "rect": [
+            12,
+            1308,
+            270,
+            1480
+          ],
+          "anchor": [
+            141.0,
+            1474
+          ],
+          "alphaBounds16": [
+            17,
+            1313,
+            265,
+            1475
+          ],
+          "bodyBounds96": [
+            19,
+            1314,
+            263,
+            1474
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 3
+        },
+        {
+          "index": 21,
+          "rect": [
+            283,
+            1245,
+            500,
+            1480
+          ],
+          "anchor": [
+            391.5,
+            1474
+          ],
+          "alphaBounds16": [
+            288,
+            1250,
+            495,
+            1475
+          ],
+          "bodyBounds96": [
+            289,
+            1252,
+            494,
+            1474
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 22,
+          "rect": [
+            512,
+            1265,
+            759,
+            1481
+          ],
+          "anchor": [
+            636.0,
+            1475
+          ],
+          "alphaBounds16": [
+            517,
+            1270,
+            754,
+            1476
+          ],
+          "bodyBounds96": [
+            519,
+            1271,
+            753,
+            1475
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 2
+        },
+        {
+          "index": 23,
+          "rect": [
+            798,
+            1263,
+            1023,
+            1482
+          ],
+          "anchor": [
+            911.0,
+            1476
+          ],
+          "alphaBounds16": [
+            803,
+            1268,
+            1018,
+            1477
+          ],
+          "bodyBounds96": [
+            805,
+            1270,
+            1017,
+            1476
+          ],
+          "minimumGutterToAlpha16Px": 5,
+          "cropEdgeMaximumAlpha": 7
+        }
+      ],
+      "destinationAnchorNormalized": [
+        0.5,
+        0.9
+      ]
+    }
+  ]
+}

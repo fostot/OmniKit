@@ -46,7 +46,11 @@ $runtimeFiles = @(
     'SQLitePCLRaw.core.dll', 'SQLitePCLRaw.provider.e_sqlite3.dll', 'e_sqlite3.dll',
     'System.Security.Cryptography.ProtectedData.dll', 'System.Speech.dll',
     'assets/bimble.png', 'assets/moonbear.png', 'assets/companions-walk.png',
-    'assets/bimble-motion.png', 'assets/moonbear-motion.png', 'assets/bimble-stargazer.png', 'assets/moonbear-stargazer.png'
+    'assets/bimble-motion.png', 'assets/moonbear-motion.png', 'assets/bimble-stargazer.png', 'assets/moonbear-stargazer.png',
+    'assets/bimble-physical.png', 'assets/moonbear-physical.png',
+    'assets/bimble-physical-stargazer.png', 'assets/moonbear-physical-stargazer.png',
+    'assets/moonblob-motion.png', 'assets/wink-motion.png', 'assets/nova-motion.png',
+    'assets/abstract-companions.frames.json', 'assets/lunar-companions.frames.json'
 )
 foreach ($relative in $runtimeFiles) {
     $source = Join-Path $releasePath $relative
@@ -81,7 +85,7 @@ $feed = [ordered]@{
     Author = 'Zero'; Name = 'OmniKit'; InternalName = 'OmniKit'
     AssemblyVersion = $manifestAssemblyVersion; DalamudApiLevel = 15; ApplicableVersion = 'any'
     Punchline = 'Your everyday toolkit for XIV.'
-    Description = "Preview $displayVersion by Zero. Minimal search, recorded chords, styled target HUD, animated companions, gathering gear, voice shortcuts and Umbra integration."
+    Description = "Preview $displayVersion by Zero. Minimal search, configurable target types, styled target HUD, animated frame companions, optional AI connections, gathering gear, voice shortcuts and Umbra integration."
     RepoUrl = 'https://github.com/fostot/OmniKit'
     Tags = @('search', 'utility', 'accessibility', 'umbra')
     DownloadLinkInstall = $download; DownloadLinkUpdate = $download; DownloadLinkTesting = $download

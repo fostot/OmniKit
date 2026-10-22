@@ -9,14 +9,22 @@ namespace OmniKit.Ui;
 internal sealed class RoamingCompanion(Configuration config, Action openCompanion)
 {
     private readonly CompanionMotion motion = new();
+    private readonly CompanionPhysics physics = new();
+    private readonly CompanionSurfaces surfaceReader = new();
     private readonly string assetDirectory = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets");
     private long lastTick;
     private float animationTime;
+    private float poseTime;
+    private CompanionPose lastPose;
+    private CompanionAnimationLibrary? artwork;
     private bool hoveredLastFrame;
+    private bool hoverPausedLastFrame;
     private string lastAvatar = string.Empty;
     private bool areaDragging;
     private Vector2 areaStart;
     private string areaHint = string.Empty;
+    private bool pointerPressed;
+    private Vector2 pointerPressPosition;
 
     private const ImGuiWindowFlags OverlayFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove
         | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground
@@ -30,6 +38,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     {
         if (!config.AvatarEnabled) return;
         IsChoosingArea = true;
+        physics.Reset();
+        pointerPressed = false;
         areaDragging = false;
         areaHint = "Drag an area for your companion. Escape cancels.";
     }
@@ -48,7 +58,10 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             CancelChooseArea();
             lastTick = 0;
             hoveredLastFrame = false;
+            hoverPausedLastFrame = false;
             motion.Reset();
+            physics.Reset();
+            pointerPressed = false;
             return;
         }
         var viewport = ImGui.GetMainViewport();
@@ -63,6 +76,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         {
             lastAvatar = config.Avatar;
             motion.Reset();
+            physics.Reset();
             animationTime = 0;
         }
 
@@ -72,40 +86,88 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var now = Environment.TickCount64;
         var elapsed = lastTick == 0 ? 0 : (now - lastTick) / 1000f;
         lastTick = now;
+        var frameFeature = config.CompanionFrameInteractionEnabled;
+        if (!frameFeature || !config.CompanionPickupEnabled && physics.IsCarried)
+        {
+            if (physics.IsCarried) pointerPressed = false;
+            physics.Reset();
+            if (frameFeature) pointerPressed = false;
+        }
+        IReadOnlyList<CompanionSurface> surfaces = frameFeature ? surfaceReader.Read(viewport.Pos, viewport.Size) : [];
+        var options = new CompanionPhysicsOptions(config.CompanionPerchEnabled, config.CompanionContainmentEnabled, config.CompanionFallingEnabled);
+        var pointer = ImGui.GetMousePos();
+        if (physics.IsCarried)
+        {
+            physics.Carry(pointer, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, elapsed);
+            if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
+            {
+                physics.Drop(pointer, surfaces, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, options);
+                pointerPressed = false;
+            }
+        }
         if (config.AnimationsEnabled)
             animationTime = (animationTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
-        motion.Update(layout, elapsed, config.AnimationsEnabled && !hoveredLastFrame && PreviewPose == CompanionPose.Automatic);
+        physics.Update(surfaces, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, elapsed,
+            config.AnimationsEnabled && PreviewPose == CompanionPose.Automatic, hoverPausedLastFrame && !physics.IsCarried, options);
+        motion.Update(layout, elapsed, config.AnimationsEnabled && !hoverPausedLastFrame && !pointerPressed
+            && !physics.Active && PreviewPose == CompanionPose.Automatic);
         if (!layout.IsVisible) return;
+        var position = physics.Active ? physics.Position : motion.Position;
+        var facingLeft = physics.Active ? physics.FacingLeft : motion.FacingLeft;
         var pose = !config.AnimationsEnabled ? CompanionPose.Idle : PreviewPose == CompanionPose.Automatic
-            ? motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
+            ? physics.Active ? physics.Pose : motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
+        poseTime = pose != lastPose || !config.AnimationsEnabled ? 0 : (poseTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
+        lastPose = pose;
+        artwork ??= new CompanionAnimationLibrary(assetDirectory);
+        var frameIndex = CompanionAtlas.SelectFrame(pose, poseTime, config.AnimationsEnabled);
         var draw = ImGui.GetForegroundDrawList();
-        var hitStart = motion.Position + layout.SpriteSize * .18f;
-        var hitEnd = motion.Position + layout.SpriteSize * .82f;
-        draw.PushClipRect(layout.Minimum, layout.Maximum, true);
+        var hitStart = position + layout.SpriteSize * .18f;
+        var hitEnd = position + layout.SpriteSize * .82f;
+        var clipMinimum = physics.Active ? physics.ClipMinimum : layout.Minimum;
+        var clipMaximum = physics.Active ? physics.ClipMaximum : layout.Maximum;
+        draw.PushClipRect(clipMinimum, clipMaximum, true);
         try
         {
-            if (ProceduralCompanion.IsProcedural(config.Avatar))
-                ProceduralCompanion.Draw(draw, motion.Position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
+            var hasAtlas = artwork.TryGet(config.Avatar, config.CompanionOutfit, out var atlas);
+            var artTexture = hasAtlas ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, atlas!.File)).GetWrapOrDefault() : null;
+            if (artTexture != null)
+            {
+                var frame = atlas!.GetFrame(frameIndex, facingLeft, position, layout.SpriteSize);
+                var tint = ProceduralCompanion.IsProcedural(config.Avatar)
+                    ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(Vector4.One, ProceduralCompanion.Palette(config.CompanionPalette), .36f))
+                    : 0xFFFFFFFFu;
+                draw.AddImage(artTexture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
+                (hitStart, hitEnd) = atlas.HitBounds(frameIndex, facingLeft, position, layout.SpriteSize);
+            }
+            else if (ProceduralCompanion.IsProcedural(config.Avatar))
+                ProceduralCompanion.Draw(draw, position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
             else
             {
                 var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory,
                     CompanionAtlas.FileName(config.Avatar, config.CompanionOutfit))).GetWrapOrDefault();
                 if (texture == null) { hoveredLastFrame = false; return; }
-                var frameIndex = PreviewPose == CompanionPose.Automatic && motion.Walking ? motion.Frame
-                    : CompanionAtlas.SelectFrame(pose, animationTime, config.AnimationsEnabled);
-                var frame = CompanionAtlas.GetFrame(config.Avatar, frameIndex, motion.FacingLeft, motion.Position, layout.SpriteSize);
+                var frame = CompanionAtlas.GetFrame(config.Avatar, frameIndex, facingLeft, position, layout.SpriteSize);
                 draw.AddImage(texture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd);
                 // The inspected frame bounds exclude large transparent gutters.
                 // Clicking uses a rectangle, not per-pixel silhouette detection.
                 hitStart = frame.Position;
                 hitEnd = frame.Position + frame.Size;
             }
-            ProceduralCompanion.DrawEffects(draw, motion.Position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
+            ProceduralCompanion.DrawEffects(draw, position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
         }
         finally { draw.PopClipRect(); }
+        // A stable pause region avoids rapid walk/idle changes as animated ear
+        // and foot silhouettes move past a stationary pointer. Only the visible
+        // body hit rectangle below creates an input window.
+        hoverPausedLastFrame = ImGui.IsMouseHoveringRect(position, position + layout.SpriteSize, false);
         hoveredLastFrame = ImGui.IsMouseHoveringRect(hitStart, hitEnd, false);
-        if (!hoveredLastFrame || ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+        if (ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+        {
+            pointerPressed = false;
+            if (physics.IsCarried) physics.Reset();
             return;
+        }
+        if (!hoveredLastFrame && !pointerPressed && !physics.IsCarried) return;
 
         var visible = BeginOverlay("##OmniKitRoamingCompanion", hitStart, hitEnd - hitStart);
         var clicked = false;
@@ -113,7 +175,22 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         {
             ImGui.InvisibleButton("##companion", hitEnd - hitStart, ImGuiButtonFlags.MouseButtonLeft);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            clicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+            if (hoveredLastFrame && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+            {
+                pointerPressed = true;
+                pointerPressPosition = pointer;
+            }
+            if (pointerPressed && frameFeature && config.CompanionPickupEnabled && !physics.IsCarried
+                && ImGui.IsMouseDown(ImGuiMouseButton.Left) && Vector2.DistanceSquared(pointer, pointerPressPosition) >= 36 * scale * scale)
+            {
+                physics.PickUp(position, pointerPressPosition, facingLeft);
+                physics.Carry(pointer, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, elapsed);
+            }
+            if (pointerPressed && ImGui.IsMouseReleased(ImGuiMouseButton.Left))
+            {
+                clicked = !physics.IsCarried && hoveredLastFrame;
+                pointerPressed = false;
+            }
         }
         ImGui.End();
         if (clicked) openCompanion();

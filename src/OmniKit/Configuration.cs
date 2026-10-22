@@ -1,6 +1,8 @@
 using Dalamud.Configuration;
 using Dalamud.Game.ClientState.Keys;
 using OmniKit.Input;
+using OmniKit.Interaction;
+using OmniKit.Assistant;
 using OmniKit.Storage;
 
 namespace OmniKit;
@@ -11,7 +13,7 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 3;
+    public int Version { get; set; } = 4;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
@@ -22,6 +24,8 @@ public sealed class Configuration : IPluginConfiguration
     public VirtualKey SettingsKey = VirtualKey.F10;
     public ModifierKeys SettingsModifier = ModifierKeys.Control;
     public bool SoftInteractEnabled = false;
+    public InteractionTargets InteractionTargets = InteractionTargets.DefaultWorld;
+    public EnemyInteractMode EnemyInteractMode = EnemyInteractMode.Choose;
     public bool InteractionHudEnabled = true;
     public VirtualKey InteractKey = VirtualKey.F;
     public ModifierKeys InteractModifier = ModifierKeys.None;
@@ -41,6 +45,11 @@ public sealed class Configuration : IPluginConfiguration
     public string CompanionOutfit = "Navigator";
     public string CompanionPalette = "Moonlight";
     public bool CompanionMagicEnabled = true;
+    public bool CompanionFrameInteractionEnabled = false;
+    public bool CompanionPickupEnabled = true;
+    public bool CompanionPerchEnabled = true;
+    public bool CompanionContainmentEnabled = true;
+    public bool CompanionFallingEnabled = true;
     public float CompanionBoxLeft = .72f;
     public float CompanionBoxTop = .55f;
     public float CompanionBoxRight = .95f;
@@ -48,8 +57,12 @@ public sealed class Configuration : IPluginConfiguration
     public float CompanionSize = 96f;
     public bool VoiceEnabled = false;
     public bool AiEnabled = false;
+    public AiConnectionKind AiConnection = AiConnectionKind.ApiKey;
     public string AiEndpoint = "https://api.openai.com/v1/responses";
     public string AiModel = "";
+    public string ChatGptModel = "";
+    public string CodexModel = "";
+    public string ClaudeModel = "";
     public List<VoiceBinding> VoiceBindings = [];
     public bool WikiInGame = false;
     public string WikiOverlayName = "omnikit";

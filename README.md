@@ -7,8 +7,7 @@ Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
 
-Build and isolated tests are separate from game validation. The compact launcher
-layout still needs in-game acceptance. See [feature status](docs/FEATURES.md)
+Build and isolated tests are separate from game validation. See [feature status](docs/FEATURES.md)
 for the full scope and [game checklist](docs/IN-GAME-CHECKLIST.md) for acceptance.
 
 ## Install
@@ -49,22 +48,36 @@ small corner rounding and a footer showing the built version and **by Zero**.
   **Interact → Detection distance** adjusts detection from 1–30 yalms. The default
   for new settings is 6; existing saved distances stay unchanged. This does not
   extend the game's allowed interaction reach.
+- **Interact → Target types** controls NPCs, quest objects, loot, aetherytes,
+  gathering nodes, retainers, housing and other usable objects. Hostile and
+  neutral enemies have separate switches, both off initially. Before enabling
+  enemy actions, choose **Target only** or **Target + start auto-attack**.
+  Looking never starts an action. Target only does not start auto-attack; if it
+  was already active, the game's existing attack state remains active.
 - Optional gathering gear changes and restoration after an observed gathering
   session, with cancellation when you change gear yourself. Save your gearsets in
   FFXIV first. This does not reveal hidden nodes or choose gathering items.
 - Local Windows speech input, typed commands, saved phrase-to-action bindings and
   a practice button. Speech starts only when requested, for one utterance.
-- Optional Responses-compatible AI text chat with endpoint-bound encrypted key
-  storage. AI receives the submitted question, not game state or plugin files.
-  Replies cannot execute commands. The local matcher does not need AI.
+- Optional text chat through **Continue with ChatGPT**, an existing **Codex CLI**
+  or **Claude CLI** login, or a Responses-compatible API endpoint. Connections
+  are selected explicitly. Replies cannot execute game commands. The local
+  matcher does not need AI. See [AI connections](docs/AI-CONNECTIONS.md).
 - Bimble and Moonbear with **Navigator** (navy/gold) and **Stargazer**
-  (violet/silver) outfit atlases, plus vector companions **Moonblob**, **Wink**
-  and **Nova**. Six aura/shape palettes are available: Moonlight, Aurora,
+  (violet/silver) outfit atlases, plus illustrated **Moonblob**, **Wink**
+  and **Nova**. Six aura palettes are available: Moonlight, Aurora,
   Nebula, Rose, Ember and Starlight. In **Companion → Appearance**, draw a
   roaming area, preview an animation, or turn off magic accents, animation or
-  the companion. Clicking the companion opens its conversation. Each outfit
-  atlas has 16 poses: 8 walking, 4 idle/blink and 4 mouth poses. Mouth movement
+  the companion. Clicking the companion opens its conversation. Each avatar
+  atlas has 24 poses: walking, idle/blink, mouth, carry, fall, land and push.
+  Bimble's ears change shape throughout its movement. Mouth movement
   is an explicit preview; synthesized speech and lip sync are not implemented.
+- Optional **Companion → Appearance → Frame interaction** lets you pick up the
+  companion and drop it onto a supported visible frame. It can perch on a top
+  edge, walk off and fall, or stay inside a frame and push against its edges.
+  Supported surfaces include rectangular FFXIV addons and compatible plugin
+  windows and Umbra bars in Dalamud's ImGui context. Closed or unsupported
+  frames return it safely to its roaming area. Nothing edits those windows.
 - SQLite preferences and JSON export/import, including saved chords, HUD position
   and the companion area. Older settings migrate to the new format.
 - Native Umbra menu integration, an optional Umbra toolbar widget, and optional
@@ -98,20 +111,25 @@ phrases to a known action catalogue. A unique spoken `job <name>` can equip its
 saved set; ambiguous results stay in the menu for you to choose. This is useful
 without a language model and makes no provider requests with AI disabled.
 
-AI adds conversational answers and explanations. This preview supports an API
-key or a compatible local Responses server. Provider API use may incur charges.
-ChatGPT OAuth and Codex/Claude CLI bridges are tracked work, not implemented
-sign-in choices. A subscription is not an API key. Character instructions guide
+AI adds conversational answers and explanations. ChatGPT sign-in uses the
+supported browser consent flow and keeps its tokens in separate Windows
+encrypted storage. CLI modes use each CLI's own login without copying its
+credentials. Codex also adds its normal global instructions and runtime context;
+OmniKit disables action tools and connectors. CLI compatibility is checked before
+requests. API mode supports an API key or a compatible local Responses server;
+provider API use may incur charges. Character instructions guide
 the assistant, but are not a guarantee against every off-topic answer or prompt
 injection; the execution boundary is the fixed local action catalogue.
 
 Preferences live in `omnikit.db` under Dalamud's OmniKit configuration directory.
-Keys use separate Windows DPAPI storage, bound to their provider endpoint.
-Exports never include keys, recordings or conversations. Exports can contain
+API keys use separate Windows DPAPI storage, bound to their provider endpoint.
+ChatGPT registrations and tokens also stay outside the database and exports.
+Exports never include credentials, recordings or conversations. Exports can contain
 your custom provider address and voice phrases, so review them before sharing.
 Import always disables AI in the interface until you explicitly enable it again.
-Schema v3 adds outfit, palette and magic preferences. It migrates v1 and v2
-settings while preserving existing preferences, including saved chords. Legacy
+Schema v4 adds target types, the explicit enemy action choice, frame interaction
+and AI connection preferences. It migrates v1, v2 and v3 settings while preserving
+existing preferences, including saved chords. Legacy
 v1 Ctrl/Alt/Shift virtual-key values are converted to chord masks. Failed
 database migrations keep the previous snapshot.
 
@@ -135,6 +153,11 @@ dotnet run --project tests/SearchTests/SearchTests.csproj -c Release
 dotnet run --project tests/GatheringStateTests.csproj -c Release
 dotnet run --project tests/StorageTests/StorageTests.csproj -c Release
 dotnet run --project tests/HotkeyTests/HotkeyTests.csproj -c Release
+dotnet run --project tests/InteractionInputTests/InteractionInputTests.csproj -c Release
+dotnet run --project tests/CompanionPhysicsTests/CompanionPhysicsTests.csproj -c Release
+dotnet run --project tests/CompanionMotionTests/CompanionMotionTests.csproj -c Release
+dotnet run --project tests/CliChatTests/CliChatTests.csproj -c Release
+dotnet run --project tests/ChatGptTests/ChatGptTests.csproj -c Release
 pwsh -NoProfile -File tests/VersioningTests.ps1
 pwsh scripts/Package.ps1
 ```

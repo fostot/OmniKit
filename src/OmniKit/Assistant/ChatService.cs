@@ -29,6 +29,7 @@ public sealed class ChatService : IDisposable
 
     private readonly Configuration config;
     private readonly CredentialStore credentials;
+    private readonly CliChatBackend cli;
     private readonly HttpClient client;
     private readonly CancellationTokenSource lifetime = new();
     private int busy;
@@ -38,6 +39,8 @@ public sealed class ChatService : IDisposable
     {
         this.config = config;
         credentials = new CredentialStore(Services.PluginInterface.ConfigDirectory);
+        cli = new CliChatBackend(Services.PluginInterface.ConfigDirectory);
+        ChatGpt = new ChatGptConnection(Services.PluginInterface.ConfigDirectory);
         client = new HttpClient(new HttpClientHandler
         {
             AllowAutoRedirect = false,
@@ -48,6 +51,23 @@ public sealed class ChatService : IDisposable
 
     public bool HasApiKey =>
         TryGetEndpoint(config.AiEndpoint, out var endpoint) && credentials.Exists(endpoint!);
+
+    public ChatGptConnection ChatGpt { get; }
+    public string CliStatus => cli.Status;
+
+    public async Task<string> ProbeCliAsync(CancellationToken ct)
+    {
+        if (disposed) return "CLI connection is unavailable while OmniKit is unloading.";
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, lifetime.Token);
+        return await cli.ProbeAsync(config.AiConnection, linked.Token).ConfigureAwait(false);
+    }
+
+    public async Task<string> SignInCliAsync(CancellationToken ct)
+    {
+        if (disposed) return "CLI connection is unavailable while OmniKit is unloading.";
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, lifetime.Token);
+        return await cli.SignInAsync(config.AiConnection, linked.Token).ConfigureAwait(false);
+    }
 
     public void SaveApiKey(string key)
     {
@@ -70,10 +90,20 @@ public sealed class ChatService : IDisposable
         if (!config.AiEnabled) return "Enable optional AI chat in OmniKit settings first.";
         if (string.IsNullOrWhiteSpace(question)) return "Ask me something about XIV or OmniKit.";
         if (question.Length > MaximumQuestionLength) return "Please shorten your question to 4,000 characters or fewer.";
-        if (!TryGetEndpoint(config.AiEndpoint, out var endpoint))
+        var connection = config.AiConnection;
+        if (!Enum.IsDefined(connection)) return "Choose a supported AI connection in settings.";
+        Uri? endpoint = null;
+        if (connection == AiConnectionKind.ApiKey && !TryGetEndpoint(config.AiEndpoint, out endpoint))
             return "Use an HTTPS Responses endpoint, or an HTTP endpoint on a literal loopback address. URLs cannot contain credentials, queries, or fragments.";
-        var model = config.AiModel.Trim();
-        if (model.Length is 0 or > 200 || model.Any(char.IsControl))
+        var model = (connection switch
+        {
+            AiConnectionKind.ChatGpt => config.ChatGptModel,
+            AiConnectionKind.CodexCli => config.CodexModel,
+            AiConnectionKind.ClaudeCli => config.ClaudeModel,
+            _ => config.AiModel,
+        }).Trim();
+        if (model.Length > 200 || model.Any(char.IsControl)
+            || (model.Length == 0 && connection is AiConnectionKind.ApiKey or AiConnectionKind.ChatGpt))
             return "Choose a valid model name in OmniKit settings first.";
         if (Interlocked.CompareExchange(ref busy, 1, 0) != 0)
             return "I am still answering your previous question.";
@@ -81,9 +111,14 @@ public sealed class ChatService : IDisposable
         try
         {
             using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(ct, lifetime.Token);
-            cancellation.CancelAfter(TimeSpan.FromSeconds(45));
+            cancellation.CancelAfter(TimeSpan.FromSeconds(90));
             var token = cancellation.Token;
             token.ThrowIfCancellationRequested();
+            var instructions = InstructionsFor(config.Avatar);
+            if (connection == AiConnectionKind.ChatGpt)
+                return await ChatGpt.AskAsync(instructions, question, model, token).ConfigureAwait(false);
+            if (connection is AiConnectionKind.CodexCli or AiConnectionKind.ClaudeCli)
+                return await cli.AskAsync(connection, instructions, question, model, token).ConfigureAwait(false);
             string? key = credentials.Read(endpoint!);
             if (key is null && !IsLoopback(endpoint!))
                 return "Save an API key for this exact provider endpoint in OmniKit settings first.";
@@ -93,7 +128,7 @@ public sealed class ChatService : IDisposable
             var payload = new
             {
                 model,
-                instructions = Instructions,
+                instructions,
                 input = new[] { new { role = "user", content = question } },
                 store = false,
                 stream = false,
@@ -136,6 +171,12 @@ public sealed class ChatService : IDisposable
         catch (ObjectDisposedException) { return "AI chat stopped because OmniKit is unloading."; }
         catch (InvalidOperationException) { return "AI chat could not read its settings or saved credential. Check settings and save the key again if needed."; }
         finally { Interlocked.Exchange(ref busy, 0); }
+    }
+
+    private static string InstructionsFor(string avatar)
+    {
+        var name = Configuration.AvatarNames.Contains(avatar) ? avatar : "Bimble";
+        return Instructions.Replace("You are Bimble, OmniKit's helpful moon-bunny companion", $"You are {name}, OmniKit's helpful moon companion", StringComparison.Ordinal);
     }
 
     private static string ReadAnswer(JsonElement root)
@@ -186,6 +227,8 @@ public sealed class ChatService : IDisposable
         if (disposed) return;
         disposed = true;
         lifetime.Cancel();
+        ChatGpt.Dispose();
+        cli.Dispose();
         client.Dispose();
         // Active requests still read the token source during cancellation handling.
         // It is retained until the service and any in-flight operation are collected.

@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace OmniKit.Ui;
 
-public enum CompanionPose { Automatic, Walk, Idle, Talk }
+public enum CompanionPose { Automatic, Walk, Idle, Talk, Carry, Fall, Land, Push }
 
 internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum, Vector2 SpriteSize)
 {
@@ -84,6 +84,10 @@ internal static class CompanionAtlas
         seconds = float.IsFinite(seconds) ? Math.Max(0, seconds) % 1000 : 0;
         if (pose == CompanionPose.Walk) return (int)(seconds * 12) % 8;
         if (pose == CompanionPose.Talk) return 12 + (int)(seconds * 6) % 4;
+        if (pose == CompanionPose.Carry) return 16 + (int)(seconds * 3) % 2;
+        if (pose == CompanionPose.Fall) return 18 + (int)(seconds * 4) % 2;
+        if (pose == CompanionPose.Land) return seconds < .22f ? 20 : 21;
+        if (pose == CompanionPose.Push) return 22 + (int)(seconds * 3) % 2;
         // A short blink at the end of each relaxed four-second idle loop.
         return (seconds % 4) switch { < 3.6f => 8, < 3.72f => 9, < 3.84f => 10, _ => 11 };
     }

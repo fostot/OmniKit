@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 3;
+    private const int SchemaVersion = 4;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -82,7 +82,7 @@ public sealed class LocalStore
         }
         using var setVersion = connection.CreateCommand();
         setVersion.Transaction = transaction;
-        setVersion.CommandText = "PRAGMA user_version = 3;";
+        setVersion.CommandText = "PRAGMA user_version = 4;";
         setVersion.ExecuteNonQuery();
         transaction.Commit();
     }
@@ -151,7 +151,7 @@ public sealed class LocalStore
         ArgumentNullException.ThrowIfNull(target);
         var settings = Parse(json);
         // Importing preferences never grants fresh permission to send text to AI.
-        settings.AiEnabled = settings.AiEnabled && target.AiEnabled &&
+        settings.AiEnabled = settings.AiEnabled && target.AiEnabled && settings.AiConnection == (int)target.AiConnection &&
             ValidEndpoint(target.AiEndpoint, out var currentEndpoint) &&
             ValidEndpoint(settings.AiEndpoint, out var importedEndpoint) &&
             currentEndpoint!.AbsoluteUri == importedEndpoint!.AbsoluteUri;
@@ -174,6 +174,7 @@ public sealed class LocalStore
             var fields = typeof(Settings).GetFields(BindingFlags.Public | BindingFlags.Instance).Select(field => field.Name);
             if (schemaVersion == 1) fields = fields.Except(VersionTwoFields);
             if (schemaVersion < 3) fields = fields.Except(VersionThreeFields);
+            if (schemaVersion < 4) fields = fields.Except(VersionFourFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -220,11 +221,31 @@ public sealed class LocalStore
             settings.CompanionPalette = "Moonlight";
             settings.CompanionMagicEnabled = true;
         }
+        if (settings.Version < 4)
+        {
+            settings.InteractionTargets = (int)Interaction.InteractionTargets.DefaultWorld;
+            settings.EnemyInteractMode = (int)Interaction.EnemyInteractMode.Choose;
+            settings.CompanionFrameInteractionEnabled = false;
+            settings.CompanionPickupEnabled = true;
+            settings.CompanionPerchEnabled = true;
+            settings.CompanionContainmentEnabled = true;
+            settings.CompanionFallingEnabled = true;
+            settings.AiConnection = (int)Assistant.AiConnectionKind.ApiKey;
+            settings.ChatGptModel = ""; settings.CodexModel = ""; settings.ClaudeModel = "";
+        }
         settings.Version = SchemaVersion;
     }
 
     private static readonly string[] VersionThreeFields =
         [nameof(Settings.CompanionOutfit), nameof(Settings.CompanionPalette), nameof(Settings.CompanionMagicEnabled)];
+
+    private static readonly string[] VersionFourFields =
+    [
+        nameof(Settings.InteractionTargets), nameof(Settings.EnemyInteractMode),
+        nameof(Settings.CompanionFrameInteractionEnabled), nameof(Settings.CompanionPickupEnabled),
+        nameof(Settings.CompanionPerchEnabled), nameof(Settings.CompanionContainmentEnabled), nameof(Settings.CompanionFallingEnabled),
+        nameof(Settings.AiConnection), nameof(Settings.ChatGptModel), nameof(Settings.CodexModel), nameof(Settings.ClaudeModel),
+    ];
 
     private static ModifierKeys LegacyModifier(int key) => key switch
     {
@@ -251,6 +272,9 @@ public sealed class LocalStore
     {
         if (settings is null || settings.Version != SchemaVersion)
             throw new InvalidOperationException("Unsupported configuration version.");
+        if ((settings.InteractionTargets & ~(int)Interaction.InteractionTargets.All) != 0 ||
+            !Enum.IsDefined((Interaction.EnemyInteractMode)settings.EnemyInteractMode))
+            throw new InvalidOperationException("Choose supported interaction target types and an enemy action.");
         if (!ValidKey(settings.LauncherKey) || !ValidKey(settings.SettingsKey) || !ValidKey(settings.InteractKey) ||
             !HotkeyChord.IsValidModifiers((ModifierKeys)settings.LauncherModifier) || !HotkeyChord.IsValidModifiers((ModifierKeys)settings.SettingsModifier) ||
             !HotkeyChord.IsValidModifiers((ModifierKeys)settings.InteractModifier))
@@ -280,7 +304,10 @@ public sealed class LocalStore
             throw new InvalidOperationException("The in-game wiki overlay name must be 1–40 letters, digits, underscores or hyphens.");
         if (!ValidEndpoint(settings.AiEndpoint, out _))
             throw new InvalidOperationException("AI endpoints must use HTTPS or literal loopback HTTP, without URL credentials, queries or fragments.");
-        if (settings.AiModel is null || settings.AiModel.Length > 200 || settings.AiModel.Any(char.IsControl))
+        if (!Enum.IsDefined((Assistant.AiConnectionKind)settings.AiConnection))
+            throw new InvalidOperationException("Choose a supported AI connection.");
+        if (new[] { settings.AiModel, settings.ChatGptModel, settings.CodexModel, settings.ClaudeModel }
+            .Any(model => model is null || model.Length > 200 || model.Any(char.IsControl)))
             throw new InvalidOperationException("The AI model name is invalid.");
         if (settings.VoiceBindings is null || settings.VoiceBindings.Count > 100)
             throw new InvalidOperationException("At most 100 voice bindings are supported.");
@@ -327,6 +354,8 @@ public sealed class LocalStore
         target.SettingsKey = (VirtualKey)value.SettingsKey;
         target.SettingsModifier = (ModifierKeys)value.SettingsModifier;
         target.SoftInteractEnabled = value.SoftInteractEnabled;
+        target.InteractionTargets = (Interaction.InteractionTargets)value.InteractionTargets;
+        target.EnemyInteractMode = (Interaction.EnemyInteractMode)value.EnemyInteractMode;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
         target.InteractKey = (VirtualKey)value.InteractKey;
         target.InteractModifier = (ModifierKeys)value.InteractModifier;
@@ -346,6 +375,11 @@ public sealed class LocalStore
         target.CompanionOutfit = value.CompanionOutfit;
         target.CompanionPalette = value.CompanionPalette;
         target.CompanionMagicEnabled = value.CompanionMagicEnabled;
+        target.CompanionFrameInteractionEnabled = value.CompanionFrameInteractionEnabled;
+        target.CompanionPickupEnabled = value.CompanionPickupEnabled;
+        target.CompanionPerchEnabled = value.CompanionPerchEnabled;
+        target.CompanionContainmentEnabled = value.CompanionContainmentEnabled;
+        target.CompanionFallingEnabled = value.CompanionFallingEnabled;
         target.CompanionBoxLeft = value.CompanionBoxLeft;
         target.CompanionBoxTop = value.CompanionBoxTop;
         target.CompanionBoxRight = value.CompanionBoxRight;
@@ -355,8 +389,12 @@ public sealed class LocalStore
         target.WikiOverlayName = value.WikiOverlayName;
         target.VoiceEnabled = value.VoiceEnabled;
         target.AiEnabled = value.AiEnabled;
+        target.AiConnection = (Assistant.AiConnectionKind)value.AiConnection;
         target.AiEndpoint = value.AiEndpoint;
         target.AiModel = value.AiModel;
+        target.ChatGptModel = value.ChatGptModel;
+        target.CodexModel = value.CodexModel;
+        target.ClaudeModel = value.ClaudeModel;
         target.VoiceBindings = voiceBindings;
     }
 
@@ -380,6 +418,8 @@ public sealed class LocalStore
         public int SettingsKey;
         public int SettingsModifier;
         public bool SoftInteractEnabled;
+        public int InteractionTargets;
+        public int EnemyInteractMode;
         public bool InteractionHudEnabled;
         public int InteractKey;
         public int InteractModifier;
@@ -399,6 +439,11 @@ public sealed class LocalStore
         public string CompanionOutfit = "Navigator";
         public string CompanionPalette = "Moonlight";
         public bool CompanionMagicEnabled = true;
+        public bool CompanionFrameInteractionEnabled;
+        public bool CompanionPickupEnabled = true;
+        public bool CompanionPerchEnabled = true;
+        public bool CompanionContainmentEnabled = true;
+        public bool CompanionFallingEnabled = true;
         public float CompanionBoxLeft = .72f;
         public float CompanionBoxTop = .55f;
         public float CompanionBoxRight = .95f;
@@ -408,8 +453,12 @@ public sealed class LocalStore
         public string WikiOverlayName = "omnikit";
         public bool VoiceEnabled;
         public bool AiEnabled;
+        public int AiConnection;
         public string AiEndpoint = "https://api.openai.com/v1/responses";
         public string AiModel = "";
+        public string ChatGptModel = "";
+        public string CodexModel = "";
+        public string ClaudeModel = "";
         public List<VoiceBinding> VoiceBindings = [];
 
         public static Settings From(Configuration value) => new()
@@ -422,6 +471,8 @@ public sealed class LocalStore
             SettingsKey = (int)value.SettingsKey,
             SettingsModifier = (int)value.SettingsModifier,
             SoftInteractEnabled = value.SoftInteractEnabled,
+            InteractionTargets = (int)value.InteractionTargets,
+            EnemyInteractMode = (int)value.EnemyInteractMode,
             InteractionHudEnabled = value.InteractionHudEnabled,
             InteractKey = (int)value.InteractKey,
             InteractModifier = (int)value.InteractModifier,
@@ -441,6 +492,11 @@ public sealed class LocalStore
             CompanionOutfit = value.CompanionOutfit,
             CompanionPalette = value.CompanionPalette,
             CompanionMagicEnabled = value.CompanionMagicEnabled,
+            CompanionFrameInteractionEnabled = value.CompanionFrameInteractionEnabled,
+            CompanionPickupEnabled = value.CompanionPickupEnabled,
+            CompanionPerchEnabled = value.CompanionPerchEnabled,
+            CompanionContainmentEnabled = value.CompanionContainmentEnabled,
+            CompanionFallingEnabled = value.CompanionFallingEnabled,
             CompanionBoxLeft = value.CompanionBoxLeft,
             CompanionBoxTop = value.CompanionBoxTop,
             CompanionBoxRight = value.CompanionBoxRight,
@@ -450,8 +506,12 @@ public sealed class LocalStore
             WikiOverlayName = value.WikiOverlayName,
             VoiceEnabled = value.VoiceEnabled,
             AiEnabled = value.AiEnabled,
+            AiConnection = (int)value.AiConnection,
             AiEndpoint = value.AiEndpoint,
             AiModel = value.AiModel,
+            ChatGptModel = value.ChatGptModel,
+            CodexModel = value.CodexModel,
+            ClaudeModel = value.ClaudeModel,
             VoiceBindings = value.VoiceBindings,
         };
     }

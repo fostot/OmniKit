@@ -41,3 +41,25 @@ pausedPress.Sample(70, 3, false);
 Check(!pausedPress.Consumed, "Physical release clears suppression.");
 
 Console.WriteLine($"Interaction input policy: {checks} checks passed.");
+
+var defaults = InteractionTargets.DefaultWorld;
+foreach (var category in Enum.GetValues<InteractionTargets>().Where(kind => kind is not (InteractionTargets.None or InteractionTargets.DefaultWorld or InteractionTargets.All)))
+{
+    Check(SoftTargetPolicy.IsEnabled(defaults, category) == !SoftTargetPolicy.IsEnemy(category), "Existing world targets stay enabled; enemies require opt-in.");
+    Check(!SoftTargetPolicy.IsEnabled(InteractionTargets.None, category), "Turning every category off must disable all candidates.");
+    Check(SoftTargetPolicy.ActionFor(InteractionTargets.All, EnemyInteractMode.Choose, category)
+        == (SoftTargetPolicy.IsEnemy(category) ? SoftTargetAction.None : SoftTargetAction.UseObject),
+        "Choosing no enemy action cannot grant enemy targeting or attacks.");
+}
+foreach (var enemy in new[] { InteractionTargets.HostileEnemies, InteractionTargets.NeutralEnemies })
+{
+    Check(SoftTargetPolicy.ActionFor(enemy, EnemyInteractMode.TargetOnly, enemy) == SoftTargetAction.TargetEnemy, "Target-only must never request starting auto-attack.");
+    Check(SoftTargetPolicy.ActionFor(enemy, EnemyInteractMode.StartAttack, enemy) == SoftTargetAction.AttackEnemy, "Starting auto-attack needs both the category and action choice.");
+    Check(SoftTargetPolicy.ActionFor(defaults, EnemyInteractMode.StartAttack, enemy) == SoftTargetAction.None, "An attack preference alone cannot enable enemy interactions.");
+    Check(SoftTargetPolicy.ActionFor(enemy, (EnemyInteractMode)99, enemy) == SoftTargetAction.None, "Unknown enemy actions fail closed.");
+}
+Check(!SoftTargetPolicy.IsEnabled(InteractionTargets.HostileEnemies, InteractionTargets.NeutralEnemies)
+    && !SoftTargetPolicy.IsEnabled(InteractionTargets.NeutralEnemies, InteractionTargets.HostileEnemies), "Hostile and neutral categories are independent.");
+Check(!SoftTargetPolicy.IsEnabled(InteractionTargets.All, InteractionTargets.All)
+    && !SoftTargetPolicy.IsEnabled((InteractionTargets)2048, InteractionTargets.Npcs), "Invalid masks and compound candidate categories fail closed.");
+Console.WriteLine($"Interaction category/action policy: {checks} combined checks passed.");

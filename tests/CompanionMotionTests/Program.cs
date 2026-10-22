@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text.Json.Nodes;
 using OmniKit.Ui;
 
 var checks = 0;
@@ -119,4 +120,69 @@ Check(CompanionLayout.TryNormalizeArea(new Vector2(-100), new Vector2(900), Vect
     new Vector2(620, 500), new Vector2(96), out area) && area == new Vector4(0, 0, 1, 1),
     "Selections are clamped to the viewport before saving.");
 
+var library = new CompanionAnimationLibrary(Path.Combine(AppContext.BaseDirectory, "assets"));
+Check(library.Count == 7, "All seven reviewed physical/reaction atlases are available.");
+foreach (var avatar in new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" })
+foreach (var outfit in new[] { "Navigator", "Stargazer" })
+{
+    Check(library.TryGet(avatar, outfit, out var atlas) && atlas != null, "Avatar and outfit resolve an accepted atlas.");
+    Check(atlas!.Frames.Length == 24, "Every new atlas contains exactly 24 poses.");
+    for (var i = 0; i < 24; i++)
+    foreach (var size in new[] { 48f, 96f, 144f })
+    foreach (var mirror in new[] { false, true })
+    {
+        var origin = new Vector2(200, 140);
+        var frame = atlas.GetFrame(i, mirror, origin, new Vector2(size));
+        var region = atlas.Frames[i];
+        var sourceAnchorOffset = new Vector2(mirror ? region.Rect.Z - region.Anchor.X : region.Anchor.X - region.Rect.X,
+            region.Anchor.Y - region.Rect.Y);
+        var renderedAnchor = frame.Position + sourceAnchorOffset * (size / atlas.SourceScale);
+        Check(Vector2.Distance(renderedAnchor, origin + new Vector2(.5f, .9f) * size) < .002f,
+            "Every pose and mirror uses the exact shared body/foot anchor.");
+        Check(frame.Position.X >= origin.X - .002f && frame.Position.Y >= origin.Y - .002f
+            && frame.Position.X + frame.Size.X <= origin.X + size + .002f
+            && frame.Position.Y + frame.Size.Y <= origin.Y + size + .002f,
+            $"The entire sampled rectangle fits the logical cell: {avatar}/{outfit}/{i}.");
+        Check(Close(frame.Size.X / (region.Rect.Z - region.Rect.X), size / atlas.SourceScale)
+            && Close(frame.Size.Y / (region.Rect.W - region.Rect.Y), size / atlas.SourceScale),
+            "Pose changes preserve one source pixel scale and original aspect ratio.");
+        var hit = atlas.HitBounds(i, mirror, origin, new Vector2(size));
+        Check(hit.Minimum.X >= frame.Position.X - .002f && hit.Minimum.Y >= frame.Position.Y - .002f
+            && hit.Maximum.X <= frame.Position.X + frame.Size.X + .002f
+            && hit.Maximum.Y <= frame.Position.Y + frame.Size.Y + .002f,
+            "Only the bounded opaque body rectangle is clickable.");
+    }
+}
+foreach (var item in new[] { (CompanionPose.Carry, 16), (CompanionPose.Fall, 18), (CompanionPose.Land, 20), (CompanionPose.Push, 22) })
+{
+    var seen = new HashSet<int>();
+    for (var step = 0; step < 100; step++)
+    {
+        seen.Add(CompanionAtlas.SelectFrame(item.Item1, step / 100f, true));
+        Check(CompanionAtlas.SelectFrame(item.Item1, step / 100f, false) == 8,
+            "Disabling animation also stops reaction and preview frames.");
+    }
+    Check(seen.SetEquals(new[] { item.Item2, item.Item2 + 1 }), "Reaction poses select only their two assigned frames.");
+}
+Check(!library.TryGet("unrecognized", "Navigator", out _), "Unknown art falls back without an arbitrary file lookup.");
+var temporary = Directory.CreateTempSubdirectory("omnikit-atlas-tests-");
+try
+{
+    var goodText = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "assets", "lunar-companions.frames.json"));
+    foreach (var invalid in new[] { "path", "order", "overflow", "truncated" })
+    {
+        var document = JsonNode.Parse(goodText)!;
+        var atlases = document["atlases"]!.AsArray();
+        while (atlases.Count > 1) atlases.RemoveAt(atlases.Count - 1);
+        var atlas = atlases[0]!;
+        if (invalid == "path") atlas["file"] = "../outside.png";
+        if (invalid == "order") atlas["frames"]![0]!["index"] = 9;
+        if (invalid == "overflow") atlas["commonSourceScalePx"] = 64;
+        File.WriteAllText(Path.Combine(temporary.FullName, "lunar-companions.frames.json"),
+            invalid == "truncated" ? "{\"atlases\":" : document.ToJsonString());
+        Check(new CompanionAnimationLibrary(temporary.FullName).Count == 0,
+            "Unsafe or malformed optional atlas metadata fails closed to the existing art fallback.");
+    }
+}
+finally { temporary.Delete(true); }
 Console.WriteLine($"Companion motion/layout: {checks} checks passed.");

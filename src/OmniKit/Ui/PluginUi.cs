@@ -54,6 +54,13 @@ internal sealed class PluginUi : IDisposable
     private SearchEntry[] entries = [];
     private Task<string>? pendingAnswer;
     private CancellationTokenSource? request;
+    private Task<string>? pendingConnection;
+    private Task<IReadOnlyList<AiModelOption>>? pendingModels;
+    private CancellationTokenSource? connectionRequest;
+    private AiConnectionKind operationConnection;
+    private bool refreshModelsAfterConnection;
+    private AiModelOption[] chatGptModels = [];
+    private string connectionStatus = "";
     private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About"];
     private static readonly Vector4 Gold = new(.48f, .78f, .74f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
@@ -106,6 +113,7 @@ internal sealed class PluginUi : IDisposable
             answer = pendingAnswer.IsCompletedSuccessfully ? pendingAnswer.Result : "The request could not finish. Please try again.";
             pendingAnswer = null; request?.Dispose(); request = null;
         }
+        UpdateConnection();
         if (!voice.TryTakeResult(out var heard)) return;
         if (!config.VoiceEnabled || !ShortcutInput.GameAcceptsInput()) { status = "Voice result discarded because the game is not ready."; return; }
         if (practiceVoice)
@@ -276,7 +284,7 @@ internal sealed class PluginUi : IDisposable
         ImGui.TextWrapped("AI adds flexible explanations and conversation about XIV. Questions you submit are sent to your chosen provider, which may charge for use. Local commands still run on your PC. AI replies cannot control the game.");
         if (ImGui.Button("Set up AI", new Vector2(-1, 0)))
         { config.AiEnabled = false; config.SetupCompleted = true; Save(); companionOpen = false; section = 3; companionTab = 2; OpenSettings(); }
-        ImGui.TextWrapped("This preview supports an API key or a compatible local server. Account sign-in is planned; a ChatGPT or Claude subscription is not an API key.");
+        ImGui.TextWrapped("Choose Continue with ChatGPT, your installed Codex or Claude CLI, an API key, or a compatible local server. Connecting an account does not enable AI questions until you turn them on.");
         ImGui.EndChild();
     }
 
@@ -303,8 +311,8 @@ internal sealed class PluginUi : IDisposable
         }
         else
         {
-            ImGui.BeginDisabled(pendingAnswer != null || string.IsNullOrWhiteSpace(question));
-            if (ImGui.Button("Ask companion") || (submit && pendingAnswer == null))
+            ImGui.BeginDisabled(pendingAnswer != null || ConnectionBusy || string.IsNullOrWhiteSpace(question));
+            if (ImGui.Button("Ask companion") || (submit && pendingAnswer == null && !ConnectionBusy))
             { request = new CancellationTokenSource(); pendingAnswer = chat.AskAsync(question, request.Token); answer = "Thinking..."; }
             ImGui.EndDisabled();
             if (pendingAnswer != null) { ImGui.SameLine(); if (ImGui.Button("Cancel")) request?.Cancel(); }
@@ -341,10 +349,10 @@ internal sealed class PluginUi : IDisposable
                 hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
+                else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack" }.Any(filter.Contains)) section = 1;
                 else if (filter.Contains("hud") || filter.Contains("target")) section = 2;
-                else if (new[] { "interact", "gather", "gear" }.Any(filter.Contains)) section = 1;
-                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box" }.Any(filter.Contains))
-                { section = 3; companionTab = filter.Contains("ai") || filter.Contains("brain") ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
+                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains))
+                { section = 3; companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
                 else if (new[] { "data", "export", "import", "json", "source", "umbra", "wiki" }.Any(filter.Contains)) section = 4;
                 else if (filter.Contains("key") || filter.Contains("shortcut")) section = 0;
                 selectSettingsTab = true;
@@ -406,7 +414,7 @@ internal sealed class PluginUi : IDisposable
     {
         Heading("Look, then interact");
         if (ImGui.Checkbox("Enable soft interaction", ref config.SoftInteractEnabled)) { hotkeys.Cancel(); Save(); }
-        ImGui.TextWrapped("Look toward a nearby NPC or usable object, then press your interact key. Nothing happens automatically just because you look at it.");
+        ImGui.TextWrapped("Look toward a nearby enabled target, then press your interact key. Nothing happens automatically just because you look at it.");
         if (!config.SoftInteractEnabled) return;
         var old = (config.InteractKey, config.InteractModifier);
         if (hotkeys.Draw("Interact key", ref config.InteractKey, ref config.InteractModifier))
@@ -418,6 +426,7 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.SliderFloat("Detection distance", ref config.InteractionDistance,
             Configuration.MinimumDetectionDistance, Configuration.MaximumDetectionDistance, "%.1f yalms")) Save();
         ImGui.TextWrapped("How far to look for targets. The game still controls how close you must be to interact.");
+        DrawInteractionTargets();
         VisibleTarget();
         if (ImGui.CollapsingHeader("Gathering outfits"))
         {
@@ -439,11 +448,66 @@ internal sealed class PluginUi : IDisposable
         }
     }
 
+    private void DrawInteractionTargets()
+    {
+        if (!ImGui.CollapsingHeader("Target types", ImGuiTreeNodeFlags.DefaultOpen)) return;
+        if (ImGui.BeginTable("world-targets", 2, ImGuiTableFlags.SizingStretchSame))
+        {
+            foreach (var (kind, label) in new[]
+            {
+                (InteractionTargets.Npcs, "NPCs / vendors"),
+                (InteractionTargets.QuestObjects, "Quest objects"),
+                (InteractionTargets.Loot, "Loot / treasure"),
+                (InteractionTargets.Aetherytes, "Aetherytes"),
+                (InteractionTargets.GatheringNodes, "Gathering nodes"),
+                (InteractionTargets.Retainers, "Retainers"),
+                (InteractionTargets.Housing, "Housing"),
+                (InteractionTargets.OtherUsableObjects, "Other usable objects"),
+            })
+            {
+                ImGui.TableNextColumn();
+                TargetToggle(label, kind);
+            }
+            ImGui.EndTable();
+        }
+        Heading("Enemies");
+        TargetToggle("Hostile enemies", InteractionTargets.HostileEnemies);
+        TargetToggle("Neutral enemies", InteractionTargets.NeutralEnemies);
+        ImGui.TextWrapped("Neutral includes attackable enemies not currently marked hostile. Their category can change with game state.");
+        if ((config.InteractionTargets & (InteractionTargets.HostileEnemies | InteractionTargets.NeutralEnemies)) != 0)
+        {
+            ImGui.TextWrapped("Choose what the interact key does to enemies:");
+            if (ImGui.RadioButton("Select target only", config.EnemyInteractMode == EnemyInteractMode.TargetOnly))
+            { config.EnemyInteractMode = EnemyInteractMode.TargetOnly; Save(); }
+            if (ImGui.RadioButton("Target and start auto-attack", config.EnemyInteractMode == EnemyInteractMode.StartAttack))
+            { config.EnemyInteractMode = EnemyInteractMode.StartAttack; Save(); }
+            if (config.EnemyInteractMode == EnemyInteractMode.Choose)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, Gold);
+                ImGui.TextWrapped("Choose an action above before using the interact key on enemies.");
+                ImGui.PopStyleColor();
+            }
+            ImGui.TextWrapped("Select target only does not start auto-attack. An existing auto-attack stays active.");
+            ImGui.TextWrapped("Looking only updates the HUD. Press the interact key to use your chosen enemy action. Auto-attack follows the game's normal range and target rules.");
+        }
+        if (config.InteractionTargets == InteractionTargets.None)
+            ImGui.TextWrapped("All target types are off. Enable a type to find interaction targets.");
+    }
+
+    private void TargetToggle(string label, InteractionTargets kind)
+    {
+        var enabled = (config.InteractionTargets & kind) != 0;
+        if (!ImGui.Checkbox(label, ref enabled)) return;
+        config.InteractionTargets = enabled ? config.InteractionTargets | kind : config.InteractionTargets & ~kind;
+        Save();
+    }
+
     private void VisibleTarget()
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Gold);
         ImGui.TextWrapped("Visible target: " + (interaction.CandidateName ?? "None"));
         ImGui.PopStyleColor();
+        ImGui.TextColored(Muted, "Target type: " + interaction.CandidateCategoryName);
         ImGui.TextWrapped(interaction.Hint ?? "Look toward a nearby usable object.");
     }
 
@@ -480,16 +544,22 @@ internal sealed class PluginUi : IDisposable
     private void DrawCompanion()
     {
         if (!ImGui.BeginTabBar("companion-options")) return;
+        // Snapshot programmatic selection before drawing: a clicked earlier tab
+        // must not make a later tab force itself selected in the same frame.
+        var requestedTab = shownCompanionTab != companionTab ? companionTab : -1;
+        var clickedTab = -1;
         foreach (var (index, title) in new[] { (0, "Appearance"), (1, "Voice"), (2, "AI") })
         {
-            var flags = shownCompanionTab != companionTab && companionTab == index ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
-            if (!ImGui.BeginTabItem(title, flags)) continue;
+            var flags = requestedTab == index ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
+            var visible = ImGui.BeginTabItem(title, flags);
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) clickedTab = index;
+            if (!visible) continue;
             shownCompanionTab = index;
             switch (index) { case 0: DrawAppearance(); break; case 1: DrawVoiceSettings(); break; case 2: DrawAiSettings(); break; }
             ImGui.EndTabItem();
         }
         ImGui.EndTabBar();
-        companionTab = shownCompanionTab;
+        companionTab = clickedTab >= 0 ? clickedTab : shownCompanionTab;
     }
 
     private void DrawAppearance()
@@ -538,6 +608,18 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.SliderFloat("Companion size", ref config.CompanionSize, 48, 192, "%.0f")) Save();
             if (ImGui.Button("Draw roaming area")) { roaming.BeginChooseArea(); settingsOpen = false; }
             ImGui.TextWrapped("Drag a box over the game. Your companion walks inside it. Escape cancels. Click the companion to talk.");
+            Heading("Frame interaction");
+            if (ImGui.Checkbox("Enable frame interaction", ref config.CompanionFrameInteractionEnabled)) Save();
+            if (config.CompanionFrameInteractionEnabled)
+            {
+                if (ImGui.Checkbox("Pick up and drag", ref config.CompanionPickupEnabled)) Save();
+                if (ImGui.Checkbox("Walk on window tops", ref config.CompanionPerchEnabled)) Save();
+                if (ImGui.Checkbox("Stay inside a window when dropped inside", ref config.CompanionContainmentEnabled)) Save();
+                if (ImGui.Checkbox("Fall when leaving a window", ref config.CompanionFallingEnabled)) Save();
+                ImGui.TextWrapped("Drag your companion onto a supported window. Drop near its top to perch, or inside it to roam within its edges.");
+                ImGui.TextWrapped("Supports visible rectangular game and Dalamud windows, including OmniKit and compatible Umbra panels. Hidden, closed or unsupported windows return your companion to its saved area.");
+                if (!config.AnimationsEnabled) ImGui.TextWrapped("Animations are off. You can still pick up and place your companion.");
+            }
         }
         if (ImGui.Button("Open companion conversation")) OpenCompanion();
     }
@@ -553,13 +635,42 @@ internal sealed class PluginUi : IDisposable
     private void DrawAiSettings()
     {
         Heading("Optional AI");
-        ImGui.TextWrapped("Your local command matcher works without AI: names, common words, saved voice phrases, jobs and game actions. AI adds open-ended answers about XIV. Only questions you submit with Ask are sent to the provider.");
+        ImGui.TextWrapped("AI answers questions about XIV. Local commands work without it. Connect below, then enable questions when ready.");
+        ImGui.SetNextItemWidth(-1);
+        if (ImGui.BeginCombo("##ai-connection", ConnectionLabel(config.AiConnection)))
+        {
+            foreach (var connection in Enum.GetValues<AiConnectionKind>())
+                if (ImGui.Selectable(ConnectionLabel(connection), connection == config.AiConnection) && connection != config.AiConnection)
+                {
+                    CancelAiOperations(); config.AiConnection = connection; config.AiEnabled = false;
+                    chatGptModels = []; apiKey = ""; connectionStatus = "";
+                    Save(); status = "Connection changed. Enable AI questions when this provider is ready.";
+                }
+            ImGui.EndCombo();
+        }
         if (ImGui.Checkbox("Use AI for questions", ref config.AiEnabled))
-        { if (!config.AiEnabled) request?.Cancel(); Save(); }
-        if (!config.AiEnabled) return;
-        ImGui.TextWrapped("1. Choose your provider and model.\n2. Paste its API key and save it.\n3. Open your companion and ask a question.");
+        { if (!config.AiEnabled) CancelAiOperations(); Save(); }
         if (ImGui.Button("Open companion")) OpenCompanion();
-        ImGui.TextWrapped("API use may cost money. Account sign-in is not available in this preview.");
+        switch (config.AiConnection)
+        {
+            case AiConnectionKind.ChatGpt: DrawChatGptConnection(); break;
+            case AiConnectionKind.CodexCli:
+            case AiConnectionKind.ClaudeCli: DrawCliConnection(); break;
+            default: DrawApiConnection(); break;
+        }
+        if (ConnectionBusy)
+        {
+            ImGui.TextWrapped("Waiting for the connection operation...");
+            if (ImGui.Button("Cancel connection")) connectionRequest?.Cancel();
+        }
+        if (connectionStatus.Length > 0) ImGui.TextWrapped(connectionStatus);
+        ImGui.Spacing();
+        ImGui.TextWrapped("Only questions you submit with Ask are sent. Replies cannot run commands or control the game. Provider limits and charges may apply.");
+    }
+
+    private void DrawApiConnection()
+    {
+        Heading("API key or local server");
         ImGui.SetNextItemWidth(-1);
         if (ImGui.InputTextWithHint("##model", "Provider model name", ref config.AiModel, 200)) Save();
         ImGui.SetNextItemWidth(-1);
@@ -583,11 +694,184 @@ internal sealed class PluginUi : IDisposable
             {
                 if (Uri.TryCreate(providerEndpoint, UriKind.Absolute, out var uri) && (uri.Scheme == "https" || (uri.Scheme == "http" && System.Net.IPAddress.TryParse(uri.Host, out var ip) && System.Net.IPAddress.IsLoopback(ip)))
                     && uri.UserInfo.Length == 0 && uri.Query.Length == 0 && uri.Fragment.Length == 0)
-                { config.AiEndpoint = providerEndpoint; Save(); }
+                {
+                    if (!string.Equals(config.AiEndpoint, providerEndpoint, StringComparison.Ordinal))
+                    {
+                        CancelAiOperations(); config.AiEndpoint = providerEndpoint; config.AiEnabled = false; apiKey = "";
+                        Save(); status = "Address changed. Enable AI questions when this provider is ready.";
+                    }
+                }
                 else status = "Use a full HTTPS Responses address, or HTTP on 127.0.0.1 for a local server.";
             }
             ImGui.TextWrapped("Use a Responses-compatible endpoint. Local servers can work without a key. Changing the address does not send your old key to the new provider.");
         }
+    }
+
+    private void DrawChatGptConnection()
+    {
+        Heading("ChatGPT account");
+        ImGui.TextWrapped(chat.ChatGpt.Status);
+        ImGui.TextWrapped("Sign-in opens your browser. OmniKit keeps its own protected connection; it does not copy another app's login.");
+        var accounts = chat.ChatGpt.Accounts;
+        var active = accounts.FirstOrDefault(account => account.IsActive);
+        ImGui.BeginDisabled(ConnectionBusy || pendingAnswer != null);
+        if (accounts.Count > 0)
+        {
+            ImGui.SetNextItemWidth(-1);
+            if (ImGui.BeginCombo("##chatgpt-account", FitLabel(active?.Label ?? "Choose a saved account", ImGui.GetContentRegionAvail().X - 40 * ImGuiHelpers.GlobalScale)))
+            {
+                foreach (var account in accounts)
+                {
+                    var label = account.Label + (account.IsConnected ? "" : " · reconnect");
+                    if (ImGui.Selectable(MenuLabel(label) + "##" + account.Id, account.IsActive))
+                    {
+                        try
+                        {
+                            chat.ChatGpt.SelectAccount(account.Id); config.AiEnabled = false; chatGptModels = []; Save();
+                            connectionStatus = "Account selected. Refresh its models, then enable AI questions.";
+                        }
+                        catch { connectionStatus = "The saved account could not be selected. Try again."; }
+                    }
+                    if (ImGui.IsItemHovered()) WrappedTooltip(label);
+                }
+                ImGui.EndCombo();
+            }
+        }
+        if (ImGui.Button("Continue with ChatGPT"))
+        {
+            config.AiEnabled = false; Save();
+            StartConnection(token => chat.ChatGpt.SignInAsync(token), refreshModels: true);
+        }
+        if (accounts.Count > 0)
+        {
+            ImGui.SameLine();
+            if (ImGui.Button("Add account"))
+            {
+                config.AiEnabled = false; Save();
+                StartConnection(token => chat.ChatGpt.SignInAsync(token, true), refreshModels: true);
+            }
+            if (ImGui.Button("Sign out selected account"))
+            {
+                config.AiEnabled = false; chatGptModels = []; Save();
+                StartConnection(token => chat.ChatGpt.SignOutAsync(token));
+            }
+        }
+        ImGui.BeginDisabled(!chat.ChatGpt.IsConnected);
+        if (ImGui.Button("Refresh available models")) StartModelRefresh();
+        ImGui.EndDisabled();
+        ImGui.EndDisabled();
+        ImGui.SetNextItemWidth(-1);
+        var selected = chatGptModels.FirstOrDefault(model => model.Id == config.ChatGptModel);
+        var preview = selected?.Name ?? (config.ChatGptModel.Length > 0 ? config.ChatGptModel : "Choose a ChatGPT model");
+        ImGui.BeginDisabled(ConnectionBusy || chatGptModels.Length == 0);
+        if (ImGui.BeginCombo("##chatgpt-model", FitLabel(preview, ImGui.GetContentRegionAvail().X - 40 * ImGuiHelpers.GlobalScale)))
+        {
+            foreach (var model in chatGptModels)
+            {
+                if (ImGui.Selectable(MenuLabel(model.Name) + "##" + model.Id, model.Id == config.ChatGptModel))
+                { config.ChatGptModel = model.Id; Save(); }
+                if (ImGui.IsItemHovered()) WrappedTooltip(model.Name);
+            }
+            ImGui.EndCombo();
+        }
+        ImGui.EndDisabled();
+        if (chatGptModels.Length == 0) ImGui.TextWrapped("Connect and refresh models to choose one available to this account.");
+    }
+
+    private void DrawCliConnection()
+    {
+        var codex = config.AiConnection == AiConnectionKind.CodexCli;
+        Heading(codex ? "Codex CLI" : "Claude CLI");
+        ImGui.TextWrapped("Uses your installed CLI and its own sign-in. OmniKit never copies its credentials.");
+        ImGui.TextWrapped("The CLI may include its own global instructions and runtime context. Action tools are disabled; game state is not sent.");
+        if (codex) ImGui.TextWrapped("Only the verified Codex CLI version " + CliChatBackend.SupportedCodexVersion + " is enabled. Other versions need an isolation check first.");
+        ImGui.TextWrapped(chat.CliStatus);
+        ImGui.BeginDisabled(ConnectionBusy || pendingAnswer != null);
+        if (ImGui.Button("Check CLI connection")) StartConnection(chat.ProbeCliAsync);
+        ImGui.SameLine();
+        if (ImGui.Button("Sign in to CLI")) StartConnection(chat.SignInCliAsync);
+        ImGui.EndDisabled();
+        ImGui.SetNextItemWidth(-1);
+        if (codex)
+        {
+            if (ImGui.InputTextWithHint("##codex-model", "Model (optional; uses CLI default)", ref config.CodexModel, 200)) Save();
+        }
+        else if (ImGui.InputTextWithHint("##claude-model", "Model (optional; uses CLI default)", ref config.ClaudeModel, 200)) Save();
+    }
+
+    private bool ConnectionBusy => pendingConnection != null || pendingModels != null;
+
+    private void StartConnection(Func<CancellationToken, Task<string>> operation, bool refreshModels = false)
+    {
+        if (ConnectionBusy) return;
+        connectionRequest = new CancellationTokenSource(); operationConnection = config.AiConnection;
+        refreshModelsAfterConnection = refreshModels; connectionStatus = "";
+        try { pendingConnection = operation(connectionRequest.Token); }
+        catch { connectionStatus = "The connection could not start. Try again."; connectionRequest.Dispose(); connectionRequest = null; }
+    }
+
+    private void StartModelRefresh()
+    {
+        if (ConnectionBusy) return;
+        connectionRequest = new CancellationTokenSource(); operationConnection = config.AiConnection;
+        connectionStatus = "";
+        try { pendingModels = chat.ChatGpt.ListModelsAsync(connectionRequest.Token); }
+        catch { connectionStatus = "Models could not be requested. Try again."; connectionRequest.Dispose(); connectionRequest = null; }
+    }
+
+    private void UpdateConnection()
+    {
+        if (pendingConnection is { IsCompleted: true })
+        {
+            var current = operationConnection == config.AiConnection;
+            var canceled = connectionRequest?.IsCancellationRequested == true;
+            if (current) connectionStatus = pendingConnection.IsCompletedSuccessfully ? pendingConnection.Result : "The connection operation could not finish.";
+            pendingConnection = null; connectionRequest?.Dispose(); connectionRequest = null;
+            var refresh = current && !canceled && refreshModelsAfterConnection && chat.ChatGpt.IsConnected
+                && connectionStatus.StartsWith("Connected to ChatGPT.", StringComparison.Ordinal);
+            refreshModelsAfterConnection = false;
+            if (refresh) StartModelRefresh();
+        }
+        if (pendingModels is { IsCompleted: true })
+        {
+            if (operationConnection == config.AiConnection && connectionRequest?.IsCancellationRequested != true)
+            {
+                chatGptModels = pendingModels.IsCompletedSuccessfully ? pendingModels.Result.ToArray() : [];
+                connectionStatus = chatGptModels.Length > 0 ? "Available models refreshed. Choose one below." : "No models were available. Check the ChatGPT connection and try again.";
+            }
+            pendingModels = null; connectionRequest?.Dispose(); connectionRequest = null;
+        }
+    }
+
+    private void CancelAiOperations() { request?.Cancel(); connectionRequest?.Cancel(); }
+
+    private static string ConnectionLabel(AiConnectionKind connection) => connection switch
+    {
+        AiConnectionKind.ChatGpt => "Continue with ChatGPT",
+        AiConnectionKind.CodexCli => "Codex CLI",
+        AiConnectionKind.ClaudeCli => "Claude CLI",
+        _ => "API key / local server",
+    };
+
+    private static string MenuLabel(string value)
+        => FitLabel(value, ImGui.GetWindowWidth() - 40 * ImGuiHelpers.GlobalScale);
+
+    private static string FitLabel(string value, float maximum)
+    {
+        maximum = Math.Max(80, maximum);
+        if (ImGui.CalcTextSize(value).X <= maximum) return value;
+        var length = value.Length;
+        while (length > 1 && ImGui.CalcTextSize(value[..length] + "...").X > maximum) length--;
+        return value[..length] + "...";
+    }
+
+    private static void WrappedTooltip(string value)
+    {
+        ImGui.BeginTooltip();
+        ImGui.PushTextWrapPos(Math.Min(360 * ImGuiHelpers.GlobalScale, ImGui.GetIO().DisplaySize.X - 40 * ImGuiHelpers.GlobalScale));
+        ImGui.TextUnformatted(value);
+        ImGui.PopTextWrapPos();
+        ImGui.EndTooltip();
     }
 
     private void DrawVoiceBindings()
@@ -672,6 +956,7 @@ internal sealed class PluginUi : IDisposable
                     store.ImportInto(imported, importJson); imported.AiEnabled = false;
                     store.Save(imported);
                     store.ImportInto(config, store.Export(imported));
+                    CancelAiOperations(); chatGptModels = []; apiKey = ""; connectionStatus = "";
                     providerEndpoint = config.AiEndpoint;
                     request?.Cancel(); voice.Cancel();
                     status = "Settings imported. AI is off until you enable it."; importJson = "";
@@ -743,6 +1028,6 @@ internal sealed class PluginUi : IDisposable
     public void Dispose()
     {
         interaction.ConfigureHudRequested -= OpenHudSettings;
-        hotkeys.Cancel(); roaming.CancelChooseArea(); request?.Cancel(); request?.Dispose(); apiKey = "";
+        hotkeys.Cancel(); roaming.CancelChooseArea(); CancelAiOperations(); request?.Dispose(); connectionRequest?.Dispose(); apiKey = "";
     }
 }

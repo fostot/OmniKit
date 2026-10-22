@@ -13,6 +13,8 @@
     <Compile Include="../../src/OmniKit/Configuration.cs" Link="Configuration.cs" />
     <Compile Include="../../src/OmniKit/Storage/LocalStore.cs" Link="LocalStore.cs" />
     <Compile Include="../../src/OmniKit/Input/HotkeyChord.cs" Link="HotkeyChord.cs" />
+    <Compile Include="../../src/OmniKit/Interaction/InteractionTargets.cs" Link="InteractionTargets.cs" />
+    <Compile Include="../../src/OmniKit/Assistant/AiConnectionKind.cs" Link="AiConnectionKind.cs" />
     <Compile Include="../../src/OmniKit/Search/SearchEngine.cs" Link="SearchEngine.cs" />
   </ItemGroup>
 </Project>

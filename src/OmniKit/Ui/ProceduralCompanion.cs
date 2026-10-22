@@ -27,6 +27,21 @@ internal static class ProceduralCompanion
         if (!animated) { pose = CompanionPose.Idle; hovered = false; }
         var edge = Math.Min(size.X, size.Y);
         var center = position + size * .5f;
+        var actionScale = pose switch
+        {
+            CompanionPose.Carry => new Vector2(.91f, 1.10f),
+            CompanionPose.Fall => new Vector2(.86f, 1.16f),
+            CompanionPose.Land => new Vector2(1.15f, .80f),
+            CompanionPose.Push => new Vector2(.91f, 1.04f),
+            _ => Vector2.One,
+        };
+        center += (pose switch
+        {
+            CompanionPose.Carry => new Vector2(0, -.035f),
+            CompanionPose.Land => new Vector2(0, .045f),
+            CompanionPose.Push => new Vector2(.035f, 0),
+            _ => Vector2.Zero,
+        }) * edge;
         var color = Palette(config.CompanionPalette);
         var ink = new Vector4(.065f, .085f, .11f, 1);
         var talk = pose == CompanionPose.Talk && animated;
@@ -34,16 +49,24 @@ internal static class ProceduralCompanion
         {
             case "Moonblob":
             {
-                var roll = pose == CompanionPose.Walk ? t * 1.7f : 0;
+                var roll = pose switch
+                {
+                    CompanionPose.Walk => t * 1.7f,
+                    CompanionPose.Carry => MathF.Sin(t * 2.8f) * .14f,
+                    CompanionPose.Fall => MathF.Sin(t * 2.2f) * .10f,
+                    CompanionPose.Push => -.16f,
+                    _ => 0,
+                };
                 var squish = animated ? MathF.Sin(t * 3.2f) * .055f : 0;
                 var radius = edge * .29f;
                 center.Y += edge * .09f;
-                Ellipse(draw, center + new Vector2(0, radius * .9f), new Vector2(radius * .9f, edge * .045f), Color(ink, .25f));
+                if (pose is not (CompanionPose.Carry or CompanionPose.Fall))
+                    Ellipse(draw, center + new Vector2(0, radius * .9f), new Vector2(radius * .9f, edge * .045f), Color(ink, .25f));
                 for (var i = 0; i < 40; i++)
                 {
                     var angle = i * MathF.Tau / 40;
                     var ripple = 1 + MathF.Sin(angle * 3 + roll) * .035f;
-                    draw.PathLineTo(center + new Vector2(MathF.Cos(angle) * (1 + squish), MathF.Sin(angle) * (1 - squish)) * radius * ripple);
+                    draw.PathLineTo(center + new Vector2(MathF.Cos(angle) * (1 + squish), MathF.Sin(angle) * (1 - squish)) * radius * ripple * actionScale);
                 }
                 draw.PathFillConvex(Color(color));
                 Ellipse(draw, center + new Vector2(-radius * .28f, -radius * .35f), new Vector2(radius * .38f, radius * .18f), 0x38FFFFFF);
@@ -60,11 +83,18 @@ internal static class ProceduralCompanion
             {
                 if (animated) center.Y += MathF.Sin(t * 1.8f) * edge * .028f;
                 var blink = animated ? Math.Clamp(MathF.Abs((t + 2.1f) % 4.8f - 2.4f) / .13f, .055f, 1) : 1;
-                Ellipse(draw, center, new Vector2(edge * .34f, edge * .23f * blink), Color(color));
-                Ellipse(draw, center, new Vector2(edge * .29f, edge * .19f * blink), 0xFFF4F6F7);
+                Ellipse(draw, center, new Vector2(edge * .34f, edge * .23f * blink) * actionScale, Color(color));
+                Ellipse(draw, center, new Vector2(edge * .29f, edge * .19f * blink) * actionScale, 0xFFF4F6F7);
                 if (blink > .6f)
                 {
                     var gaze = center + new Vector2(animated ? MathF.Sin(t * .7f) * edge * .025f : 0, hovered ? -edge * .025f : 0);
+                    gaze += (pose switch
+                    {
+                        CompanionPose.Carry => new Vector2(0, -.04f),
+                        CompanionPose.Fall => new Vector2(0, .045f),
+                        CompanionPose.Push => new Vector2(.07f, 0),
+                        _ => Vector2.Zero,
+                    }) * edge;
                     draw.AddCircleFilled(gaze, edge * .115f, Color(color));
                     draw.AddCircleFilled(gaze, edge * (talk ? .061f : .071f), Color(ink));
                     draw.AddCircleFilled(gaze + new Vector2(-.025f, -.035f) * edge, edge * .024f, 0xFFFFFFFF);
@@ -76,15 +106,15 @@ internal static class ProceduralCompanion
                 // Less than one pulse per second, with a small amplitude and no on/off flashes.
                 var pulse = animated ? 1 + MathF.Sin(t * (talk ? 3.4f : 2.5f)) * .045f : 1;
                 var rotation = animated ? t * .18f : 0;
-                draw.AddCircleFilled(center, edge * .36f * pulse, Color(color, .08f), 40);
+                Ellipse(draw, center, new Vector2(edge * .36f * pulse) * actionScale, Color(color, .08f));
                 for (var i = 0; i < 24; i++)
                 {
                     var angle = i * MathF.Tau / 24 + rotation;
                     var radius = edge * (i % 2 == 0 ? .30f : .17f) * pulse;
                     var nextAngle = (i + 1) * MathF.Tau / 24 + rotation;
                     var nextRadius = edge * (i % 2 == 0 ? .17f : .30f) * pulse;
-                    draw.AddTriangleFilled(center, center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius,
-                        center + new Vector2(MathF.Cos(nextAngle), MathF.Sin(nextAngle)) * nextRadius, Color(color, .86f));
+                    draw.AddTriangleFilled(center, center + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius * actionScale,
+                        center + new Vector2(MathF.Cos(nextAngle), MathF.Sin(nextAngle)) * nextRadius * actionScale, Color(color, .86f));
                 }
                 draw.AddCircleFilled(center, edge * .10f, 0xFFF4F8F8, 24);
                 draw.AddCircleFilled(center + new Vector2(-.025f, -.025f) * edge, edge * .026f, 0xFFFFFFFF);
@@ -103,6 +133,8 @@ internal static class ProceduralCompanion
         var color = Palette(config.CompanionPalette);
         var thickness = Math.Max(1, edge * .009f);
         var orbit = center + new Vector2(0, edge * .26f);
+        if (pose is CompanionPose.Carry or CompanionPose.Fall) orbit.Y = center.Y;
+        if (pose == CompanionPose.Land) orbit.Y += edge * .04f;
         for (var i = 0; i < 40; i++)
         {
             var angle = i * MathF.Tau / 40;

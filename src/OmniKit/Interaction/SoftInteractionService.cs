@@ -12,19 +12,22 @@ using NativeEventHandler = FFXIVClientStructs.FFXIV.Client.Game.Event.EventHandl
 using NativeFramework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 using NativeGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 using NativeVector3 = FFXIVClientStructs.FFXIV.Common.Math.Vector3;
+using NativeTargetType = FFXIVClientStructs.FFXIV.Client.Game.Object.TargetType;
+using NativeUiState = FFXIVClientStructs.FFXIV.Client.Game.UI.UIState;
 
 namespace OmniKit.Interaction;
 
 /// <summary>
-/// Camera-directed, one-press interaction. This service never writes hard/soft targets,
-/// advances dialogue, selects menu choices, or repeats an interaction while a key is held.
+/// Camera-directed, one-press interaction. World objects preserve the hard target.
+/// Explicit enemy modes may select a hard target and enable native auto-attack.
+/// Never advances dialogue, selects menu choices, or repeats while a key is held.
 /// Update must run on Dalamud's framework thread; DrawHud must run in UiBuilder.Draw.
 /// </summary>
 internal sealed unsafe class SoftInteractionService(Configuration config) : IDisposable
 {
     private static readonly ConditionFlag[] BlockingConditions =
     [
-        ConditionFlag.Unconscious, ConditionFlag.InCombat, ConditionFlag.Casting,
+        ConditionFlag.Unconscious, ConditionFlag.Casting,
         ConditionFlag.Casting87, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51,
         ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78,
         ConditionFlag.Occupied, ConditionFlag.Occupied30, ConditionFlag.OccupiedInEvent,
@@ -65,6 +68,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoDocking;
 
     public string? CandidateName => candidate?.Name;
+    public string CandidateCategoryName => candidate == null ? "None" : SoftTargetPolicy.Label(candidate.Category);
     public string? Hint { get; private set; }
     public bool ActionPaused { get; private set; } = true;
     public GatheringGearService Gathering { get; } = new(config);
@@ -106,13 +110,9 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                 return;
             }
 
-            var pauseReason = GetActionPauseReason(inputBlocked, allowReleasedModifiers: true);
-            Gathering.Update(pauseReason != null);
-            // A pending gathering callback may itself enter a busy game state.
-            pauseReason = GetActionPauseReason(inputBlocked, allowReleasedModifiers: !down);
-            ActionPaused = pauseReason != null;
-            if (ActionPaused)
-                interactionPress.Pause();
+            // Gathering retains the non-combat object guards even if the camera
+            // is currently looking at an enemy.
+            Gathering.Update(GetActionPauseReason(inputBlocked, allowReleasedModifiers: true) != null);
 
             // Observation is independent of action permission. Menus, typing and
             // modifier keys pause the key, but keep the camera detector reviewable.
@@ -125,17 +125,30 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
             if (candidate is not { } selected)
             {
-                Hint = pauseReason ?? "Look toward a nearby interactable NPC or object.";
+                var unavailableAction = GetActionPauseReason(inputBlocked, allowReleasedModifiers: !down);
+                ActionPaused = unavailableAction != null;
+                if (ActionPaused) interactionPress.Pause();
+                Hint = unavailableAction ?? (config.InteractionTargets == InteractionTargets.None
+                    ? "All target types are off. Choose target types in Interact settings."
+                    : "Look toward an enabled target type.");
                 return;
             }
 
+            var pauseReason = GetActionPauseReason(inputBlocked, allowReleasedModifiers: !down,
+                enemy: SoftTargetPolicy.IsEnemy(selected.Category));
+            var action = SoftTargetPolicy.ActionFor(config.InteractionTargets, config.EnemyInteractMode, selected.Category);
+            if (pauseReason == null && action == SoftTargetAction.None)
+                pauseReason = "Choose what the interact key does to enemies in Interact settings.";
+            ActionPaused = pauseReason != null;
             if (ActionPaused)
             {
+                interactionPress.Pause();
                 Hint = pauseReason;
                 return;
             }
 
-            Hint = $"{HotkeyChord.Format(key, config.InteractModifier)}: interact with {selected.Name}";
+            var verb = action == SoftTargetAction.AttackEnemy ? "target and attack" : action == SoftTargetAction.TargetEnemy ? "target" : "interact with";
+            Hint = $"{HotkeyChord.Format(key, config.InteractModifier)}: {verb} {selected.Name}";
             if (pressed && HotkeyChord.IsDown(key, config.InteractModifier))
             {
                 // FindCandidate was rerun on this exact key edge. Resolve by ID again
@@ -153,7 +166,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
                 Services.Keys[key] = false;
                 interactionPress.Consume();
-                if (!Gathering.TryPrepare(current, () => InteractIfStillEligible(selected)))
+                if (SoftTargetPolicy.IsEnemy(selected.Category)
+                    || !Gathering.TryPrepare(current, () => InteractIfStillEligible(selected)))
                     InteractIfStillEligible(selected);
             }
             else if (down && interactionPress.Consumed)
@@ -378,15 +392,31 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     {
         if (disposed || faulted || !config.SoftInteractEnabled
             || GetObservationUnavailableReason() != null
-            || GetActionPauseReason(lastInputBlocked, allowReleasedModifiers: true) != null)
+            || GetActionPauseReason(lastInputBlocked, allowReleasedModifiers: true,
+                enemy: SoftTargetPolicy.IsEnemy(expected.Category)) != null)
             return false;
         var actual = FindCandidate();
-        if (actual == null || actual.Id != expected.Id || actual.Address != expected.Address)
+        if (actual == null || actual.Id != expected.Id || actual.Address != expected.Address || actual.Category != expected.Category)
             return false;
+        var action = SoftTargetPolicy.ActionFor(config.InteractionTargets, config.EnemyInteractMode, actual.Category);
+        if (action == SoftTargetAction.None) return false;
         var target = Services.Objects.SearchById(actual.Id);
         var system = TargetSystem.Instance();
         if (target == null || system == null || target.Address != expected.Address)
             return false;
+        if (SoftTargetPolicy.IsEnemy(actual.Category))
+        {
+            var native = (NativeGameObject*)target.Address;
+            if (Classify(target, native) != actual.Category || !system->SetHardTarget(native)) return false;
+            // An action must never enable auto-attack on a different target if
+            // another subsystem rejected or replaced the requested hard target.
+            var hardTarget = Services.Targets.Target;
+            if (hardTarget == null || hardTarget.GameObjectId != actual.Id || hardTarget.Address != actual.Address) return false;
+            if (action == SoftTargetAction.TargetEnemy) return true;
+            var uiState = NativeUiState.Instance();
+            if (uiState == null) return false;
+            return uiState->WeaponState.AutoAttackState.Get() || uiState->WeaponState.AutoAttackState.Set(true);
+        }
         // Preserve the native range/state/LOS checks. Its return value is not treated
         // as proof that the game accepted or completed the requested interaction.
         system->InteractWithObject((NativeGameObject*)target.Address, true);
@@ -438,7 +468,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         return reason;
     }
 
-    private string? GetActionPauseReason(bool inputBlocked, bool allowReleasedModifiers = false)
+    private string? GetActionPauseReason(bool inputBlocked, bool allowReleasedModifiers = false, bool enemy = false)
     {
         if (inputBlocked)
             return "Interaction paused while OmniKit is open; camera detection remains active.";
@@ -459,6 +489,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         foreach (var flag in BlockingConditions)
             if (Services.Conditions[flag])
                 return "Interaction paused while the character is busy; camera detection remains active.";
+        if (!enemy && Services.Conditions[ConditionFlag.InCombat])
+            return "Object interaction paused during combat; camera detection remains active.";
         var framework = NativeFramework.Instance();
         if (framework == null || framework->WindowInactive || framework->IsExiting)
             return "Interaction paused while the game is not focused.";
@@ -493,7 +525,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
         foreach (var obj in Services.Objects)
         {
-            if (obj == null || obj.GameObjectId == player.GameObjectId || !IsInteractiveKind(obj.ObjectKind)
+            if (obj == null || obj.GameObjectId == player.GameObjectId
                 || !obj.IsValid() || !obj.IsTargetable)
                 continue;
 
@@ -505,6 +537,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             var native = (NativeGameObject*)obj.Address;
             if (native == null || !native->GetIsTargetable() || !targets->IsObjectInViewRange(native))
                 continue;
+            var category = Classify(obj, native);
+            if (!SoftTargetPolicy.IsEnabled(config.InteractionTargets, category)) continue;
 
             var worldCenter = new NativeVector3();
             native->GetCenterPosition(&worldCenter);
@@ -521,14 +555,14 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             var score = screenDistance / radius + (distance / maxDistance) * 0.1f;
             if (candidate?.Id == obj.GameObjectId)
                 score -= 0.075f;
-            if (score >= bestScore || !HasActiveInteraction(native, obj.ObjectKind)
+            if (score >= bestScore || (!SoftTargetPolicy.IsEnemy(category) && !HasActiveInteraction(native, obj.ObjectKind))
                 || !HasCameraLineOfSight(cameraPosition, position, obj.HitboxRadius))
                 continue;
 
             var name = obj.Name.TextValue;
             if (string.IsNullOrWhiteSpace(name))
                 name = "Interact";
-            best = new Candidate(obj.GameObjectId, obj.Address, name);
+            best = new Candidate(obj.GameObjectId, obj.Address, name, category);
             bestScore = score;
         }
 
@@ -567,10 +601,31 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             direction / distance, out _, rayDistance);
     }
 
-    private static bool IsInteractiveKind(ObjectKind kind) => kind is ObjectKind.EventNpc
-        or ObjectKind.EventObj or ObjectKind.Treasure or ObjectKind.Aetheryte
-        or ObjectKind.GatheringPoint or ObjectKind.Retainer or ObjectKind.HousingEventObject
-        or ObjectKind.ReactionEventObject;
+    private static InteractionTargets Classify(IGameObject obj, NativeGameObject* native)
+    {
+        if (obj.ObjectKind == ObjectKind.BattleNpc)
+        {
+            if (obj is not IBattleNpc npc || npc.BattleNpcKind != BattleNpcSubKind.Combatant
+                || native->IsDead() || native->GetTargetType() != NativeTargetType.Enemy)
+                return InteractionTargets.None;
+            // Use the game's hostility flag, not InCombat. This can change with
+            // game state; it is not a lookup of permanent species aggression.
+            return (npc.StatusFlags & StatusFlags.Hostile) != 0
+                ? InteractionTargets.HostileEnemies : InteractionTargets.NeutralEnemies;
+        }
+        return obj.ObjectKind switch
+        {
+            ObjectKind.EventNpc => InteractionTargets.Npcs,
+            ObjectKind.EventObj => InteractionTargets.QuestObjects,
+            ObjectKind.Treasure => InteractionTargets.Loot,
+            ObjectKind.Aetheryte => InteractionTargets.Aetherytes,
+            ObjectKind.GatheringPoint => InteractionTargets.GatheringNodes,
+            ObjectKind.Retainer => InteractionTargets.Retainers,
+            ObjectKind.HousingEventObject => InteractionTargets.Housing,
+            ObjectKind.ReactionEventObject => InteractionTargets.OtherUsableObjects,
+            _ => InteractionTargets.None,
+        };
+    }
 
     private static bool IsUsableKey(VirtualKey key) => HotkeyChord.IsValidKey(key)
         && Services.Keys.IsVirtualKeyValid((int)key);
@@ -583,5 +638,5 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         interactionPress.Pause();
     }
 
-    private sealed record Candidate(ulong Id, nint Address, string Name);
+    private sealed record Candidate(ulong Id, nint Address, string Name, InteractionTargets Category);
 }

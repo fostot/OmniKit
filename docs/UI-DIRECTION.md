@@ -32,15 +32,25 @@ exposes Move, Lock/Unlock, Hide and Settings; position and scale are adjustable.
 
 Bimble and Moonbear use separate Navigator (navy/gold) and Stargazer
 (violet/silver) outfit atlases. Each atlas contains 8 walking, 4 idle/blink and
-4 mouth poses. Moonblob, Wink and Nova are vector companions. Six palettes
-control the aura or vector shape: Moonlight, Aurora, Nebula, Rose, Ember and
-Starlight. These companions stay inside a user-drawn screen rectangle; clicking
-one opens its conversation. Mouth movement is an explicit preview, without
+4 mouth poses, plus paired carry, fall, landing and edge-pushing poses.
+Moonblob, Wink and Nova use illustrated 24-pose atlases too. Six palettes
+control the aura and softly tint these three companions: Moonlight, Aurora,
+Nebula, Rose, Ember and Starlight. The saved screen rectangle remains the default
+roaming area. Optional Frame interaction lets the user pick up a companion and
+place it on a supported visible frame's top or inside it. Its physics follow
+the frame, handle edges and recover safely when the frame disappears. A click
+opens its conversation; a drag does not. Mouth movement is an explicit preview, without
 synthesized speech or audio-driven lip sync.
 
 Magic accents, animation and the companion can be disabled independently.
 Disabling animation leaves the companion still. The idle search field remains
 free of companion art.
+
+The AI subtab must always allow returning to Appearance and Voice with actual
+mouse clicks. Native tab state and programmatic tab selection must agree.
+Connection-specific options occupy the scrolling content area; the version
+footer remains separate. ChatGPT browser sign-in, CLI checks and model loading
+run asynchronously with visible progress and cancellation.
 
 Growing content uses scrollable regions; launcher height follows its
 query/results state. Keep visible gutters from borders and dividers, and check

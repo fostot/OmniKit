@@ -1,3 +1,51 @@
+# 0.1.0.0005: companion motion, target choices and AI connections
+
+Fixed Companion settings getting stuck on the AI tab. The regression check now
+clicks AI → Appearance → Voice → AI through the actual native tab bar and also
+checks programmatic selection at minimum window size.
+
+Interact settings now expose eight world-object categories and separate hostile
+and neutral enemy switches. Enemies start disabled. The user must explicitly
+choose Target only or Target + start auto-attack before an enemy press can act.
+Looking does nothing by itself. Target only preserves any already-active attack
+state; starting auto-attack sets it on rather than toggling it. Classification
+uses the game's current hostility flag, which can change with game state.
+Native reach, camera visibility, input and busy-state guards remain enforced.
+
+All five companions now use illustrated 24-pose atlases, including both Bimble
+and Moonbear outfits. The new artwork covers carry, fall, land and edge-pushing
+alongside walking, idle/blink and mouth previews. Bimble has changing ear poses;
+Moonblob, Wink and Nova have new cute illustrated designs. Six aura palettes
+and independent animation/magic switches remain available.
+
+Optional Frame interaction under Companion → Appearance adds mouse pickup,
+top-edge perching, falling, landing and contained walking with an edge-pushing
+reaction. Supported surfaces include visible rectangular FFXIV addons and
+compatible plugin windows/bars in Dalamud's ImGui context, including Umbra.
+Snapshots are read-only; a closed or unsuitable supporting frame returns the
+companion to its roaming area. Pickup, perching, containment and falling each
+have a switch. Animation off freezes motion; the master frame switch starts off.
+
+AI settings offer Continue with ChatGPT, Codex CLI, Claude CLI and API key
+connections. ChatGPT uses OmniKit's own supported browser OAuth registration,
+PKCE/state/nonce and signed identity verification, separate DPAPI token storage,
+account selection, rotating refresh, model listing and bounded streaming.
+Native CLI modes reuse each CLI's own login, disable action tools/connectors,
+run in empty directories and stop on cancellation, timeout or unload. Codex
+adds its normal global instructions; compatibility checks refuse untested Codex
+versions. See [AI connections](AI-CONNECTIONS.md) for supported versions, setup,
+privacy boundaries and provider limits. No AI reply executes game actions.
+
+Schema v4 migrates v1/v2/v3 settings and adds safe target, frame and connection
+defaults. JSON exports contain preferences only. Credentials stay outside the
+database/export; changing a connection cannot grant AI transmission consent.
+
+Focused input/category, storage/migration, frame physics, atlas bounds, offline
+OAuth/CLI and native UI checks cover these changes. These are isolated checks. Enemy attack behavior,
+native frame tracking and real provider sign-in/inference still require the
+[in-game acceptance checks](IN-GAME-CHECKLIST.md). The base version remains
+0.1.0, with the final build identified by its source commit count and hash.
+
 # 0.1.0.0003: compact settings, companion choices and commit-derived versioning
 
 The settings and companion panels now use a compact frameless layout with teal
