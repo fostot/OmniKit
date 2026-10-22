@@ -1,0 +1,26 @@
+[
+  {
+    "Author": "OmniKit contributors",
+    "Name": "OmniKit",
+    "InternalName": "OmniKit",
+    "AssemblyVersion": "0.1.0.0",
+    "DalamudApiLevel": 15,
+    "ApplicableVersion": "any",
+    "Punchline": "Your everyday toolkit for XIV.",
+    "Description": "Early preview 0.1.0-dev.1. Search, optional soft interaction and HUD, gathering gear, moon companions, voice shortcuts and Umbra integration. Game validation is still pending.",
+    "RepoUrl": "https://github.com/fostot/OmniKit",
+    "Tags": [
+      "search",
+      "utility",
+      "accessibility",
+      "umbra"
+    ],
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0-dev.1/OmniKit.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0-dev.1/OmniKit.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0-dev.1/OmniKit.zip",
+    "IconUrl": "https://raw.githubusercontent.com/fostot/OmniKit/main/assets/bimble.png",
+    "LastUpdate": 1792705627,
+    "IsHide": false,
+    "IsTestingExclusive": false
+  }
+]
