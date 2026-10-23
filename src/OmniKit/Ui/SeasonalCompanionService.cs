@@ -33,13 +33,14 @@ internal sealed unsafe class SeasonalCompanionService(Configuration config)
         var ready = game != null && player != null && game->ConnectedToZone
             && game->TerritoryLoadState == 2 && game->CurrentTerritoryTypeId != 0;
         var currentTerritory = Services.ClientState.TerritoryType;
+        var enabled = config.CompanionSeasonalEnabled || config.CompanionHolidayHomeEnabled || config.CompanionHolidayBodiesEnabled;
         var changed = territory != currentTerritory || lastReady != ready
-            || lastEnabled != config.CompanionSeasonalEnabled || lastSelection != config.CompanionSeasonalTheme;
+            || lastEnabled != enabled || lastSelection != config.CompanionSeasonalTheme;
         var now = Stopwatch.GetTimestamp();
         if (!changed && now < nextRead) return;
         nextRead = now + Stopwatch.Frequency;
         territory = currentTerritory; lastReady = ready;
-        lastEnabled = config.CompanionSeasonalEnabled; lastSelection = config.CompanionSeasonalTheme;
+        lastEnabled = enabled; lastSelection = config.CompanionSeasonalTheme;
         if (ready && !catalogLoaded)
         {
             // Only static sheet relationships, never the player's quest progress or inventory.
@@ -56,7 +57,7 @@ internal sealed unsafe class SeasonalCompanionService(Configuration config)
             for (var i = 0; i < world.Length; i++) world[i] = new(game->ActiveFestivals[i].Id, game->ActiveFestivals[i].Phase);
             for (var i = 0; i < ui.Length; i++) ui[i] = new(player->ActiveFestivalIds[i], player->ActiveFestivalPhases[i]);
         }
-        Volatile.Write(ref snapshot, policy.Resolve(config.CompanionSeasonalEnabled, config.CompanionSeasonalTheme,
+        Volatile.Write(ref snapshot, policy.Resolve(enabled, config.CompanionSeasonalTheme,
             true, ready, world, ui, DateTimeOffset.UtcNow));
     }
 

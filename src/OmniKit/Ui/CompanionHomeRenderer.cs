@@ -5,13 +5,18 @@ namespace OmniKit.Ui;
 
 internal static class CompanionHomeRenderer
 {
-    public static void DrawHouse(ImDrawListPtr draw, ImTextureID texture, CompanionHomeRect house, bool mirrored)
-        => draw.AddImage(texture, house.Minimum, house.Maximum,
+    public static void DrawHouse(ImDrawListPtr draw, ImTextureID texture, CompanionHomeRect house, bool mirrored,
+        CompanionHomeStyleFrame? styleFrame = null)
+    {
+        if (styleFrame is { } style) CompanionStyleRenderer.DrawHome(draw, texture, style);
+        else draw.AddImage(texture, house.Minimum, house.Maximum,
             new Vector2(mirrored ? .925f : .08f, .035f), new Vector2(mirrored ? .08f : .925f, .9f));
+    }
 
     public static (Vector2 Minimum, Vector2 Maximum) DrawNap(ImDrawListPtr draw, ImTextureID texture,
         ImTextureID houseTexture, NapSheet sheet, CompanionHomeRoutine routine, Vector2 spriteSize,
-        CompanionHomeRect house, bool houseMirrored, bool showHouse = true, uint tint = 0xFFFFFFFFu)
+        CompanionHomeRect house, bool houseMirrored, bool showHouse = true, uint tint = 0xFFFFFFFFu,
+        CompanionHomeStyleFrame? styleFrame = null)
     {
         var frame = sheet.Frame(routine.ArtFrame, routine.Position, spriteSize, routine.ArtScale, routine.FacingLeft);
         var bounds = (Minimum: frame.Position, Maximum: frame.Position + frame.Size);
@@ -28,12 +33,14 @@ internal static class CompanionHomeRenderer
         else draw.AddImage(texture, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
 
         if (!showHouse) return bounds;
-        DrawHouseWalls(draw, houseTexture, house, houseMirrored);
+        DrawHouseWalls(draw, houseTexture, house, houseMirrored, styleFrame);
         return bounds;
     }
 
-    public static void DrawHouseWalls(ImDrawListPtr draw, ImTextureID houseTexture, CompanionHomeRect house, bool houseMirrored)
+    public static void DrawHouseWalls(ImDrawListPtr draw, ImTextureID houseTexture, CompanionHomeRect house, bool houseMirrored,
+        CompanionHomeStyleFrame? styleFrame = null)
     {
+        if (styleFrame is { } style) { CompanionStyleRenderer.DrawHomeWalls(draw, houseTexture, style); return; }
         // The visitor goes behind the house walls but stays visible on its bed.
         var opening = CompanionHomeGeometry.Opening(house, houseMirrored);
         var doorMin = opening.Minimum;
@@ -54,10 +61,11 @@ internal static class CompanionHomeRenderer
     }
 
     public static void DrawZs(ImDrawListPtr draw, CompanionHomeRect house, bool mirrored,
-        float time, Vector2 viewportPosition, Vector2 viewportSize)
+        float time, Vector2 viewportPosition, Vector2 viewportSize, CompanionHomeStyleFrame? styleFrame = null)
     {
         var font = ImGui.GetFont();
-        var chimney = house.At(mirrored ? .76f : .24f, .17f);
+        var chimney = styleFrame?.Chimney ?? house.At(mirrored ? .76f : .24f, .17f);
+        if (styleFrame is { } style) house = new(style.Minimum, style.Maximum);
         draw.PushClipRect(viewportPosition, viewportPosition + viewportSize, true);
         for (var i = 0; i < 3; i++)
         {

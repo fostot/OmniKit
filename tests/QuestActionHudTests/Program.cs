@@ -25,8 +25,12 @@ var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
 var failures = new List<string>();
 var checks = 0;
 var renders = 0;
+var tooltipOnly = args.Contains("--tooltip-only");
+var visibilityOnly = args.Contains("--visibility-only");
 var texture = Type("OmniKit.Ui.ActionButtonRenderer").GetProperty("TextureForTest", BindingFlags.Static | BindingFlags.NonPublic)!;
 texture.SetValue(null, (Func<uint, ImTextureID>)(_ => new ImTextureID(2UL)));
+if (!tooltipOnly && !visibilityOnly)
+{
 foreach (var scale in new[] { 1f, 1.5f, 2f })
 foreach (var width in new[] { 320, 480 })
 {
@@ -47,6 +51,23 @@ foreach (var scale in new[] { 1f, 2f })
     Run("items-input", false, true, 11, true, true, scale, new(480, 360), input: true);
     Run("disabled-input", true, false, 0, true, false, scale, new(480, 360), input: true);
 }
+}
+if (!tooltipOnly)
+foreach (var locked in new[] { true, false })
+{
+    foreach (var action in new[] { "Interact", "Target", "Target + attack" })
+        Run("hidden-ordinary-" + action + "-" + locked, true, false, 0, locked, true, 1, new(480, 360), questKind: null, action: action);
+    Run("hidden-no-target-" + locked, true, false, 0, locked, true, 1, new(480, 360), missing: true);
+    Run("hidden-paused-" + locked, true, false, 0, locked, true, 1, new(480, 360), paused: true);
+    Run("matched-item-" + locked, true, false, 0, locked, true, 1, new(480, 360));
+    Run("matched-emote-" + locked, true, false, 0, locked, true, 1, new(480, 360), questKind: "Emote", action: "Emote");
+    Run("matched-unusable-item-" + locked, true, false, 0, locked, false, 1, new(480, 360));
+}
+if (!visibilityOnly)
+foreach (var scale in new[] { 1f, 1.5f, 2f })
+foreach (var width in new[] { 320, 480 })
+foreach (var corner in new[] { Vector2.Zero, Vector2.UnitX, Vector2.UnitY, Vector2.One })
+    TooltipCase(scale, new Vector2(width, 360), corner);
 texture.SetValue(null, null);
 foreach (var failure in failures) Console.WriteLine("FAIL: " + failure);
 Console.WriteLine($"Actual HUD: {checks} checks, {renders} renders, {failures.Count} failures. No framework update or game service was invoked.");
@@ -57,8 +78,76 @@ void Set(object instance, string name, object? value) => instance.GetType().GetF
 object? Get(object instance, string name) => instance.GetType().GetField(name, flags)!.GetValue(instance);
 void Check(bool value, string message) { ++checks; if (!value) failures.Add(message); }
 
+unsafe void TooltipCase(float scale, Vector2 viewport, Vector2 corner)
+{
+    const string text = "Ripe La Noscean Orange\nThe item is not usable on this target right now. Check your range and state.";
+    var label = $"orange-tooltip-{viewport.X:0}-scale{scale:0.0}-{corner.X:0}-{corner.Y:0}";
+    var context = ImGui.CreateContext();
+    try
+    {
+        var io = ImGui.GetIO(); io.DisplaySize = viewport; io.DeltaTime = 1f / 60; io.FontGlobalScale = scale;
+        io.IniFilename = null; io.LogFilename = null;
+        io.Fonts.AddFontDefault(); io.Fonts.Build(); ImGui.StyleColorsDark();
+        var renderer = new SoftwareRenderer();
+        var method = Type("OmniKit.Ui.ActionButtonRenderer").GetMethod("Draw", BindingFlags.Public | BindingFlags.Static)!;
+        var button = new Vector2(32 * scale); var position = new Vector2(6) + (viewport - button - new Vector2(12)) * corner;
+        var textColor = new Vector4(.93f, .81f, .57f, 1);
+        Vector2? stablePosition = null;
+        for (var frame = 0; frame < 12; frame++)
+        {
+            io.AddMousePosEvent(position.X + button.X * .5f, position.Y + button.Y * .5f);
+            ImGui.NewFrame();
+            ImGui.SetNextWindowPos(position); ImGui.SetNextWindowSize(button);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+            ImGui.Begin("##tooltip-hover-fixture", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground);
+            ImGui.PopStyleVar(); ImGui.PushStyleColor(ImGuiCol.Text, textColor);
+            object[] parameters = ["orange", position, button, 0u, "?", 0, false, text, false];
+            method.Invoke(null, parameters);
+            ImGui.PopStyleColor(); ImGui.End(); ImGui.Render();
+            if (frame < 3) continue;
+            var contextWindows = ImGui.GetCurrentContext().Windows;
+            var found = 0;
+            for (var n = 0; n < contextWindows.Size; n++)
+            {
+                var window = contextWindows[n];
+                if (!window.Active || window.Hidden || (window.Flags & ImGuiWindowFlags.Tooltip) == 0) continue;
+                found++;
+                Check(window.ScrollMax == Vector2.Zero, label + ": tooltip must not scroll in either direction.");
+                Check((window.Flags & ImGuiWindowFlags.NoInputs) == ImGuiWindowFlags.NoInputs,
+                    label + ": tooltip must not capture mouse or navigation input.");
+                Check(window.Pos.X >= 4 && window.Pos.Y >= 4 && window.Pos.X + window.Size.X <= viewport.X - 3
+                    && window.Pos.Y + window.Size.Y <= viewport.Y - 3, label + ": tooltip leaves its viewport gutter.");
+                if (stablePosition.HasValue) Check(window.Pos == stablePosition.Value, label + ": stationary hover must not flicker or move the tooltip.");
+                stablePosition = window.Pos;
+                var glyphVertices = 0; var fullGlyphBounds = true; var expectedColor = ImGui.ColorConvertFloat4ToU32(textColor);
+                for (var v = 0; v < window.DrawList.VtxBuffer.Size; v++)
+                {
+                    var vertex = window.DrawList.VtxBuffer[v];
+                    if (vertex.Col != expectedColor) continue;
+                    glyphVertices++;
+                    fullGlyphBounds &= vertex.Pos.X >= window.InnerClipRect.Min.X && vertex.Pos.Y >= window.InnerClipRect.Min.Y
+                        && vertex.Pos.X <= window.InnerClipRect.Max.X && vertex.Pos.Y <= window.InnerClipRect.Max.Y;
+                }
+                Check(glyphVertices == text.Count(c => !char.IsWhiteSpace(c)) * 4,
+                    label + ": every visible name/reason glyph must be emitted, without truncation.");
+                Check(fullGlyphBounds, label + ": complete glyphs must fit the tooltip content clip rectangle.");
+                var activeChild = false;
+                for (var child = 0; child < contextWindows.Size; child++)
+                    activeChild |= contextWindows[child].Active && !contextWindows[child].Hidden
+                        && contextWindows[child].ParentWindow.Handle == window.Handle;
+                Check(!activeChild, label + ": tooltip must not contain a fixed-height scroll child.");
+            }
+            Check(found == 1 && !(bool)parameters[^1], label + ": disabled action hover must show one stable tooltip without owning click input.");
+        }
+        renderer.Save(ImGui.GetDrawData(), Path.Combine(output, label + ".png")); renders++;
+    }
+    finally { ImGui.DestroyContext(context); }
+}
+
 unsafe void Run(string name, bool next, bool items, int count, bool locked, bool enabled, float scale,
-    Vector2 viewport, bool edge = false, bool input = false)
+    Vector2 viewport, bool edge = false, bool input = false, string? questKind = "EventItem", string action = "Use quest item",
+    bool paused = false, bool missing = false)
 {
     var label = $"{name}-{viewport.X:0}-scale{scale:0.0}";
     var config = Activator.CreateInstance(Type("OmniKit.Configuration"))!;
@@ -77,16 +166,17 @@ unsafe void Run(string name, bool next, bool items, int count, bool locked, bool
         Expression.Parameter(config.GetType())).Compile();
     Set(config, "Persist", persist);
     var interaction = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Interaction.SoftInteractionService"));
-    Set(interaction, "<ActionPaused>k__BackingField", false);
+    Set(interaction, "<ActionPaused>k__BackingField", paused);
     Set(interaction, "<InventoryActionPaused>k__BackingField", false);
     var candidateType = interaction.GetType().GetNestedType("Candidate", BindingFlags.NonPublic)!;
     var candidate = Activator.CreateInstance(candidateType, [42UL, (nint)128, "Synthetic target",
         Enum.Parse(Type("OmniKit.Interaction.InteractionTargets"), "QuestObjects")]);
     Set(interaction, "candidate", candidate);
     var preview = Activator.CreateInstance(Type("OmniKit.Interaction.InteractionActionPreview"),
-        [42UL, (nint)128, "Synthetic quest item", "Use quest item", 100u, enabled,
+        [42UL, (nint)128, "Synthetic quest item", action, 100u, enabled,
             enabled ? "" : "The item is not usable on this target right now. Check your range and state."]);
-    Set(interaction, "nextAction", preview);
+    if (questKind != null) preview!.GetType().GetProperty("QuestKind")!.SetValue(preview, Enum.Parse(Type("OmniKit.Interaction.QuestActionKind"), questKind));
+    Set(interaction, "nextAction", missing ? null : preview);
     var inventory = Activator.CreateInstance(Type("OmniKit.Interaction.QuestInventoryService"))!;
     var entries = Array.CreateInstance(Type("OmniKit.Interaction.QuestInventoryEntry"), count);
     var target = Activator.CreateInstance(Type("OmniKit.Interaction.QuestInventoryTarget"), [42UL, (nint)128, 135u]);
@@ -127,6 +217,13 @@ unsafe void Run(string name, bool next, bool items, int count, bool locked, bool
             renderer.Save(ImGui.GetDrawData(), Path.Combine(output, label + suffix + ".png")); ++renders;
         }
         Save("");
+        if (next)
+        {
+            var nextWindow = ImGuiP.FindWindowByName("##OmniKitNextAction");
+            var visible = nextWindow.Handle != null && nextWindow.Active && !nextWindow.Hidden;
+            Check(visible == (!missing && !paused && questKind != null),
+                label + ": only a matched quest item/emote may show Next Action, including while unlocked.");
+        }
         foreach (var id in new[] { "##OmniKitNextAction", "##OmniKitQuestItems" })
         {
             var window = ImGuiP.FindWindowByName(id);

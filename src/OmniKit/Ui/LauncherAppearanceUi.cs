@@ -14,6 +14,9 @@ internal static class LauncherAppearanceUi
             Row("Width");
             changed |= ImGui.SliderFloat("##launcher-width", ref config.LauncherWidth, 320, 1200, "%.0f px");
             UiText.Hint("Width before the game's UI scale. The launcher always stays inside the viewport.");
+            Row("Height");
+            changed |= ImGui.SliderFloat("##launcher-height", ref config.LauncherHeight, 24, 120, "%.0f px");
+            UiText.Hint("Collapsed height. Reducing it removes space above and below the search text; large text keeps its minimum readable height.");
             Row("Text size");
             changed |= ImGui.SliderFloat("##launcher-text", ref config.LauncherTextScale, .75f, 1.5f, "%.2fx");
             Row("Visible results");
@@ -34,6 +37,7 @@ internal static class LauncherAppearanceUi
         {
             var defaults = LauncherOptions.Default;
             config.LauncherWidth = defaults.Width;
+            config.LauncherHeight = defaults.Height;
             config.LauncherTextScale = defaults.TextScale;
             config.LauncherResultCount = defaults.ResultCount;
             config.LauncherCenterX = defaults.CenterX;

@@ -5,6 +5,7 @@ namespace OmniKit;
 internal sealed class Configuration
 {
     public float LauncherWidth = 640;
+    public float LauncherHeight = 64;
     public float LauncherTextScale = 1;
     public int LauncherResultCount = 7;
     public float LauncherCenterX = .5f;

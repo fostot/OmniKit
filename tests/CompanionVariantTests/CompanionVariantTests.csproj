@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <DalamudLibPath>$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/OmniKit/Ui/CompanionVariantLibrary.cs" Link="CompanionVariantLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionVariantSelection.cs" Link="CompanionVariantSelection.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionVariantRenderer.cs" Link="CompanionVariantRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionAnimationLibrary.cs" Link="CompanionAnimationLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
+    <Compile Include="../LauncherUiSmoke/SoftwareRenderer.cs" Link="SoftwareRenderer.cs" />
+    <Reference Include="Dalamud.Bindings.ImGui" HintPath="$(DalamudLibPath)/Dalamud.Bindings.ImGui.dll" />
+    <Reference Include="HexaGen.Runtime" HintPath="$(DalamudLibPath)/HexaGen.Runtime.dll" />
+    <Content Include="$(DalamudLibPath)/cimgui.dll" Link="cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

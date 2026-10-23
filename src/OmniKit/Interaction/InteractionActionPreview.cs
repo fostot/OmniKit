@@ -1,4 +1,7 @@
 namespace OmniKit.Interaction;
 
 internal sealed record InteractionActionPreview(ulong TargetId, nint Address, string Name, string Action,
-    uint IconId, bool CanUse, string Reason);
+    uint IconId, bool CanUse, string Reason)
+{
+    public QuestActionKind? QuestKind { get; init; }
+}

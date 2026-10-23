@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with Moonblob and seven other moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0013`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0015`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -41,7 +41,7 @@ small corner rounding and a footer showing the built version and **by Zero**.
 
 - Search game windows, loaded plugins, community recruitment and saved gearsets.
   Try `guild`, `community`, `free company`, `inventory` or `job paladin`.
-  **Launcher** adjusts width, text size, visible result count and horizontal/top
+  **Launcher** adjusts width, height, text size, visible result count and horizontal/top
   position, with a reset button. The empty launcher remains just input and gear;
   scrolling or arrow keys reach results beyond the visible count.
 - Optional camera-directed interaction: look toward an eligible nearby object
@@ -83,12 +83,12 @@ small corner rounding and a footer showing the built version and **by Zero**.
   not fall back to talking. Native game execution remains unverified. See
   [scope and sources](docs/QUEST-EMOTES.md).
 - **Quest Items** controls two movable icon surfaces. **Next Action** previews
-  the exact action Interact would attempt, including a mapped item/emote and its
+  only a mapped quest item or emote for the current target, together with its
   blocked reason. Locked, it is one icon; unlocking reveals the **NEXT ACTION**
-  heading and drag area. Its separate lock button never executes the action.
+  heading and drag area. Ordinary interactions and enemies show no extra button, even unlocked. Its separate lock button never executes the action.
   The item bar shows up to eight buttons per page for usable KeyItems and ordinary
   bag items explicitly listed by a current native quest tracker. It is not a
-  potion/inventory bar or proof of the correct item for a target. Select a target
+  potion/inventory bar or proof of the correct item for a target. Item tooltips wrap the full name and reason without a scrolling child. Select a target
   before manually clicking an item; target, stack and native usability are checked
   again. Ground-targeted items are excluded, with no retries or automatic targeting.
 - Local Windows speech input, typed commands, saved phrase-to-action bindings and
@@ -101,19 +101,25 @@ small corner rounding and a footer showing the built version and **by Zero**.
 - Eight illustrated whole-body companions: **Moonblob** (the default), **Wink**,
   **Nova**, **Mochi**, **Puff**, **Orbit**, **Ember** and **Prism**. Each uses one
   complete body, with no separate limb rig. Moonblob rolls continuously; the
-  others float using stable body images. Six aura palettes remain available:
+  others float using stable body images. Four extra looks per companion add 32
+  everyday choices, with Random and an optional look timer. Ember flickers and
+  curls, Mochi squashes, Puff billows, and Orbit's rings rotate and tilt around a
+  steady core. Ring movement and speed have their own controls. Six aura palettes remain available:
   Moonlight, Aurora, Nebula, Rose, Ember and Starlight. In **Companion → Appearance**,
   draw a roaming area, preview an animation, or turn off magic accents, animation
   or the companion. Clicking it opens its conversation. Mouth movement is an
   explicit preview; synthesized speech and lip sync are not implemented.
-- **Companion → Appearance → Seasonal looks & rotation** adds nine accessory
+- **Companion → Appearance → Seasonal looks & rotation** adds nine painted body
   themes: All Saints' Wake, Starlight, Heavensturn, Valentione, Little Ladies' Day,
   Hatching-tide, Make It Rain, Moonfire Faire and The Rising. **Auto** reads supported
   native festivals; an unknown or conflicting state does not guess from the month.
   Only explicitly recorded official date windows can provide a fallback when
   native data is unavailable. A manual theme remains available. Optional rotation
   chooses another companion every 30–3600 seconds without replacing your saved
-  selection. Wink also has an optional Fourier-smoothed blink.
+  selection. Each companion has all nine painted holiday bodies, with optional
+  accessories fitted to its crown and width. Bodies, accessories and holiday
+  homes can be enabled separately. A body stays unchanged while carried or
+  napping. Wink also has an optional Fourier-smoothed blink.
 - Optional **Companion → Appearance → Frame interaction** lets you pick up the
   companion and drop it onto a supported visible frame. It can perch on a top
   edge, turn and walk off, land on supported frames below or the screen floor,
@@ -123,17 +129,24 @@ small corner rounding and a footer showing the built version and **by Zero**.
   windows and Umbra bars in Dalamud's ImGui context, including compatible
   windows marked to ignore mouse input. Full-screen canvases are not universally
   supported. Closed or unsupported frames make it fall and return. Nothing edits
-  those windows. An optional draggable moon house has its own saved position;
+  those windows. Optional grounded roaming walks along flat surfaces, makes
+  bounded hops to nearby ledges and falls from open edges. An optional draggable moon house has its own saved position;
   moving it leaves the drawn roaming area unchanged. Optional hand cues
   center the carried companion/house under the grip and show pickup/release at a
   default scale of 0.4, adjustable from 0.2–1. Walking off a supported thin HUD strip
   falls toward a lower support or the screen floor.
+  **Home & personality** selects Default, Crystal Pod, Cloud Cushion, Lantern Hut
+  or a holiday home, plus Random. The hand similarly offers Default, four styles
+  or Random, retaining the same hand throughout a pickup.
   Wink blinks while floating. Occasional comments are local
   text only, with no model request or microphone use.
 - All eight companions have entrance, settling and sleeping art. Normal
   roaming stays inside the drawn area; nap trips can reach a house outside it at
   about twice the usual walking speed, enter through the front doorway, then
-  return continuously. Naps default to about 45 seconds awake and 20 seconds
+  return continuously. They shrink another 10% inside, step outward while small,
+  then grow in front of the house. Accessories hide on entry and return outside
+  only when enabled. Grounded trips use physical supports; unreachable routes
+  stop at the actual position instead of teleporting. Naps default to about 45 seconds awake and 20 seconds
   asleep; awake interval (15–300 seconds),
   sleep duration (5–120 seconds), naps and chimney sleep symbols are adjustable.
   Pausing animation freezes the trip. Disabling naps, hiding or moving the house
@@ -147,9 +160,9 @@ The earlier rabbit and bear art and rigs were retired locally. Current source
 files and packages exclude them; older published releases and history remain
 unchanged. Wink is the plugin icon.
 
-The larger per-companion appearance collection, selectable everyday/holiday
-homes, alternative hands, grounded hopping and rings are pending a later batch;
-they are not part of source 13.
+This batch includes 112 body looks (8 originals, 32 everyday variants and 72
+holiday bodies), 13 homes and 5 hands. Isolated rendering checks remain separate
+from acceptance inside FFXIV.
 
 ## Umbra
 

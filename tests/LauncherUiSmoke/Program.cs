@@ -41,8 +41,9 @@ foreach (var scale in new[] { 1f, 1.5f, 2f })
 foreach (var viewport in new[] { new Vector2(1280, 720), new Vector2(320, 360), new Vector2(480, 330) })
 foreach (var preset in new[]
 {
-    (Name: "small", Value: new LauncherOptions(320, .75f, 3, .05f, 0)),
-    (Name: "large", Value: new LauncherOptions(1200, 1.5f, 12, .95f, .9f)),
+    (Name: "small", Value: new LauncherOptions(320, .75f, 3, .05f, 0, 24)),
+    (Name: "large", Value: new LauncherOptions(1200, 1.5f, 12, .95f, .9f, 120)),
+    (Name: "tight-text", Value: new LauncherOptions(640, 1.5f, 7, .5f, .2f, 24)),
 })
 {
     Render("blank-" + preset.Name, "", scale, viewport, appearance: preset.Value);

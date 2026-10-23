@@ -24,6 +24,9 @@ internal readonly record struct SeasonalOverlayQuad(Vector2 A, Vector2 B, Vector
         (Vector2.Min(Vector2.Min(A, B), Vector2.Min(C, D)), Vector2.Max(Vector2.Max(A, B), Vector2.Max(C, D)));
 }
 
+/// <summary>Reviewed crown and head width in the same source-pixel units as the body transform.</summary>
+internal readonly record struct SeasonalAccessoryFit(Vector2 Anchor, float HeadWidth);
+
 /// <summary>One rigid seasonal accessory. No body recoloring, animation clock, movement or game actions.</summary>
 internal sealed class SeasonalCompanionRenderer
 {
@@ -31,8 +34,8 @@ internal sealed class SeasonalCompanionRenderer
     private readonly Dictionary<string, Profile> profiles = new(StringComparer.Ordinal);
     private readonly Vector2 sheetSize;
     public const string File = "seasonal-accessories.png";
-    // Continuous full-circle Moonblob bound is .223823; .23 includes every reviewed crop, not just quarter poses.
-    public const float RequiredVisualPaddingFraction = .23f;
+    // Reserve room for fitted hats; the caller fits the complete body and hat in the roaming area.
+    public const float RequiredVisualPaddingFraction = .60f;
     public bool IsAvailable => themes.Count == 9 && profiles.Count == 8;
 
     public SeasonalCompanionRenderer(string assetDirectory)
@@ -63,8 +66,43 @@ internal sealed class SeasonalCompanionRenderer
         // Fail closed if metadata no longer matches this source pose after an art replacement.
         if (attach.X < body.SourceRect.X || attach.X > body.SourceRect.Z
             || attach.Y < body.SourceRect.Y || attach.Y > body.SourceRect.W) return false;
+        var widths = nap ? profile.NapHeadWidths : profile.NormalHeadWidths;
+        return widths.Length == anchors.Length
+            ? TryGetQuad(theme, body, new SeasonalAccessoryFit(attach, widths[frameIndex]), out quad)
+            : TryGetQuad(theme, body, attach, out quad);
+    }
+
+    public bool TryGetQuad(SeasonalCompanionTheme theme, SeasonalBodyTransform body, Vector2 attach, out SeasonalOverlayQuad quad)
+        => TryGetQuadCore(theme, body, attach, 0, out quad);
+
+    public bool TryGetSourceAnchor(string avatar, int frameIndex, bool nap, out Vector2 anchor)
+    {
+        anchor = default;
+        if (!IsAvailable || !profiles.TryGetValue(avatar, out var profile)) return false;
+        var anchors = nap ? profile.NapSourceAnchors : profile.NormalSourceAnchors;
+        if ((uint)frameIndex >= (uint)anchors.Length) return false;
+        anchor = Point(anchors[frameIndex]);
+        return true;
+    }
+
+    public bool TryGetQuad(SeasonalCompanionTheme theme, SeasonalBodyTransform body, SeasonalAccessoryFit fit, out SeasonalOverlayQuad quad)
+    {
+        quad = default;
+        return float.IsFinite(fit.HeadWidth) && fit.HeadWidth is >= 8 and <= 4096
+            && TryGetQuadCore(theme, body, fit.Anchor, fit.HeadWidth, out quad);
+    }
+
+    private bool TryGetQuadCore(SeasonalCompanionTheme theme, SeasonalBodyTransform body, Vector2 attach, float headWidth, out SeasonalOverlayQuad quad)
+    {
+        quad = default;
+        if (!IsAvailable || !themes.TryGetValue(theme, out var accessory) || !Finite(attach)
+            || !ValidRect(body.SourceRect, new Vector2(8192)) || !float.IsFinite(body.SourceScale) || body.SourceScale <= 0
+            || !Finite(body.A) || !Finite(body.B) || !Finite(body.D)
+            || attach.X < body.SourceRect.X || attach.X > body.SourceRect.Z
+            || attach.Y < body.SourceRect.Y || attach.Y > body.SourceRect.W) return false;
         var r = Rect(accessory.Bounds);
-        var factor = body.SourceScale * accessory.WidthFraction / (r.Z - r.X);
+        var width = headWidth > 0 ? headWidth * accessory.HeadWidthFraction : body.SourceScale * accessory.WidthFraction;
+        var factor = width / (r.Z - r.X);
         var pivot = Point(accessory.Pivot);
         Vector2 Map(float x, float y) => body.Map(attach + (new Vector2(x, y) - pivot) * factor);
         quad = new(Map(r.X, r.Y), Map(r.Z, r.Y), Map(r.Z, r.W), Map(r.X, r.W),
@@ -92,17 +130,21 @@ internal sealed class SeasonalCompanionRenderer
             if (t == null || !Enum.TryParse<SeasonalCompanionTheme>(t.Id, out var theme) || !Enum.IsDefined(theme)
                 || t.Id != theme.ToString() || !ids.Add(t.Id) || t.Bounds is not { Length: 4 } || t.Pivot is not { Length: 2 }
                 || !ValidRect(Rect(t.Bounds), size) || !Finite(Point(t.Pivot)) || !float.IsFinite(t.WidthFraction)
-                || t.WidthFraction is < .1f or > .4f || t.Pivot[0] < t.Bounds[0] || t.Pivot[0] > t.Bounds[2]
+                || t.WidthFraction is < .1f or > .4f || !float.IsFinite(t.HeadWidthFraction) || t.HeadWidthFraction is < .2f or > 1.5f
+                || t.Pivot[0] < t.Bounds[0] || t.Pivot[0] > t.Bounds[2]
                 || t.Pivot[1] < t.Bounds[1] || t.Pivot[1] > t.Bounds[3]) return false;
         }
         foreach (var p in d.Profiles)
             if (p == null || !Configuration.AvatarNames.Contains(p.Avatar) || !avatars.Add(p.Avatar)
                 || p.NormalSourceAnchors is not { Length: 24 } || p.NapSourceAnchors is not { Length: 4 }
                 || !p.NormalSourceAnchors.Concat(p.NapSourceAnchors).All(a => a is { Length: 2 }
-                    && a.All(float.IsFinite) && a.All(v => v is >= 0 and <= 8192))) return false;
+                    && a.All(float.IsFinite) && a.All(v => v is >= 0 and <= 8192))
+                || !ValidWidths(p.NormalHeadWidths, 24) || !ValidWidths(p.NapHeadWidths, 4)) return false;
         return true;
     }
     private static Vector2 Point(float[] p) => new(p[0], p[1]);
+    private static bool ValidWidths(float[]? widths, int count) => widths is { Length: 0 }
+        || widths?.Length == count && widths.All(w => float.IsFinite(w) && w is >= 8 and <= 4096);
     private static Vector4 Rect(float[] p) => new(p[0], p[1], p[2], p[3]);
     private static bool Finite(Vector2 p) => float.IsFinite(p.X) && float.IsFinite(p.Y);
     private static bool ValidRect(Vector4 r, Vector2 size) => float.IsFinite(r.X) && float.IsFinite(r.Y)
@@ -124,11 +166,14 @@ internal sealed class SeasonalCompanionRenderer
         public float[] Bounds { get; set; } = [];
         public float[] Pivot { get; set; } = [];
         public float WidthFraction { get; set; }
+        public float HeadWidthFraction { get; set; } = 1;
     }
     private sealed class Profile
     {
         public string Avatar { get; set; } = string.Empty;
         public float[][] NormalSourceAnchors { get; set; } = [];
         public float[][] NapSourceAnchors { get; set; } = [];
+        public float[] NormalHeadWidths { get; set; } = [];
+        public float[] NapHeadWidths { get; set; } = [];
     }
 }

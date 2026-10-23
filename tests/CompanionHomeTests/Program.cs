@@ -12,6 +12,14 @@ if (args.Contains("--rotation-only"))
 var checks = RotationChecks.Run();
 var failures = new List<string>();
 var root = Path.GetFullPath(args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? ".");
+if (args.Contains("--styles-only"))
+{
+    void Verify(bool passed, string reason) { if (!passed) throw new InvalidOperationException(reason); checks++; }
+    StyleNavigationChecks.Run(root, Verify);
+    if (!args.Contains("--logic-only")) StyleNapRender.Run(root, Verify);
+    Console.WriteLine($"Styled home integration: {checks} focused checks passed" + (args.Contains("--logic-only") ? "." : "; 192 native styled nap samples saved."));
+    return;
+}
 if (args.Contains("--door-only") || args.Contains("--door-before"))
 {
     NativeRender.Run(root, (passed, reason) => { if (!passed) throw new InvalidOperationException(reason); checks++; },
@@ -96,7 +104,7 @@ foreach (var outfit in new[] { "Default" })
     atlasCount++;
     foreach (var size in new[] { 96f, 192f })
     foreach (var mirrored in new[] { false, true })
-    foreach (var artScale in new[] { 1f, .62f })
+    foreach (var artScale in new[] { 1f, CompanionHomeRoutine.IndoorScale })
     for (var frameIndex = 0; frameIndex < 4; frameIndex++)
     {
         var frame = sheet.Frame(frameIndex, viewport, new(size), artScale, mirrored);
@@ -152,7 +160,12 @@ void Cycle(Vector2 anchor, CompanionHomeRect home)
         validPositions &= Fits(routine.Position, layout.SpriteSize, viewport, viewport + viewportSize);
         largestStep = Math.Max(largestStep, Vector2.Distance(before, routine.Position));
         leftDrawnBox |= !Fits(routine.Position, layout.SpriteSize, layout.Minimum, layout.Maximum);
-        if (routine.UsesNapArt) doorwayAligned &= Math.Abs(routine.Position.X - door.X) < .01f;
+        if (routine.UsesNapArt && routine.State != CompanionHomeState.Leaving) doorwayAligned &= Math.Abs(routine.Position.X - door.X) < .01f;
+        if (routine.State == CompanionHomeState.Leaving && routine.ArtScale > CompanionHomeRoutine.IndoorScale + .0001f)
+            Check(routine.InFrontOfHome && routine.AccessoriesVisible,
+                "Growth and restored accessories paint in front of the house at " + anchor);
+        if (routine.State is CompanionHomeState.Entering or CompanionHomeState.Settling or CompanionHomeState.Sleeping or CompanionHomeState.Waking)
+            Check(!routine.AccessoriesVisible && !routine.InFrontOfHome, "Indoor poses hide accessories and retain the wall mask.");
         var overlapsHouse = routine.Position.X < home.Maximum.X && routine.Position.X + layout.SpriteSize.X > home.Minimum.X &&
             routine.Position.Y < home.Maximum.Y && routine.Position.Y + layout.SpriteSize.Y > home.Minimum.Y;
         if (overlapsHouse && !routine.UsesNapArt)

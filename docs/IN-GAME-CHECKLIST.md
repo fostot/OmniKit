@@ -14,11 +14,11 @@ establish them. None is marked passed until observed.
   another app focused, and conflicting desktop shortcuts.
 - Search community/guild/free company; open game windows and loaded plugin UIs.
   Equip a saved job set and confirm an ambiguous job search asks for a choice.
-- In Launcher settings test width 320/640/1200, text size 0.75/1/1.5, result count
+- In Launcher settings test width 320/640/1200, height 24/64/120, text size 0.75/1/1.5, result count
   3/7/12 and both position limits. Check empty, typed, cleared and no-match queries
   at narrow viewports and UI scale 1/1.5/2. The input and gear must stay visible;
   keyboard/scroll navigation must still reach results beyond the row limit.
-  Reset must restore the five defaults and survive reload.
+  Reducing height must remove vertical whitespace. Reset restores all six defaults and survives reload.
 - Enable soft interaction and its HUD. Face two nearby NPCs, rotate/zoom the
   camera, check stable selection, range and blocked line of sight. Toggle HUD off.
   Start NPC dialogue, a vendor, quest/choice menu, retainer interaction and a
@@ -75,11 +75,13 @@ establish them. None is marked passed until observed.
   [mapping and limits](QUEST-EMOTES.md).
 - In Quest Items, inspect locked Next Action as one icon and unlocked mode with
   its heading/drag area. Compare the preview to the actual Interact resolver for
-  ordinary, mapped item/emote and blocked candidates. Clicking submits once;
+  mapped item/emote and blocked matched candidates. Ordinary targets and enemies
+  must show no extra button, even unlocked. Pausing hides it. Clicking submits once;
   holding, locking, dragging and tooltips must never cause repeated/extra actions.
   Check empty/single/eight/more-than-eight item pages, button sizes 24/40/56,
   saved positions and viewport edges at 320/480px widths and UI scale 1/1.5/2.
-  Headings, corner locks, panels and tooltips must not overlap or clip.
+  Headings, corner locks, panels and tooltips must not overlap or clip. Hover Ripe
+  La Noscean Orange: its full name and blocked reason must fit without scrolling.
 - Check the manual bar with usable KeyItems and native-tracked ordinary quest
   items. Untracked potions and ground-targeted actions must not appear. With no
   selected target, clicking must stay blocked. Change target, stack identity,
@@ -92,13 +94,20 @@ establish them. None is marked passed until observed.
   blinking and explicit mouth preview, including both facing directions.
   Draw a roaming area and confirm the complete companion and magic stay inside.
   Verify click-to-talk, resize, animation off, magic off and companion off.
-- Preview all nine seasonal themes on the eight companions. Check Auto against
+- Preview all nine seasonal body themes on the eight companions, with accessories
+  on/off independently. Inspect all 72 looks and fitted hats at 96/192 and both
+  directions, including Ember's broad crown rather than its flame tip. Check Auto against
   supported native festival state, no festival, unknown IDs and conflicting
   events; it must not infer an event from the PC month. Official date fallback
   applies only when native data is unavailable, and manual selection remains
   available. Test seasonal off and optional companion rotation at 30/300/3600
   seconds, including pause/carry/nap states. Rotation must retain the saved
   manual companion choice and make no model request.
+- Pick each of the four everyday looks on every companion, then Random and its
+  look timer. Keep identity through pickup and naps; check theme changes defer
+  until the companion is free. Inspect connected Ember flicker, Mochi squash and
+  Puff billow, plus Orbit's layered rotating/tilting rings with movement off/on
+  and speed 0.2/1/3. Disabling animation must freeze them.
 - Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
   Bodies must retain their identity, source aspect and stable scale; no separate
   body pieces should jiggle or detach. Compare idle with movement and reactions.
@@ -120,6 +129,9 @@ establish them. None is marked passed until observed.
   and the master switch. It must not move, resize or edit any foreign frame.
   Include a thin HUD strip: walking past its edge must fall, not remain attached
   to an invisible full-screen canvas.
+  With flat-surface walking on, verify no free-space ascent. Nearby reachable
+  ledges permit bounded hops; open edges permit falls. Toggle hopping off and
+  verify unreachable routes stop instead of teleporting.
 - Expand Home & personality. Show/hide the house and drag it near each screen
   edge and outside the drawn area; the roaming area must remain unchanged and
   the entrance must face inward. Normal free roaming must remain in the drawn
@@ -132,11 +144,17 @@ establish them. None is marked passed until observed.
   shape or movement. Pick up near different object edges and confirm the object
   eases under the centered hand; hand scaling must not shift it. Comments must
   not trigger AI requests, microphone capture or speech.
+  Select Default, Crystal Pod, Cloud Cushion, Lantern Hut and each holiday home;
+  disable Use holiday homes when testing a manual style. Check Random home/hand
+  choice, all five hand designs, continuous grip contact and a retained hand from
+  pickup through release. Clamp actual house artwork flush to each screen edge.
 - Test naps for all eight companions: about 45 seconds awake and 20 asleep by default,
   plus awake interval 15/300 and sleep duration 5/120. A nap trip can leave the
   drawn area at about twice normal speed, enter through the front doorway rather
   than the roof/side, curl up, breathe,
-  wake and return. Check sleep symbols on/off and all screen edges. Pause during
+  wake and return. Stay small while leaving the doorway and crossing the front
+  path; step outward before growing in front of the house, with no roof or
+  wall intersection. Check sleep symbols on/off and all screen edges. Pause during
   approach and sleep; position must freeze. Disable naps, hide or move the house
   during approach/entry/sleep; the companion must exit and return without a
   teleport. Approved walking/rolling/floating cadence must remain intact.

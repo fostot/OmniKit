@@ -4,6 +4,8 @@ namespace OmniKit
     internal sealed class Configuration
     {
         public bool CompanionSeasonalEnabled = true;
+        public bool CompanionHolidayHomeEnabled = true;
+        public bool CompanionHolidayBodiesEnabled = true;
         public string CompanionSeasonalTheme = "Auto";
         public static readonly string[] AvatarNames = ["Moonblob","Wink","Nova","Mochi","Puff","Orbit","Ember","Prism"];
         public static readonly string[] OutfitNames = ["Default"];

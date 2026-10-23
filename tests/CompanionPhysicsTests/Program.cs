@@ -1,13 +1,19 @@
 using System.Numerics;
 using OmniKit.Ui;
 
+if (args.Contains("--grounded-only"))
+{
+    Console.WriteLine($"Grounded companion physics: {GroundedChecks.Run()} focused checks passed.");
+    return;
+}
+
 if (args.Contains("--grab-only"))
 {
     Console.WriteLine($"Companion grab anchors: {GrabAnchorChecks.Run()} focused checks passed.");
     return;
 }
 
-var checks = GrabAnchorChecks.Run();
+var checks = GrabAnchorChecks.Run() + GroundedChecks.Run();
 void Check(bool value, string why) { checks++; if (!value) throw new Exception(why); }
 var viewportMin = new Vector2(100, 50);
 var viewportMax = new Vector2(900, 650);

@@ -20,6 +20,8 @@
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeRoutine.cs" Link="CompanionHomeRoutine.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionNapArtwork.cs" Link="CompanionNapArtwork.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeRenderer.cs" Link="CompanionHomeRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHomeStyleLibrary.cs" Link="CompanionHomeStyleLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionStyleRenderer.cs" Link="CompanionStyleRenderer.cs" />
     <Compile Include="../../src/OmniKit/Ui/ProceduralCompanion.cs" Link="ProceduralCompanion.cs" />
     <Compile Include="../LauncherUiSmoke/SoftwareRenderer.cs" Link="SoftwareRenderer.cs" />
     <Reference Include="Dalamud" HintPath="$(DalamudLibPath)/Dalamud.dll" />

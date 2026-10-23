@@ -32,18 +32,18 @@ internal sealed class QuestActionHud(Configuration config, SoftInteractionServic
     private void DrawNext(float scale)
     {
         var preview = interaction.NextAction;
-        if (config.NextActionLocked && (preview == null || interaction.ActionPaused)) return;
+        if (preview == null || preview.QuestKind is not (QuestActionKind.EventItem or QuestActionKind.Emote)) return;
+        if (interaction.ActionPaused) return;
         var edge = 52 * scale;
         var size = new Vector2(edge);
         if (!BeginPanel("NextAction", "NEXT ACTION", size, config.NextActionLocked,
                 ref config.NextActionX, ref config.NextActionY, scale, out var origin)) { ImGui.End(); return; }
         var lockMinimum = config.NextActionLocked ? origin + new Vector2(edge - 17 * scale, 2 * scale) : default;
         var overLock = config.NextActionLocked && ImGui.IsMouseHoveringRect(lockMinimum, lockMinimum + new Vector2(15 * scale));
-        var enabled = preview?.CanUse == true && !interaction.ActionPaused;
-        var clicked = ActionButtonRenderer.Draw("next", origin, size, preview?.IconId ?? 0,
-            preview?.Action == "Target + attack" ? "!" : preview?.Action == "Target" ? "+" : "·",
-            0, enabled, preview == null ? "Look toward an eligible target." :
-                preview.Action + ": " + preview.Name + (preview.Reason.Length == 0 ? "" : "\n" + preview.Reason), out var ownsInput);
+        var enabled = preview.CanUse && !interaction.ActionPaused;
+        var clicked = ActionButtonRenderer.Draw("next", origin, size, preview.IconId,
+            "·", 0, enabled,
+            preview.Action + ": " + preview.Name + (preview.Reason.Length == 0 ? "" : "\n" + preview.Reason), out var ownsInput);
         OwnsActionInput |= ownsInput;
         if (clicked && !overLock && preview != null) interaction.RequestNextAction(preview);
         if (LockButton("next-lock", origin, size, config.NextActionLocked, scale))
@@ -224,22 +224,25 @@ internal static class ActionButtonRenderer
     {
         var viewport = ImGui.GetMainViewport();
         var padding = ImGui.GetStyle().WindowPadding * 2;
-        var wrap = Math.Max(32, Math.Min(340, viewport.Size.X - padding.X - 16));
+        var availableWidth = Math.Max(1, viewport.Size.X - padding.X - 16);
+        var wrap = Math.Min(340, availableWidth);
         var measured = ImGui.CalcTextSize(text, false, wrap);
-        var contentHeight = Math.Min(measured.Y + 2, Math.Max(20, viewport.Size.Y - padding.Y - 20));
-        var size = new Vector2(Math.Min(wrap, measured.X) + padding.X + 2, contentHeight + padding.Y);
+        if (measured.Y + padding.Y + 2 > viewport.Size.Y - 8 && wrap < availableWidth)
+        {
+            wrap = availableWidth;
+            measured = ImGui.CalcTextSize(text, false, wrap);
+        }
+        var size = new Vector2(wrap + padding.X, MathF.Ceiling(measured.Y) + padding.Y + 2);
         var position = Vector2.Clamp(ImGui.GetMousePos() + new Vector2(12, 18), viewport.Pos + new Vector2(4),
             Vector2.Max(viewport.Pos + new Vector2(4), viewport.Pos + viewport.Size - size - new Vector2(4)));
         ImGui.SetNextWindowPos(position, ImGuiCond.Always);
         ImGui.SetNextWindowSize(size, ImGuiCond.Always);
         ImGui.BeginTooltip();
-        if (ImGui.BeginChild("##action-tip", new Vector2(0, contentHeight), false, ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoSavedSettings))
-        {
-            ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrap);
-            ImGui.TextUnformatted(text);
-            ImGui.PopTextWrapPos();
-        }
-        ImGui.EndChild();
+        // A tooltip already ignores mouse input. Drawing directly avoids a
+        // child's extra padding/scrollbar reducing the measured text height.
+        ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrap);
+        ImGui.TextUnformatted(text);
+        ImGui.PopTextWrapPos();
         ImGui.EndTooltip();
     }
 }

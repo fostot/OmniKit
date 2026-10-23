@@ -4,7 +4,7 @@ using OmniKit.Search;
 
 namespace OmniKit.Ui;
 
-internal readonly record struct LauncherOptions(float Width, float TextScale, int ResultCount, float CenterX, float Top)
+internal readonly record struct LauncherOptions(float Width, float TextScale, int ResultCount, float CenterX, float Top, float Height = 64)
 {
     public static LauncherOptions Default => new(640, 1, 7, .5f, .20f);
 }
@@ -31,32 +31,40 @@ internal sealed class CompactLauncher
         var gutter = 12 * scale;
         var width = Math.Max(1, Math.Min(FiniteRange(options.Width, 320, 1200, 640) * scale, viewport.WorkSize.X - gutter * 2));
         var padding = 12 * scale;
-        var framePaddingY = 12 * scale;
         var baseLineHeight = ImGui.GetTextLineHeight();
         var lineHeight = baseLineHeight * textScale;
-        var barHeight = lineHeight + framePaddingY * 2;
+        var minimumBarHeight = Math.Max(lineHeight, 22 * scale);
+        var requestedHeight = Math.Max(FiniteRange(options.Height, 24, 120, 64) * scale, minimumBarHeight + 2 * scale);
+        // Height controls the collapsed panel, including its vertical whitespace.
+        // Tight bars give space back from both the outer gutter and input padding.
+        var verticalPadding = Math.Clamp((requestedHeight - minimumBarHeight) * .25f, 0, 12 * scale);
+        var barHeight = requestedHeight - verticalPadding * 2;
+        var framePaddingY = Math.Max(0, (barHeight - lineHeight) * .5f);
         var rowHeight = lineHeight * 2 + 14 * scale;
         var availableHeight = Math.Max(1, viewport.WorkSize.Y - gutter * 2);
         var hasStatus = hasQuery && status.Length > 0;
         var statusHeight = hasStatus ? lineHeight + 4 * scale : 0;
-        var showDescriptions = availableHeight - barHeight - padding * 2 - 12 * scale - statusHeight >= rowHeight;
+        var showDescriptions = availableHeight - barHeight - verticalPadding * 2 - 12 * scale - statusHeight >= rowHeight;
         if (hasQuery && !showDescriptions)
         {
             // Keep one complete readable result in a short viewport. Descriptions
             // remain available in the existing hover tooltip.
-            padding = framePaddingY = 8 * scale;
+            padding = 8 * scale;
+            verticalPadding = Math.Min(verticalPadding, 4 * scale);
+            framePaddingY = Math.Min(framePaddingY, 8 * scale);
             var lineBudget = (availableHeight - (hasStatus ? 60 : 56) * scale) / (hasStatus ? 3 : 2);
             textScale = Math.Min(textScale, Math.Max(1, lineBudget) / Math.Max(1, baseLineHeight));
             lineHeight = baseLineHeight * textScale;
-            barHeight = lineHeight + framePaddingY * 2;
+            barHeight = Math.Max(lineHeight + framePaddingY * 2, 22 * scale);
+            framePaddingY = (barHeight - lineHeight) * .5f;
             statusHeight = hasStatus ? lineHeight + 4 * scale : 0;
             rowHeight = lineHeight + 12 * scale;
         }
-        var availableResults = Math.Max(1, availableHeight - barHeight - padding * 2 - 12 * scale - statusHeight);
+        var availableResults = Math.Max(1, availableHeight - barHeight - verticalPadding * 2 - 12 * scale - statusHeight);
         var visibleRows = Math.Min(Math.Min(rows.Count, Math.Clamp(options.ResultCount, 3, 12)),
             Math.Max(1, (int)MathF.Floor(availableResults / rowHeight)));
         var resultsHeight = hasQuery ? Math.Min(availableResults, visibleRows * rowHeight) : 0;
-        var height = padding * 2 + barHeight + (hasQuery ? resultsHeight + 12 * scale + statusHeight : 0);
+        var height = verticalPadding * 2 + barHeight + (hasQuery ? resultsHeight + 12 * scale + statusHeight : 0);
         var position = viewport.WorkPos + new Vector2(
             viewport.WorkSize.X * FiniteRange(options.CenterX, .05f, .95f, .5f) - width / 2,
             viewport.WorkSize.Y * FiniteRange(options.Top, 0, .9f, .20f));
@@ -64,7 +72,7 @@ internal sealed class CompactLauncher
             Vector2.Max(viewport.WorkPos + new Vector2(gutter), viewport.WorkPos + viewport.WorkSize - new Vector2(width, height) - new Vector2(gutter)));
         ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.Always);
         ImGui.SetNextWindowPos(position, ImGuiCond.Always);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding, verticalPadding));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8 * scale, framePaddingY));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2 * scale);

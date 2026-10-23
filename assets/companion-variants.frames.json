@@ -1,0 +1,9117 @@
+{
+  "Version": 1,
+  "LogicalAnchor": [
+    0.5,
+    0.9
+  ],
+  "StateOrder": [
+    "Neutral",
+    "MoveA",
+    "MoveB",
+    "ClosedBlink",
+    "CarrySquirmA",
+    "CarrySquirmB",
+    "EnterBed",
+    "Wake"
+  ],
+  "Variants": [
+    {
+      "Avatar": "Moonblob",
+      "Choice": "Look1",
+      "Id": "OceanOpal",
+      "Label": "Ocean Opal",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            19,
+            42,
+            230,
+            239
+          ],
+          "BodyBounds": [
+            27,
+            50,
+            222,
+            231
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.5,
+            231
+          ],
+          "Grip": [
+            124.5,
+            83.79999999999998
+          ],
+          "AccessoryAnchor": [
+            124.5,
+            60.86
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            240,
+            47,
+            458,
+            240
+          ],
+          "BodyBounds": [
+            248,
+            55,
+            450,
+            232
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.0,
+            232
+          ],
+          "Grip": [
+            349.0,
+            84.79999999999998
+          ],
+          "AccessoryAnchor": [
+            349.0,
+            65.62
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            463,
+            50,
+            677,
+            240
+          ],
+          "BodyBounds": [
+            471,
+            58,
+            669,
+            232
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            570.0,
+            232
+          ],
+          "Grip": [
+            570.0,
+            84.79999999999998
+          ],
+          "AccessoryAnchor": [
+            570.0,
+            68.44
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            683,
+            43,
+            891,
+            241
+          ],
+          "BodyBounds": [
+            691,
+            51,
+            883,
+            233
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            787.0,
+            233
+          ],
+          "Grip": [
+            787.0,
+            85.79999999999998
+          ],
+          "AccessoryAnchor": [
+            787.0,
+            61.92
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            904,
+            42,
+            1108,
+            242
+          ],
+          "BodyBounds": [
+            912,
+            50,
+            1100,
+            234
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.0,
+            234
+          ],
+          "Grip": [
+            1006.0,
+            86.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1006.0,
+            61.04
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1115,
+            45,
+            1321,
+            242
+          ],
+          "BodyBounds": [
+            1123,
+            53,
+            1313,
+            234
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1218.0,
+            234
+          ],
+          "Grip": [
+            1218.0,
+            86.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1218.0,
+            63.86
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            83,
+            1550,
+            241
+          ],
+          "BodyBounds": [
+            1338,
+            91,
+            1542,
+            233
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1440.0,
+            233
+          ],
+          "Grip": [
+            1440.0,
+            95
+          ],
+          "AccessoryAnchor": [
+            1440.0,
+            99.52
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1554,
+            42,
+            1759,
+            241
+          ],
+          "BodyBounds": [
+            1562,
+            50,
+            1751,
+            233
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1656.5,
+            233
+          ],
+          "Grip": [
+            1656.5,
+            85.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1656.5,
+            60.98
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 167.7
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "Choice": "Look2",
+      "Id": "BerryNebula",
+      "Label": "Berry Nebula",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            20,
+            245,
+            231,
+            444
+          ],
+          "BodyBounds": [
+            28,
+            253,
+            223,
+            436
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            125.5,
+            436
+          ],
+          "Grip": [
+            125.5,
+            288.0
+          ],
+          "AccessoryAnchor": [
+            125.5,
+            263.98
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            240,
+            248,
+            459,
+            447
+          ],
+          "BodyBounds": [
+            248,
+            256,
+            451,
+            439
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.5,
+            439
+          ],
+          "Grip": [
+            349.5,
+            291.0
+          ],
+          "AccessoryAnchor": [
+            349.5,
+            266.98
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            252,
+            679,
+            445
+          ],
+          "BodyBounds": [
+            470,
+            260,
+            671,
+            437
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            570.5,
+            437
+          ],
+          "Grip": [
+            570.5,
+            289.0
+          ],
+          "AccessoryAnchor": [
+            570.5,
+            270.62
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            683,
+            246,
+            891,
+            444
+          ],
+          "BodyBounds": [
+            691,
+            254,
+            883,
+            436
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            787.0,
+            436
+          ],
+          "Grip": [
+            787.0,
+            288.0
+          ],
+          "AccessoryAnchor": [
+            787.0,
+            264.92
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            903,
+            246,
+            1110,
+            447
+          ],
+          "BodyBounds": [
+            911,
+            254,
+            1102,
+            439
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.5,
+            439
+          ],
+          "Grip": [
+            1006.5,
+            291.0
+          ],
+          "AccessoryAnchor": [
+            1006.5,
+            265.1
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1115,
+            248,
+            1323,
+            448
+          ],
+          "BodyBounds": [
+            1123,
+            256,
+            1315,
+            440
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1219.0,
+            440
+          ],
+          "Grip": [
+            1219.0,
+            292.0
+          ],
+          "AccessoryAnchor": [
+            1219.0,
+            267.04
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1331,
+            290,
+            1551,
+            448
+          ],
+          "BodyBounds": [
+            1339,
+            298,
+            1543,
+            440
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1441.0,
+            440
+          ],
+          "Grip": [
+            1441.0,
+            302
+          ],
+          "AccessoryAnchor": [
+            1441.0,
+            306.52
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 167.7
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            247,
+            1756,
+            447
+          ],
+          "BodyBounds": [
+            1563,
+            255,
+            1748,
+            439
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1655.5,
+            439
+          ],
+          "Grip": [
+            1655.5,
+            291.0
+          ],
+          "AccessoryAnchor": [
+            1655.5,
+            266.04
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 167.7
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "Choice": "Look3",
+      "Id": "HoneydewMoon",
+      "Label": "Honeydew Moon",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            18,
+            452,
+            231,
+            654
+          ],
+          "BodyBounds": [
+            26,
+            460,
+            223,
+            646
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.5,
+            646
+          ],
+          "Grip": [
+            124.5,
+            497.2
+          ],
+          "AccessoryAnchor": [
+            124.5,
+            471.16
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            240,
+            455,
+            458,
+            656
+          ],
+          "BodyBounds": [
+            248,
+            463,
+            450,
+            648
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.0,
+            648
+          ],
+          "Grip": [
+            349.0,
+            499.2
+          ],
+          "AccessoryAnchor": [
+            349.0,
+            474.1
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            463,
+            464,
+            678,
+            657
+          ],
+          "BodyBounds": [
+            471,
+            472,
+            670,
+            649
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            570.5,
+            649
+          ],
+          "Grip": [
+            570.5,
+            500.2
+          ],
+          "AccessoryAnchor": [
+            570.5,
+            482.62
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            683,
+            454,
+            892,
+            655
+          ],
+          "BodyBounds": [
+            691,
+            462,
+            884,
+            647
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            787.5,
+            647
+          ],
+          "Grip": [
+            787.5,
+            498.2
+          ],
+          "AccessoryAnchor": [
+            787.5,
+            473.1
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            904,
+            458,
+            1109,
+            659
+          ],
+          "BodyBounds": [
+            912,
+            466,
+            1101,
+            651
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.5,
+            651
+          ],
+          "Grip": [
+            1006.5,
+            502.2
+          ],
+          "AccessoryAnchor": [
+            1006.5,
+            477.1
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1114,
+            458,
+            1323,
+            660
+          ],
+          "BodyBounds": [
+            1122,
+            466,
+            1315,
+            652
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1218.5,
+            652
+          ],
+          "Grip": [
+            1218.5,
+            503.2
+          ],
+          "AccessoryAnchor": [
+            1218.5,
+            477.16
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            498,
+            1550,
+            658
+          ],
+          "BodyBounds": [
+            1338,
+            506,
+            1542,
+            650
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1440.0,
+            650
+          ],
+          "Grip": [
+            1440.0,
+            510
+          ],
+          "AccessoryAnchor": [
+            1440.0,
+            514.64
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 169.42
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1554,
+            456,
+            1761,
+            655
+          ],
+          "BodyBounds": [
+            1562,
+            464,
+            1753,
+            647
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1657.5,
+            647
+          ],
+          "Grip": [
+            1657.5,
+            498.2
+          ],
+          "AccessoryAnchor": [
+            1657.5,
+            474.98
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 169.42
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "Choice": "Look4",
+      "Id": "LavenderGeode",
+      "Label": "Lavender Geode",
+      "ScaleReference": 231,
+      "Frames": [
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            17,
+            659,
+            233,
+            867
+          ],
+          "BodyBounds": [
+            25,
+            667,
+            225,
+            859
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            125.0,
+            859
+          ],
+          "Grip": [
+            125.0,
+            705.4
+          ],
+          "AccessoryAnchor": [
+            125.0,
+            678.52
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            240,
+            666,
+            458,
+            865
+          ],
+          "BodyBounds": [
+            248,
+            674,
+            450,
+            857
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.0,
+            857
+          ],
+          "Grip": [
+            349.0,
+            703.4
+          ],
+          "AccessoryAnchor": [
+            349.0,
+            684.98
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            461,
+            670,
+            678,
+            864
+          ],
+          "BodyBounds": [
+            469,
+            678,
+            670,
+            856
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            569.5,
+            856
+          ],
+          "Grip": [
+            569.5,
+            702.4
+          ],
+          "AccessoryAnchor": [
+            569.5,
+            688.68
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            684,
+            661,
+            894,
+            865
+          ],
+          "BodyBounds": [
+            692,
+            669,
+            886,
+            857
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            789.0,
+            857
+          ],
+          "Grip": [
+            789.0,
+            703.4
+          ],
+          "AccessoryAnchor": [
+            789.0,
+            680.28
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            905,
+            661,
+            1109,
+            868
+          ],
+          "BodyBounds": [
+            913,
+            669,
+            1101,
+            860
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1007.0,
+            860
+          ],
+          "Grip": [
+            1007.0,
+            706.4
+          ],
+          "AccessoryAnchor": [
+            1007.0,
+            680.46
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1115,
+            662,
+            1324,
+            867
+          ],
+          "BodyBounds": [
+            1123,
+            670,
+            1316,
+            859
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1219.5,
+            859
+          ],
+          "Grip": [
+            1219.5,
+            705.4
+          ],
+          "AccessoryAnchor": [
+            1219.5,
+            681.34
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1331,
+            706,
+            1551,
+            866
+          ],
+          "BodyBounds": [
+            1339,
+            714,
+            1543,
+            858
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1441.0,
+            858
+          ],
+          "Grip": [
+            1441.0,
+            718
+          ],
+          "AccessoryAnchor": [
+            1441.0,
+            722.64
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 172.0
+        },
+        {
+          "File": "moonblob-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            661,
+            1761,
+            867
+          ],
+          "BodyBounds": [
+            1563,
+            669,
+            1753,
+            859
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1658.0,
+            859
+          ],
+          "Grip": [
+            1658.0,
+            705.4
+          ],
+          "AccessoryAnchor": [
+            1658.0,
+            680.4
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 172.0
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "Choice": "Look1",
+      "Id": "TideGlass",
+      "Label": "Tide Glass",
+      "ScaleReference": 227,
+      "Frames": [
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            11,
+            25,
+            230,
+            229
+          ],
+          "BodyBounds": [
+            19,
+            33,
+            222,
+            221
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            120.5,
+            221
+          ],
+          "Grip": [
+            120.5,
+            70.6
+          ],
+          "AccessoryAnchor": [
+            142.83,
+            59.32
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            237,
+            31,
+            443,
+            232
+          ],
+          "BodyBounds": [
+            245,
+            39,
+            435,
+            224
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            340.0,
+            224
+          ],
+          "Grip": [
+            340.0,
+            73.6
+          ],
+          "AccessoryAnchor": [
+            360.9,
+            64.9
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            456,
+            44,
+            660,
+            227
+          ],
+          "BodyBounds": [
+            464,
+            52,
+            652,
+            219
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            558.0,
+            219
+          ],
+          "Grip": [
+            558.0,
+            68.6
+          ],
+          "AccessoryAnchor": [
+            578.68,
+            75.38
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            34,
+            880,
+            230
+          ],
+          "BodyBounds": [
+            682,
+            42,
+            872,
+            222
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            777.0,
+            222
+          ],
+          "Grip": [
+            777.0,
+            71.6
+          ],
+          "AccessoryAnchor": [
+            797.9,
+            67.2
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            898,
+            35,
+            1090,
+            228
+          ],
+          "BodyBounds": [
+            906,
+            43,
+            1082,
+            220
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            994.0,
+            220
+          ],
+          "Grip": [
+            994.0,
+            69.6
+          ],
+          "AccessoryAnchor": [
+            1013.36,
+            67.78
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1109,
+            47,
+            1313,
+            232
+          ],
+          "BodyBounds": [
+            1117,
+            55,
+            1305,
+            224
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1211.0,
+            224
+          ],
+          "Grip": [
+            1211.0,
+            73.6
+          ],
+          "AccessoryAnchor": [
+            1231.68,
+            78.66
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            41,
+            1541,
+            232
+          ],
+          "BodyBounds": [
+            1338,
+            49,
+            1533,
+            224
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1435.5,
+            224
+          ],
+          "Grip": [
+            1435.5,
+            73.6
+          ],
+          "AccessoryAnchor": [
+            1456.95,
+            73.5
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 154.28
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1549,
+            40,
+            1766,
+            236
+          ],
+          "BodyBounds": [
+            1557,
+            48,
+            1758,
+            228
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1657.5,
+            228
+          ],
+          "Grip": [
+            1657.5,
+            77.6
+          ],
+          "AccessoryAnchor": [
+            1679.61,
+            73.2
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 154.28
+        }
+      ],
+      "EyeEllipse": [
+        141,
+        114,
+        42,
+        32
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "Choice": "Look2",
+      "Id": "TwilightVelvet",
+      "Label": "Twilight Velvet",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            10,
+            244,
+            230,
+            445
+          ],
+          "BodyBounds": [
+            18,
+            252,
+            222,
+            437
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            120.0,
+            437
+          ],
+          "Grip": [
+            120.0,
+            287.4
+          ],
+          "AccessoryAnchor": [
+            142.44,
+            277.9
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            236,
+            249,
+            443,
+            446
+          ],
+          "BodyBounds": [
+            244,
+            257,
+            435,
+            438
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            339.5,
+            438
+          ],
+          "Grip": [
+            339.5,
+            288.4
+          ],
+          "AccessoryAnchor": [
+            360.51,
+            282.34
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            454,
+            264,
+            662,
+            443
+          ],
+          "BodyBounds": [
+            462,
+            272,
+            654,
+            435
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            558.0,
+            435
+          ],
+          "Grip": [
+            558.0,
+            285.4
+          ],
+          "AccessoryAnchor": [
+            579.12,
+            294.82
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            673,
+            251,
+            879,
+            445
+          ],
+          "BodyBounds": [
+            681,
+            259,
+            871,
+            437
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            776.0,
+            437
+          ],
+          "Grip": [
+            776.0,
+            287.4
+          ],
+          "AccessoryAnchor": [
+            796.9,
+            283.92
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            897,
+            251,
+            1089,
+            444
+          ],
+          "BodyBounds": [
+            905,
+            259,
+            1081,
+            436
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            993.0,
+            436
+          ],
+          "Grip": [
+            993.0,
+            286.4
+          ],
+          "AccessoryAnchor": [
+            1012.36,
+            283.78
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1108,
+            266,
+            1313,
+            450
+          ],
+          "BodyBounds": [
+            1116,
+            274,
+            1305,
+            442
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1210.5,
+            442
+          ],
+          "Grip": [
+            1210.5,
+            292.4
+          ],
+          "AccessoryAnchor": [
+            1231.29,
+            297.52
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1329,
+            259,
+            1541,
+            449
+          ],
+          "BodyBounds": [
+            1337,
+            267,
+            1533,
+            441
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1435.0,
+            441
+          ],
+          "Grip": [
+            1435.0,
+            291.4
+          ],
+          "AccessoryAnchor": [
+            1456.56,
+            291.36
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1550,
+            253,
+            1766,
+            456
+          ],
+          "BodyBounds": [
+            1558,
+            261,
+            1758,
+            448
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1658.0,
+            448
+          ],
+          "Grip": [
+            1658.0,
+            298.4
+          ],
+          "AccessoryAnchor": [
+            1680.0,
+            287.18
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 155.04
+        }
+      ],
+      "EyeEllipse": [
+        144,
+        333,
+        42,
+        32
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "Choice": "Look3",
+      "Id": "Roselight",
+      "Label": "Roselight",
+      "ScaleReference": 226,
+      "Frames": [
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            12,
+            463,
+            230,
+            663
+          ],
+          "BodyBounds": [
+            20,
+            471,
+            222,
+            655
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            121.0,
+            655
+          ],
+          "Grip": [
+            121.0,
+            507.79999999999995
+          ],
+          "AccessoryAnchor": [
+            143.22,
+            496.76
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            236,
+            467,
+            442,
+            666
+          ],
+          "BodyBounds": [
+            244,
+            475,
+            434,
+            658
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            339.0,
+            658
+          ],
+          "Grip": [
+            339.0,
+            510.79999999999995
+          ],
+          "AccessoryAnchor": [
+            359.9,
+            500.62
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            455,
+            480,
+            661,
+            662
+          ],
+          "BodyBounds": [
+            463,
+            488,
+            653,
+            654
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            558.0,
+            654
+          ],
+          "Grip": [
+            558.0,
+            506.79999999999995
+          ],
+          "AccessoryAnchor": [
+            578.9,
+            511.24
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            470,
+            879,
+            665
+          ],
+          "BodyBounds": [
+            682,
+            478,
+            871,
+            657
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            776.5,
+            657
+          ],
+          "Grip": [
+            776.5,
+            509.79999999999995
+          ],
+          "AccessoryAnchor": [
+            797.29,
+            503.06
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            897,
+            471,
+            1088,
+            664
+          ],
+          "BodyBounds": [
+            905,
+            479,
+            1080,
+            656
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            992.5,
+            656
+          ],
+          "Grip": [
+            992.5,
+            508.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1011.75,
+            503.78
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1110,
+            483,
+            1309,
+            668
+          ],
+          "BodyBounds": [
+            1118,
+            491,
+            1301,
+            660
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1209.5,
+            660
+          ],
+          "Grip": [
+            1209.5,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            1229.63,
+            514.66
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1331,
+            478,
+            1541,
+            668
+          ],
+          "BodyBounds": [
+            1339,
+            486,
+            1533,
+            660
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1436.0,
+            660
+          ],
+          "Grip": [
+            1436.0,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            1457.34,
+            510.36
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 153.52
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1550,
+            473,
+            1765,
+            672
+          ],
+          "BodyBounds": [
+            1558,
+            481,
+            1757,
+            664
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1657.5,
+            664
+          ],
+          "Grip": [
+            1657.5,
+            516.8
+          ],
+          "AccessoryAnchor": [
+            1679.39,
+            506.62
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 153.52
+        }
+      ],
+      "EyeEllipse": [
+        143,
+        552,
+        42,
+        32
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "Choice": "Look4",
+      "Id": "JadeLantern",
+      "Label": "Jade Lantern",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            10,
+            674,
+            230,
+            879
+          ],
+          "BodyBounds": [
+            18,
+            682,
+            222,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            120.0,
+            871
+          ],
+          "Grip": [
+            120.0,
+            719.8
+          ],
+          "AccessoryAnchor": [
+            142.44,
+            708.46
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            237,
+            684,
+            443,
+            881
+          ],
+          "BodyBounds": [
+            245,
+            692,
+            435,
+            873
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            340.0,
+            873
+          ],
+          "Grip": [
+            340.0,
+            721.8
+          ],
+          "AccessoryAnchor": [
+            360.9,
+            717.34
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            455,
+            691,
+            661,
+            873
+          ],
+          "BodyBounds": [
+            463,
+            699,
+            653,
+            865
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            558.0,
+            865
+          ],
+          "Grip": [
+            558.0,
+            713.8
+          ],
+          "AccessoryAnchor": [
+            578.9,
+            722.24
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            685,
+            879,
+            879
+          ],
+          "BodyBounds": [
+            682,
+            693,
+            871,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            776.5,
+            871
+          ],
+          "Grip": [
+            776.5,
+            719.8
+          ],
+          "AccessoryAnchor": [
+            797.29,
+            717.92
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            899,
+            685,
+            1088,
+            878
+          ],
+          "BodyBounds": [
+            907,
+            693,
+            1080,
+            870
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            993.5,
+            870
+          ],
+          "Grip": [
+            993.5,
+            718.8
+          ],
+          "AccessoryAnchor": [
+            1012.53,
+            717.78
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1109,
+            702,
+            1311,
+            883
+          ],
+          "BodyBounds": [
+            1117,
+            710,
+            1303,
+            875
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1210.0,
+            875
+          ],
+          "Grip": [
+            1210.0,
+            723.8
+          ],
+          "AccessoryAnchor": [
+            1230.46,
+            733.1
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            695,
+            1542,
+            883
+          ],
+          "BodyBounds": [
+            1338,
+            703,
+            1534,
+            875
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1436.0,
+            875
+          ],
+          "Grip": [
+            1436.0,
+            723.8
+          ],
+          "AccessoryAnchor": [
+            1457.56,
+            727.08
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 155.04
+        },
+        {
+          "File": "wink-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1550,
+            688,
+            1765,
+            887
+          ],
+          "BodyBounds": [
+            1558,
+            696,
+            1757,
+            882
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1657.5,
+            882
+          ],
+          "Grip": [
+            1657.5,
+            730.8
+          ],
+          "AccessoryAnchor": [
+            1679.39,
+            722.04
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 155.04
+        }
+      ],
+      "EyeEllipse": [
+        143,
+        766,
+        42,
+        32
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "Choice": "Look1",
+      "Id": "SunriseSilk",
+      "Label": "Sunrise Silk",
+      "ScaleReference": 222,
+      "Frames": [
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            20,
+            16,
+            229,
+            215
+          ],
+          "BodyBounds": [
+            28,
+            24,
+            221,
+            207
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.5,
+            207
+          ],
+          "Grip": [
+            124.5,
+            59.79999999999998
+          ],
+          "AccessoryAnchor": [
+            132.22,
+            60.6
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            246,
+            31,
+            437,
+            216
+          ],
+          "BodyBounds": [
+            254,
+            39,
+            429,
+            208
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            341.5,
+            208
+          ],
+          "Grip": [
+            341.5,
+            60.79999999999998
+          ],
+          "AccessoryAnchor": [
+            348.5,
+            72.8
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            451,
+            18,
+            660,
+            214
+          ],
+          "BodyBounds": [
+            459,
+            26,
+            652,
+            206
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            555.5,
+            206
+          ],
+          "Grip": [
+            555.5,
+            58.79999999999998
+          ],
+          "AccessoryAnchor": [
+            563.22,
+            62.0
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            677,
+            23,
+            880,
+            212
+          ],
+          "BodyBounds": [
+            685,
+            31,
+            872,
+            204
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            778.5,
+            204
+          ],
+          "Grip": [
+            778.5,
+            56.79999999999998
+          ],
+          "AccessoryAnchor": [
+            785.98,
+            65.6
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            904,
+            26,
+            1108,
+            219
+          ],
+          "BodyBounds": [
+            912,
+            34,
+            1100,
+            211
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.0,
+            211
+          ],
+          "Grip": [
+            1006.0,
+            63.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1013.52,
+            69.4
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1125,
+            29,
+            1308,
+            218
+          ],
+          "BodyBounds": [
+            1133,
+            37,
+            1300,
+            210
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.5,
+            210
+          ],
+          "Grip": [
+            1216.5,
+            62.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1223.18,
+            71.6
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1326,
+            50,
+            1540,
+            213
+          ],
+          "BodyBounds": [
+            1334,
+            58,
+            1532,
+            205
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1433.0,
+            205
+          ],
+          "Grip": [
+            1433.0,
+            62
+          ],
+          "AccessoryAnchor": [
+            1440.92,
+            87.4
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 144.75
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            18,
+            1752,
+            218
+          ],
+          "BodyBounds": [
+            1559,
+            26,
+            1744,
+            210
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            210
+          ],
+          "Grip": [
+            1651.5,
+            62.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1658.9,
+            62.8
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 144.75
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "Choice": "Look2",
+      "Id": "PolarAurora",
+      "Label": "Polar Aurora",
+      "ScaleReference": 223,
+      "Frames": [
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            19,
+            238,
+            229,
+            439
+          ],
+          "BodyBounds": [
+            27,
+            246,
+            221,
+            431
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.0,
+            431
+          ],
+          "Grip": [
+            124.0,
+            283.0
+          ],
+          "AccessoryAnchor": [
+            131.76,
+            283.0
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            246,
+            254,
+            437,
+            440
+          ],
+          "BodyBounds": [
+            254,
+            262,
+            429,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            341.5,
+            432
+          ],
+          "Grip": [
+            341.5,
+            284.0
+          ],
+          "AccessoryAnchor": [
+            348.5,
+            296.0
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            451,
+            239,
+            660,
+            436
+          ],
+          "BodyBounds": [
+            459,
+            247,
+            652,
+            428
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            555.5,
+            428
+          ],
+          "Grip": [
+            555.5,
+            280.0
+          ],
+          "AccessoryAnchor": [
+            563.22,
+            283.2
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            677,
+            243,
+            881,
+            435
+          ],
+          "BodyBounds": [
+            685,
+            251,
+            873,
+            427
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            427
+          ],
+          "Grip": [
+            779.0,
+            279.0
+          ],
+          "AccessoryAnchor": [
+            786.52,
+            286.2
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            903,
+            248,
+            1109,
+            441
+          ],
+          "BodyBounds": [
+            911,
+            256,
+            1101,
+            433
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.0,
+            433
+          ],
+          "Grip": [
+            1006.0,
+            285.0
+          ],
+          "AccessoryAnchor": [
+            1013.6,
+            291.4
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1125,
+            251,
+            1308,
+            440
+          ],
+          "BodyBounds": [
+            1133,
+            259,
+            1300,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.5,
+            432
+          ],
+          "Grip": [
+            1216.5,
+            284.0
+          ],
+          "AccessoryAnchor": [
+            1223.18,
+            293.6
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1326,
+            270,
+            1540,
+            436
+          ],
+          "BodyBounds": [
+            1334,
+            278,
+            1532,
+            428
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1433.0,
+            428
+          ],
+          "Grip": [
+            1433.0,
+            282
+          ],
+          "AccessoryAnchor": [
+            1440.92,
+            308.0
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            240,
+            1753,
+            441
+          ],
+          "BodyBounds": [
+            1559,
+            248,
+            1745,
+            433
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1652.0,
+            433
+          ],
+          "Grip": [
+            1652.0,
+            285.0
+          ],
+          "AccessoryAnchor": [
+            1659.44,
+            285.0
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 145.5
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "Choice": "Look3",
+      "Id": "RoseComet",
+      "Label": "Rose Comet",
+      "ScaleReference": 225,
+      "Frames": [
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            19,
+            457,
+            229,
+            659
+          ],
+          "BodyBounds": [
+            27,
+            465,
+            221,
+            651
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.0,
+            651
+          ],
+          "Grip": [
+            124.0,
+            501.4
+          ],
+          "AccessoryAnchor": [
+            131.76,
+            502.2
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            246,
+            470,
+            437,
+            660
+          ],
+          "BodyBounds": [
+            254,
+            478,
+            429,
+            652
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            341.5,
+            652
+          ],
+          "Grip": [
+            341.5,
+            502.4
+          ],
+          "AccessoryAnchor": [
+            348.5,
+            512.8
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            450,
+            460,
+            660,
+            658
+          ],
+          "BodyBounds": [
+            458,
+            468,
+            652,
+            650
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            555.0,
+            650
+          ],
+          "Grip": [
+            555.0,
+            500.4
+          ],
+          "AccessoryAnchor": [
+            562.76,
+            504.4
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            677,
+            464,
+            881,
+            658
+          ],
+          "BodyBounds": [
+            685,
+            472,
+            873,
+            650
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            650
+          ],
+          "Grip": [
+            779.0,
+            500.4
+          ],
+          "AccessoryAnchor": [
+            786.52,
+            507.6
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            904,
+            466,
+            1108,
+            663
+          ],
+          "BodyBounds": [
+            912,
+            474,
+            1100,
+            655
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.0,
+            655
+          ],
+          "Grip": [
+            1006.0,
+            505.4
+          ],
+          "AccessoryAnchor": [
+            1013.52,
+            510.2
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1125,
+            471,
+            1308,
+            662
+          ],
+          "BodyBounds": [
+            1133,
+            479,
+            1300,
+            654
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.5,
+            654
+          ],
+          "Grip": [
+            1216.5,
+            504.4
+          ],
+          "AccessoryAnchor": [
+            1223.18,
+            514.0
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1326,
+            493,
+            1540,
+            657
+          ],
+          "BodyBounds": [
+            1334,
+            501,
+            1532,
+            649
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1433.0,
+            649
+          ],
+          "Grip": [
+            1433.0,
+            505
+          ],
+          "AccessoryAnchor": [
+            1440.92,
+            530.6
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            460,
+            1752,
+            663
+          ],
+          "BodyBounds": [
+            1559,
+            468,
+            1744,
+            655
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            655
+          ],
+          "Grip": [
+            1651.5,
+            505.4
+          ],
+          "AccessoryAnchor": [
+            1658.9,
+            505.4
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 145.5
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "Choice": "Look4",
+      "Id": "MidnightOpal",
+      "Label": "Midnight Opal",
+      "ScaleReference": 226,
+      "Frames": [
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            19,
+            670,
+            229,
+            874
+          ],
+          "BodyBounds": [
+            27,
+            678,
+            221,
+            866
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.0,
+            866
+          ],
+          "Grip": [
+            124.0,
+            715.6
+          ],
+          "AccessoryAnchor": [
+            131.76,
+            715.6
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            246,
+            685,
+            437,
+            876
+          ],
+          "BodyBounds": [
+            254,
+            693,
+            429,
+            868
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            341.5,
+            868
+          ],
+          "Grip": [
+            341.5,
+            717.6
+          ],
+          "AccessoryAnchor": [
+            348.5,
+            728.0
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            451,
+            671,
+            660,
+            874
+          ],
+          "BodyBounds": [
+            459,
+            679,
+            652,
+            866
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            555.5,
+            866
+          ],
+          "Grip": [
+            555.5,
+            715.6
+          ],
+          "AccessoryAnchor": [
+            563.22,
+            716.4
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            677,
+            680,
+            881,
+            874
+          ],
+          "BodyBounds": [
+            685,
+            688,
+            873,
+            866
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            866
+          ],
+          "Grip": [
+            779.0,
+            715.6
+          ],
+          "AccessoryAnchor": [
+            786.52,
+            723.6
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            903,
+            682,
+            1109,
+            879
+          ],
+          "BodyBounds": [
+            911,
+            690,
+            1101,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1006.0,
+            871
+          ],
+          "Grip": [
+            1006.0,
+            720.6
+          ],
+          "AccessoryAnchor": [
+            1013.6,
+            726.2
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1125,
+            686,
+            1308,
+            879
+          ],
+          "BodyBounds": [
+            1133,
+            694,
+            1300,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.5,
+            871
+          ],
+          "Grip": [
+            1216.5,
+            720.6
+          ],
+          "AccessoryAnchor": [
+            1223.18,
+            729.4
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1326,
+            708,
+            1540,
+            874
+          ],
+          "BodyBounds": [
+            1334,
+            716,
+            1532,
+            866
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1433.0,
+            866
+          ],
+          "Grip": [
+            1433.0,
+            720
+          ],
+          "AccessoryAnchor": [
+            1440.92,
+            746.0
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 145.5
+        },
+        {
+          "File": "nova-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            675,
+            1753,
+            879
+          ],
+          "BodyBounds": [
+            1559,
+            683,
+            1745,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1652.0,
+            871
+          ],
+          "Grip": [
+            1652.0,
+            720.6
+          ],
+          "AccessoryAnchor": [
+            1659.44,
+            720.6
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 145.5
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "Choice": "Look1",
+      "Id": "SakuraCream",
+      "Label": "Sakura Cream",
+      "ScaleReference": 227,
+      "Frames": [
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            22,
+            81,
+            240,
+            272
+          ],
+          "BodyBounds": [
+            30,
+            89,
+            233,
+            264
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            131.5,
+            264
+          ],
+          "Grip": [
+            131.5,
+            122.4
+          ],
+          "AccessoryAnchor": [
+            131.5,
+            97.75
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            240,
+            81,
+            458,
+            274
+          ],
+          "BodyBounds": [
+            247,
+            89,
+            452,
+            266
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.5,
+            266
+          ],
+          "Grip": [
+            349.5,
+            124.4
+          ],
+          "AccessoryAnchor": [
+            349.5,
+            97.85
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            459,
+            82,
+            673,
+            274
+          ],
+          "BodyBounds": [
+            465,
+            90,
+            668,
+            266
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            566.5,
+            266
+          ],
+          "Grip": [
+            566.5,
+            124.4
+          ],
+          "AccessoryAnchor": [
+            566.5,
+            98.8
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            81,
+            889,
+            273
+          ],
+          "BodyBounds": [
+            679,
+            89,
+            882,
+            265
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            780.5,
+            265
+          ],
+          "Grip": [
+            780.5,
+            123.4
+          ],
+          "AccessoryAnchor": [
+            780.5,
+            97.8
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            890,
+            83,
+            1107,
+            276
+          ],
+          "BodyBounds": [
+            897,
+            91,
+            1102,
+            268
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            999.5,
+            268
+          ],
+          "Grip": [
+            999.5,
+            126.4
+          ],
+          "AccessoryAnchor": [
+            999.5,
+            99.85
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1108,
+            84,
+            1323,
+            275
+          ],
+          "BodyBounds": [
+            1113,
+            92,
+            1317,
+            267
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1215.0,
+            267
+          ],
+          "Grip": [
+            1215.0,
+            125.4
+          ],
+          "AccessoryAnchor": [
+            1215.0,
+            100.75
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1323,
+            83,
+            1539,
+            273
+          ],
+          "BodyBounds": [
+            1329,
+            91,
+            1532,
+            265
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1430.5,
+            265
+          ],
+          "Grip": [
+            1430.5,
+            123.4
+          ],
+          "AccessoryAnchor": [
+            1430.5,
+            99.7
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 182.7
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1539,
+            81,
+            1756,
+            274
+          ],
+          "BodyBounds": [
+            1546,
+            89,
+            1748,
+            266
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1647.0,
+            266
+          ],
+          "Grip": [
+            1647.0,
+            124.4
+          ],
+          "AccessoryAnchor": [
+            1647.0,
+            97.85
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 182.7
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "Choice": "Look2",
+      "Id": "MatchaMoon",
+      "Label": "Matcha Moon",
+      "ScaleReference": 229,
+      "Frames": [
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            22,
+            276,
+            241,
+            470
+          ],
+          "BodyBounds": [
+            30,
+            284,
+            235,
+            462
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            132.5,
+            462
+          ],
+          "Grip": [
+            132.5,
+            315.6
+          ],
+          "AccessoryAnchor": [
+            132.5,
+            292.9
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            241,
+            275,
+            461,
+            474
+          ],
+          "BodyBounds": [
+            247,
+            283,
+            455,
+            466
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            351.0,
+            466
+          ],
+          "Grip": [
+            351.0,
+            319.6
+          ],
+          "AccessoryAnchor": [
+            351.0,
+            292.15
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            281,
+            675,
+            477
+          ],
+          "BodyBounds": [
+            468,
+            289,
+            672,
+            469
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            570.0,
+            469
+          ],
+          "Grip": [
+            570.0,
+            322.6
+          ],
+          "AccessoryAnchor": [
+            570.0,
+            298.0
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            676,
+            281,
+            890,
+            473
+          ],
+          "BodyBounds": [
+            679,
+            289,
+            883,
+            465
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            781.0,
+            465
+          ],
+          "Grip": [
+            781.0,
+            318.6
+          ],
+          "AccessoryAnchor": [
+            781.0,
+            297.8
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            891,
+            276,
+            1107,
+            475
+          ],
+          "BodyBounds": [
+            898,
+            284,
+            1103,
+            467
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1000.5,
+            467
+          ],
+          "Grip": [
+            1000.5,
+            320.6
+          ],
+          "AccessoryAnchor": [
+            1000.5,
+            293.15
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1108,
+            278,
+            1322,
+            475
+          ],
+          "BodyBounds": [
+            1112,
+            286,
+            1317,
+            467
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1214.5,
+            467
+          ],
+          "Grip": [
+            1214.5,
+            320.6
+          ],
+          "AccessoryAnchor": [
+            1214.5,
+            295.05
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1323,
+            281,
+            1537,
+            473
+          ],
+          "BodyBounds": [
+            1328,
+            289,
+            1531,
+            465
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1429.5,
+            465
+          ],
+          "Grip": [
+            1429.5,
+            318.6
+          ],
+          "AccessoryAnchor": [
+            1429.5,
+            297.8
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 184.5
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1538,
+            279,
+            1754,
+            474
+          ],
+          "BodyBounds": [
+            1544,
+            287,
+            1746,
+            466
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1645.0,
+            466
+          ],
+          "Grip": [
+            1645.0,
+            319.6
+          ],
+          "AccessoryAnchor": [
+            1645.0,
+            295.95
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 184.5
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "Choice": "Look3",
+      "Id": "BlackSesame",
+      "Label": "Black Sesame",
+      "ScaleReference": 230,
+      "Frames": [
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            21,
+            478,
+            240,
+            674
+          ],
+          "BodyBounds": [
+            29,
+            486,
+            233,
+            666
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            131.0,
+            666
+          ],
+          "Grip": [
+            131.0,
+            518.0
+          ],
+          "AccessoryAnchor": [
+            131.0,
+            495.0
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            241,
+            478,
+            463,
+            676
+          ],
+          "BodyBounds": [
+            248,
+            486,
+            456,
+            669
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            352.0,
+            669
+          ],
+          "Grip": [
+            352.0,
+            521.0
+          ],
+          "AccessoryAnchor": [
+            352.0,
+            495.15
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            463,
+            479,
+            676,
+            677
+          ],
+          "BodyBounds": [
+            470,
+            487,
+            673,
+            670
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            571.5,
+            670
+          ],
+          "Grip": [
+            571.5,
+            522.0
+          ],
+          "AccessoryAnchor": [
+            571.5,
+            496.15
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            677,
+            480,
+            891,
+            674
+          ],
+          "BodyBounds": [
+            680,
+            488,
+            884,
+            666
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            782.0,
+            666
+          ],
+          "Grip": [
+            782.0,
+            518.0
+          ],
+          "AccessoryAnchor": [
+            782.0,
+            496.9
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            892,
+            477,
+            1109,
+            677
+          ],
+          "BodyBounds": [
+            899,
+            485,
+            1103,
+            670
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1001.0,
+            670
+          ],
+          "Grip": [
+            1001.0,
+            522.0
+          ],
+          "AccessoryAnchor": [
+            1001.0,
+            494.25
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1110,
+            479,
+            1326,
+            676
+          ],
+          "BodyBounds": [
+            1116,
+            487,
+            1321,
+            670
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1218.5,
+            670
+          ],
+          "Grip": [
+            1218.5,
+            522.0
+          ],
+          "AccessoryAnchor": [
+            1218.5,
+            496.15
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1326,
+            479,
+            1539,
+            673
+          ],
+          "BodyBounds": [
+            1331,
+            487,
+            1533,
+            665
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1432.0,
+            665
+          ],
+          "Grip": [
+            1432.0,
+            517.0
+          ],
+          "AccessoryAnchor": [
+            1432.0,
+            495.9
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 183.6
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1540,
+            478,
+            1756,
+            676
+          ],
+          "BodyBounds": [
+            1546,
+            486,
+            1748,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1647.0,
+            668
+          ],
+          "Grip": [
+            1647.0,
+            520.0
+          ],
+          "AccessoryAnchor": [
+            1647.0,
+            495.1
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 183.6
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "Choice": "Look4",
+      "Id": "YuzuGlow",
+      "Label": "Yuzu Glow",
+      "ScaleReference": 228,
+      "Frames": [
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            22,
+            676,
+            239,
+            865
+          ],
+          "BodyBounds": [
+            30,
+            684,
+            232,
+            857
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            131.0,
+            857
+          ],
+          "Grip": [
+            131.0,
+            713.8
+          ],
+          "AccessoryAnchor": [
+            131.0,
+            692.65
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            239,
+            676,
+            459,
+            868
+          ],
+          "BodyBounds": [
+            246,
+            683,
+            452,
+            860
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            349.0,
+            860
+          ],
+          "Grip": [
+            349.0,
+            716.8
+          ],
+          "AccessoryAnchor": [
+            349.0,
+            691.85
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            460,
+            677,
+            674,
+            868
+          ],
+          "BodyBounds": [
+            467,
+            684,
+            668,
+            860
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            567.5,
+            860
+          ],
+          "Grip": [
+            567.5,
+            716.8
+          ],
+          "AccessoryAnchor": [
+            567.5,
+            692.8
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            678,
+            891,
+            866
+          ],
+          "BodyBounds": [
+            680,
+            685,
+            883,
+            858
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            781.5,
+            858
+          ],
+          "Grip": [
+            781.5,
+            714.8
+          ],
+          "AccessoryAnchor": [
+            781.5,
+            693.65
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            891,
+            678,
+            1107,
+            869
+          ],
+          "BodyBounds": [
+            899,
+            685,
+            1102,
+            861
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1000.5,
+            861
+          ],
+          "Grip": [
+            1000.5,
+            717.8
+          ],
+          "AccessoryAnchor": [
+            1000.5,
+            693.8
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1108,
+            676,
+            1323,
+            869
+          ],
+          "BodyBounds": [
+            1113,
+            682,
+            1318,
+            861
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1215.5,
+            861
+          ],
+          "Grip": [
+            1215.5,
+            717.8
+          ],
+          "AccessoryAnchor": [
+            1215.5,
+            690.95
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1324,
+            679,
+            1537,
+            867
+          ],
+          "BodyBounds": [
+            1329,
+            687,
+            1531,
+            859
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1430.0,
+            859
+          ],
+          "Grip": [
+            1430.0,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            1430.0,
+            695.6
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 181.8
+        },
+        {
+          "File": "mochi-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1538,
+            676,
+            1753,
+            867
+          ],
+          "BodyBounds": [
+            1544,
+            684,
+            1745,
+            859
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1644.5,
+            859
+          ],
+          "Grip": [
+            1644.5,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            1644.5,
+            692.75
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 181.8
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "Choice": "Look1",
+      "Id": "PeachParfait",
+      "Label": "Peach Parfait",
+      "ScaleReference": 334,
+      "Frames": [
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            6,
+            46,
+            317,
+            295
+          ],
+          "BodyBounds": [
+            14,
+            54,
+            309,
+            287
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            161.5,
+            287
+          ],
+          "Grip": [
+            161.5,
+            91.79999999999998
+          ],
+          "AccessoryAnchor": [
+            161.5,
+            109.92
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 265.5
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            18,
+            76,
+            299,
+            298
+          ],
+          "BodyBounds": [
+            26,
+            84,
+            291,
+            290
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            158.5,
+            290
+          ],
+          "Grip": [
+            158.5,
+            124.39999999999998
+          ],
+          "AccessoryAnchor": [
+            158.5,
+            133.44
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 230.87
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            327,
+            76,
+            610,
+            297
+          ],
+          "BodyBounds": [
+            335,
+            84,
+            602,
+            289
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            468.5,
+            289
+          ],
+          "Grip": [
+            468.5,
+            123.39999999999998
+          ],
+          "AccessoryAnchor": [
+            468.5,
+            133.2
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 230.87
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            321,
+            45,
+            631,
+            295
+          ],
+          "BodyBounds": [
+            329,
+            53,
+            623,
+            287
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            476.0,
+            287
+          ],
+          "Grip": [
+            476.0,
+            91.79999999999998
+          ],
+          "AccessoryAnchor": [
+            476.0,
+            109.16
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 265.5
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            638,
+            49,
+            945,
+            304
+          ],
+          "BodyBounds": [
+            646,
+            57,
+            937,
+            296
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            791.5,
+            296
+          ],
+          "Grip": [
+            791.5,
+            100.79999999999998
+          ],
+          "AccessoryAnchor": [
+            791.5,
+            114.36
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 265.5
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            955,
+            47,
+            1252,
+            307
+          ],
+          "BodyBounds": [
+            963,
+            55,
+            1244,
+            299
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1103.5,
+            299
+          ],
+          "Grip": [
+            1103.5,
+            103.79999999999998
+          ],
+          "AccessoryAnchor": [
+            1103.5,
+            113.56
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 265.5
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            644,
+            90,
+            923,
+            301
+          ],
+          "BodyBounds": [
+            652,
+            98,
+            915,
+            293
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            783.5,
+            293
+          ],
+          "Grip": [
+            783.5,
+            127.39999999999998
+          ],
+          "AccessoryAnchor": [
+            783.5,
+            144.8
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 230.87
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            954,
+            75,
+            1231,
+            298
+          ],
+          "BodyBounds": [
+            962,
+            83,
+            1223,
+            290
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            1092.5,
+            290
+          ],
+          "Grip": [
+            1092.5,
+            124.39999999999998
+          ],
+          "AccessoryAnchor": [
+            1092.5,
+            132.68
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 230.87
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "Choice": "Look2",
+      "Id": "AuroraDream",
+      "Label": "Aurora Dream",
+      "ScaleReference": 344,
+      "Frames": [
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            5,
+            353,
+            319,
+            606
+          ],
+          "BodyBounds": [
+            13,
+            361,
+            312,
+            598
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            162.5,
+            598
+          ],
+          "Grip": [
+            162.5,
+            402.79999999999995
+          ],
+          "AccessoryAnchor": [
+            162.5,
+            417.88
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 269.1
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            12,
+            371,
+            304,
+            610
+          ],
+          "BodyBounds": [
+            20,
+            379,
+            296,
+            602
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            158.0,
+            602
+          ],
+          "Grip": [
+            158.0,
+            423.6
+          ],
+          "AccessoryAnchor": [
+            158.0,
+            432.52
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 234.0
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            327,
+            379,
+            618,
+            612
+          ],
+          "BodyBounds": [
+            335,
+            387,
+            610,
+            604
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            472.5,
+            604
+          ],
+          "Grip": [
+            472.5,
+            425.6
+          ],
+          "AccessoryAnchor": [
+            472.5,
+            439.08
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 234.0
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            320,
+            354,
+            633,
+            606
+          ],
+          "BodyBounds": [
+            327,
+            362,
+            625,
+            598
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            476.0,
+            598
+          ],
+          "Grip": [
+            476.0,
+            402.79999999999995
+          ],
+          "AccessoryAnchor": [
+            476.0,
+            418.64
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 269.1
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            635,
+            357,
+            947,
+            617
+          ],
+          "BodyBounds": [
+            643,
+            365,
+            939,
+            609
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            791.0,
+            609
+          ],
+          "Grip": [
+            791.0,
+            413.79999999999995
+          ],
+          "AccessoryAnchor": [
+            791.0,
+            423.56
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 269.1
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            953,
+            358,
+            1254,
+            618
+          ],
+          "BodyBounds": [
+            961,
+            366,
+            1247,
+            610
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1104.0,
+            610
+          ],
+          "Grip": [
+            1104.0,
+            414.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1104.0,
+            424.56
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 269.1
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            641,
+            394,
+            927,
+            616
+          ],
+          "BodyBounds": [
+            649,
+            402,
+            919,
+            608
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            784.0,
+            608
+          ],
+          "Grip": [
+            784.0,
+            429.6
+          ],
+          "AccessoryAnchor": [
+            784.0,
+            451.44
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 234.0
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            954,
+            375,
+            1240,
+            609
+          ],
+          "BodyBounds": [
+            962,
+            383,
+            1232,
+            601
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            1097.0,
+            601
+          ],
+          "Grip": [
+            1097.0,
+            422.6
+          ],
+          "AccessoryAnchor": [
+            1097.0,
+            435.32
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 234.0
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "Choice": "Look3",
+      "Id": "RainPearl",
+      "Label": "Rain Pearl",
+      "ScaleReference": 351,
+      "Frames": [
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            3,
+            656,
+            319,
+            913
+          ],
+          "BodyBounds": [
+            11,
+            664,
+            314,
+            905
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            162.5,
+            905
+          ],
+          "Grip": [
+            162.5,
+            709.8
+          ],
+          "AccessoryAnchor": [
+            162.5,
+            721.84
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 272.7
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            16,
+            672,
+            313,
+            911
+          ],
+          "BodyBounds": [
+            24,
+            680,
+            305,
+            903
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            164.5,
+            903
+          ],
+          "Grip": [
+            164.5,
+            724.6
+          ],
+          "AccessoryAnchor": [
+            164.5,
+            733.52
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 237.13
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            326,
+            682,
+            624,
+            913
+          ],
+          "BodyBounds": [
+            334,
+            690,
+            616,
+            905
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            475.0,
+            905
+          ],
+          "Grip": [
+            475.0,
+            726.6
+          ],
+          "AccessoryAnchor": [
+            475.0,
+            741.6
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 237.13
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            319,
+            656,
+            633,
+            913
+          ],
+          "BodyBounds": [
+            324,
+            664,
+            627,
+            905
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            475.5,
+            905
+          ],
+          "Grip": [
+            475.5,
+            709.8
+          ],
+          "AccessoryAnchor": [
+            475.5,
+            721.84
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 272.7
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            634,
+            666,
+            949,
+            926
+          ],
+          "BodyBounds": [
+            640,
+            674,
+            941,
+            918
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            790.5,
+            918
+          ],
+          "Grip": [
+            790.5,
+            722.8
+          ],
+          "AccessoryAnchor": [
+            790.5,
+            732.56
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 272.7
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            954,
+            667,
+            1254,
+            925
+          ],
+          "BodyBounds": [
+            962,
+            675,
+            1247,
+            917
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1104.5,
+            917
+          ],
+          "Grip": [
+            1104.5,
+            721.8
+          ],
+          "AccessoryAnchor": [
+            1104.5,
+            733.08
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 272.7
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            645,
+            693,
+            937,
+            920
+          ],
+          "BodyBounds": [
+            653,
+            701,
+            929,
+            912
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            791.0,
+            912
+          ],
+          "Grip": [
+            791.0,
+            733.6
+          ],
+          "AccessoryAnchor": [
+            791.0,
+            751.64
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 237.13
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            956,
+            679,
+            1244,
+            913
+          ],
+          "BodyBounds": [
+            964,
+            687,
+            1236,
+            905
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            1100.0,
+            905
+          ],
+          "Grip": [
+            1100.0,
+            726.6
+          ],
+          "AccessoryAnchor": [
+            1100.0,
+            739.32
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 237.13
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "Choice": "Look4",
+      "Id": "MintMallow",
+      "Label": "Mint Mallow",
+      "ScaleReference": 347,
+      "Frames": [
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            5,
+            964,
+            318,
+            1222
+          ],
+          "BodyBounds": [
+            13,
+            972,
+            310,
+            1214
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            161.5,
+            1214
+          ],
+          "Grip": [
+            161.5,
+            1016.4
+          ],
+          "AccessoryAnchor": [
+            161.5,
+            1030.08
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 267.3
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            13,
+            969,
+            307,
+            1205
+          ],
+          "BodyBounds": [
+            21,
+            977,
+            299,
+            1197
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            160.0,
+            1197
+          ],
+          "Grip": [
+            160.0,
+            1017.8
+          ],
+          "AccessoryAnchor": [
+            160.0,
+            1029.8
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 232.435
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            332,
+            973,
+            621,
+            1206
+          ],
+          "BodyBounds": [
+            340,
+            981,
+            613,
+            1198
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            476.5,
+            1198
+          ],
+          "Grip": [
+            476.5,
+            1018.8
+          ],
+          "AccessoryAnchor": [
+            476.5,
+            1033.08
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 232.435
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            318,
+            964,
+            632,
+            1222
+          ],
+          "BodyBounds": [
+            326,
+            972,
+            624,
+            1214
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            475.0,
+            1214
+          ],
+          "Grip": [
+            475.0,
+            1016.4
+          ],
+          "AccessoryAnchor": [
+            475.0,
+            1030.08
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 267.3
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            640,
+            966,
+            947,
+            1225
+          ],
+          "BodyBounds": [
+            648,
+            974,
+            939,
+            1217
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            793.5,
+            1217
+          ],
+          "Grip": [
+            793.5,
+            1019.4
+          ],
+          "AccessoryAnchor": [
+            793.5,
+            1032.32
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 267.3
+        },
+        {
+          "File": "puff-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            955,
+            966,
+            1254,
+            1229
+          ],
+          "BodyBounds": [
+            963,
+            974,
+            1248,
+            1221
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1105.5,
+            1221
+          ],
+          "Grip": [
+            1105.5,
+            1023.4
+          ],
+          "AccessoryAnchor": [
+            1105.5,
+            1033.28
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 267.3
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            644,
+            985,
+            929,
+            1206
+          ],
+          "BodyBounds": [
+            652,
+            993,
+            921,
+            1198
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            786.5,
+            1198
+          ],
+          "Grip": [
+            786.5,
+            1018.8
+          ],
+          "AccessoryAnchor": [
+            786.5,
+            1042.2
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 232.435
+        },
+        {
+          "File": "puff-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            954,
+            967,
+            1243,
+            1207
+          ],
+          "BodyBounds": [
+            962,
+            975,
+            1235,
+            1199
+          ],
+          "SourceUnitScale": 1.15,
+          "Anchor": [
+            1098.5,
+            1199
+          ],
+          "Grip": [
+            1098.5,
+            1019.8
+          ],
+          "AccessoryAnchor": [
+            1098.5,
+            1028.76
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 232.435
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "Choice": "Look1",
+      "Id": "OceanMarble",
+      "Label": "Ocean Marble",
+      "ScaleReference": 220,
+      "Frames": [
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            26,
+            32,
+            222,
+            226
+          ],
+          "BodyBounds": [
+            34,
+            40,
+            214,
+            218
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.0,
+            218
+          ],
+          "Grip": [
+            124.0,
+            72.4
+          ],
+          "AccessoryAnchor": [
+            124.0,
+            57.8
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            245,
+            32,
+            440,
+            227
+          ],
+          "BodyBounds": [
+            253,
+            40,
+            432,
+            219
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            342.5,
+            219
+          ],
+          "Grip": [
+            342.5,
+            73.4
+          ],
+          "AccessoryAnchor": [
+            342.5,
+            57.9
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            30,
+            658,
+            227
+          ],
+          "BodyBounds": [
+            470,
+            38,
+            650,
+            219
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            560.0,
+            219
+          ],
+          "Grip": [
+            560.0,
+            73.4
+          ],
+          "AccessoryAnchor": [
+            560.0,
+            56.1
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            681,
+            30,
+            877,
+            227
+          ],
+          "BodyBounds": [
+            689,
+            38,
+            869,
+            219
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            219
+          ],
+          "Grip": [
+            779.0,
+            73.4
+          ],
+          "AccessoryAnchor": [
+            779.0,
+            56.1
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            896,
+            35,
+            1098,
+            225
+          ],
+          "BodyBounds": [
+            904,
+            43,
+            1090,
+            217
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            997.0,
+            217
+          ],
+          "Grip": [
+            997.0,
+            71.4
+          ],
+          "AccessoryAnchor": [
+            997.0,
+            60.4
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1113,
+            29,
+            1319,
+            227
+          ],
+          "BodyBounds": [
+            1121,
+            37,
+            1311,
+            219
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.0,
+            219
+          ],
+          "Grip": [
+            1216.0,
+            73.4
+          ],
+          "AccessoryAnchor": [
+            1216.0,
+            55.2
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1335,
+            36,
+            1535,
+            226
+          ],
+          "BodyBounds": [
+            1343,
+            44,
+            1527,
+            218
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1435.0,
+            218
+          ],
+          "Grip": [
+            1435.0,
+            72.4
+          ],
+          "AccessoryAnchor": [
+            1435.0,
+            61.4
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 171.0
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            29,
+            1751,
+            226
+          ],
+          "BodyBounds": [
+            1563,
+            37,
+            1743,
+            218
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1653.0,
+            218
+          ],
+          "Grip": [
+            1653.0,
+            72.4
+          ],
+          "AccessoryAnchor": [
+            1653.0,
+            55.1
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 171.0
+        }
+      ],
+      "Ringless": true
+    },
+    {
+      "Avatar": "Orbit",
+      "Choice": "Look2",
+      "Id": "PeachGiant",
+      "Label": "Peach Giant",
+      "ScaleReference": 224,
+      "Frames": [
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            24,
+            240,
+            222,
+            439
+          ],
+          "BodyBounds": [
+            32,
+            248,
+            214,
+            431
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            123.0,
+            431
+          ],
+          "Grip": [
+            123.0,
+            282.2
+          ],
+          "AccessoryAnchor": [
+            123.0,
+            266.3
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            244,
+            241,
+            442,
+            440
+          ],
+          "BodyBounds": [
+            252,
+            249,
+            434,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            343.0,
+            432
+          ],
+          "Grip": [
+            343.0,
+            283.2
+          ],
+          "AccessoryAnchor": [
+            343.0,
+            267.3
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            463,
+            238,
+            661,
+            440
+          ],
+          "BodyBounds": [
+            471,
+            246,
+            653,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            562.0,
+            432
+          ],
+          "Grip": [
+            562.0,
+            283.2
+          ],
+          "AccessoryAnchor": [
+            562.0,
+            264.6
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            681,
+            241,
+            878,
+            440
+          ],
+          "BodyBounds": [
+            689,
+            249,
+            870,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.5,
+            432
+          ],
+          "Grip": [
+            779.5,
+            283.2
+          ],
+          "AccessoryAnchor": [
+            779.5,
+            267.3
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            896,
+            247,
+            1098,
+            437
+          ],
+          "BodyBounds": [
+            904,
+            255,
+            1090,
+            429
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            997.0,
+            429
+          ],
+          "Grip": [
+            997.0,
+            280.2
+          ],
+          "AccessoryAnchor": [
+            997.0,
+            272.4
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1115,
+            241,
+            1318,
+            436
+          ],
+          "BodyBounds": [
+            1123,
+            249,
+            1310,
+            428
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1216.5,
+            428
+          ],
+          "Grip": [
+            1216.5,
+            279.2
+          ],
+          "AccessoryAnchor": [
+            1216.5,
+            266.9
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1336,
+            247,
+            1536,
+            440
+          ],
+          "BodyBounds": [
+            1344,
+            255,
+            1528,
+            432
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1436.0,
+            432
+          ],
+          "Grip": [
+            1436.0,
+            283.2
+          ],
+          "AccessoryAnchor": [
+            1436.0,
+            272.7
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 172.9
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            236,
+            1753,
+            437
+          ],
+          "BodyBounds": [
+            1563,
+            244,
+            1745,
+            429
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1654.0,
+            429
+          ],
+          "Grip": [
+            1654.0,
+            280.2
+          ],
+          "AccessoryAnchor": [
+            1654.0,
+            262.5
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 172.9
+        }
+      ],
+      "Ringless": true
+    },
+    {
+      "Avatar": "Orbit",
+      "Choice": "Look3",
+      "Id": "JadeWorld",
+      "Label": "Jade World",
+      "ScaleReference": 222,
+      "Frames": [
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            26,
+            451,
+            223,
+            650
+          ],
+          "BodyBounds": [
+            34,
+            459,
+            215,
+            642
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.5,
+            642
+          ],
+          "Grip": [
+            124.5,
+            494.79999999999995
+          ],
+          "AccessoryAnchor": [
+            124.5,
+            477.3
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            244,
+            452,
+            441,
+            650
+          ],
+          "BodyBounds": [
+            252,
+            460,
+            433,
+            642
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            342.5,
+            642
+          ],
+          "Grip": [
+            342.5,
+            494.79999999999995
+          ],
+          "AccessoryAnchor": [
+            342.5,
+            478.2
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            463,
+            451,
+            660,
+            651
+          ],
+          "BodyBounds": [
+            471,
+            459,
+            652,
+            643
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            561.5,
+            643
+          ],
+          "Grip": [
+            561.5,
+            495.79999999999995
+          ],
+          "AccessoryAnchor": [
+            561.5,
+            477.4
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            681,
+            452,
+            877,
+            651
+          ],
+          "BodyBounds": [
+            689,
+            460,
+            869,
+            643
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            643
+          ],
+          "Grip": [
+            779.0,
+            495.79999999999995
+          ],
+          "AccessoryAnchor": [
+            779.0,
+            478.3
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            897,
+            459,
+            1099,
+            646
+          ],
+          "BodyBounds": [
+            905,
+            467,
+            1091,
+            638
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            998.0,
+            638
+          ],
+          "Grip": [
+            998.0,
+            490.79999999999995
+          ],
+          "AccessoryAnchor": [
+            998.0,
+            484.1
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1113,
+            451,
+            1317,
+            650
+          ],
+          "BodyBounds": [
+            1121,
+            459,
+            1309,
+            642
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1215.0,
+            642
+          ],
+          "Grip": [
+            1215.0,
+            494.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1215.0,
+            477.3
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1335,
+            459,
+            1536,
+            652
+          ],
+          "BodyBounds": [
+            1343,
+            467,
+            1528,
+            644
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1435.5,
+            644
+          ],
+          "Grip": [
+            1435.5,
+            496.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1435.5,
+            484.7
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            449,
+            1750,
+            649
+          ],
+          "BodyBounds": [
+            1563,
+            457,
+            1742,
+            641
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1652.5,
+            641
+          ],
+          "Grip": [
+            1652.5,
+            493.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1652.5,
+            475.4
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 171.95
+        }
+      ],
+      "Ringless": true
+    },
+    {
+      "Avatar": "Orbit",
+      "Choice": "Look4",
+      "Id": "AmethystSky",
+      "Label": "Amethyst Sky",
+      "ScaleReference": 221,
+      "Frames": [
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            26,
+            665,
+            223,
+            862
+          ],
+          "BodyBounds": [
+            34,
+            673,
+            215,
+            854
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            124.5,
+            854
+          ],
+          "Grip": [
+            124.5,
+            707.6
+          ],
+          "AccessoryAnchor": [
+            124.5,
+            691.1
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            244,
+            664,
+            442,
+            862
+          ],
+          "BodyBounds": [
+            252,
+            672,
+            434,
+            854
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            343.0,
+            854
+          ],
+          "Grip": [
+            343.0,
+            707.6
+          ],
+          "AccessoryAnchor": [
+            343.0,
+            690.2
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            664,
+            658,
+            863
+          ],
+          "BodyBounds": [
+            470,
+            672,
+            650,
+            855
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            560.0,
+            855
+          ],
+          "Grip": [
+            560.0,
+            708.6
+          ],
+          "AccessoryAnchor": [
+            560.0,
+            690.3
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            680,
+            665,
+            878,
+            863
+          ],
+          "BodyBounds": [
+            688,
+            673,
+            870,
+            855
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            855
+          ],
+          "Grip": [
+            779.0,
+            708.6
+          ],
+          "AccessoryAnchor": [
+            779.0,
+            691.2
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            896,
+            666,
+            1098,
+            860
+          ],
+          "BodyBounds": [
+            904,
+            674,
+            1090,
+            852
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            997.0,
+            852
+          ],
+          "Grip": [
+            997.0,
+            705.6
+          ],
+          "AccessoryAnchor": [
+            997.0,
+            691.8
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1112,
+            664,
+            1316,
+            862
+          ],
+          "BodyBounds": [
+            1120,
+            672,
+            1308,
+            854
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1214.0,
+            854
+          ],
+          "Grip": [
+            1214.0,
+            707.6
+          ],
+          "AccessoryAnchor": [
+            1214.0,
+            690.2
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1332,
+            666,
+            1534,
+            862
+          ],
+          "BodyBounds": [
+            1340,
+            674,
+            1526,
+            854
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1433.0,
+            854
+          ],
+          "Grip": [
+            1433.0,
+            707.6
+          ],
+          "AccessoryAnchor": [
+            1433.0,
+            692.0
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 171.95
+        },
+        {
+          "File": "orbit-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1555,
+            664,
+            1751,
+            862
+          ],
+          "BodyBounds": [
+            1563,
+            672,
+            1743,
+            854
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1653.0,
+            854
+          ],
+          "Grip": [
+            1653.0,
+            707.6
+          ],
+          "AccessoryAnchor": [
+            1653.0,
+            690.2
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 171.95
+        }
+      ],
+      "Ringless": true
+    },
+    {
+      "Avatar": "Ember",
+      "Choice": "Look1",
+      "Id": "Moonfire",
+      "Label": "Moonfire",
+      "ScaleReference": 336,
+      "Frames": [
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            30,
+            26,
+            318,
+            314
+          ],
+          "BodyBounds": [
+            38,
+            34,
+            310,
+            306
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            174.0,
+            306
+          ],
+          "Grip": [
+            174.0,
+            86.0
+          ],
+          "AccessoryAnchor": [
+            174.0,
+            126.48
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            21,
+            24,
+            307,
+            325
+          ],
+          "BodyBounds": [
+            29,
+            32,
+            299,
+            319
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            164.0,
+            319
+          ],
+          "Grip": [
+            164.0,
+            89.39999999999998
+          ],
+          "AccessoryAnchor": [
+            164.0,
+            129.58
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            342,
+            65,
+            638,
+            332
+          ],
+          "BodyBounds": [
+            350,
+            73,
+            630,
+            324
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            490.0,
+            324
+          ],
+          "Grip": [
+            490.0,
+            94.39999999999998
+          ],
+          "AccessoryAnchor": [
+            490.0,
+            158.34
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            348,
+            25,
+            632,
+            314
+          ],
+          "BodyBounds": [
+            356,
+            33,
+            624,
+            306
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            490.0,
+            306
+          ],
+          "Grip": [
+            490.0,
+            86.0
+          ],
+          "AccessoryAnchor": [
+            490.0,
+            125.82
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            647,
+            32,
+            936,
+            321
+          ],
+          "BodyBounds": [
+            655,
+            40,
+            928,
+            313
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            791.5,
+            313
+          ],
+          "Grip": [
+            791.5,
+            93.0
+          ],
+          "AccessoryAnchor": [
+            791.5,
+            132.82
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            963,
+            26,
+            1241,
+            317
+          ],
+          "BodyBounds": [
+            971,
+            34,
+            1233,
+            309
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1102.0,
+            309
+          ],
+          "Grip": [
+            1102.0,
+            89.0
+          ],
+          "AccessoryAnchor": [
+            1102.0,
+            127.5
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            649,
+            105,
+            935,
+            336
+          ],
+          "BodyBounds": [
+            657,
+            113,
+            927,
+            328
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            792.0,
+            328
+          ],
+          "Grip": [
+            792.0,
+            117
+          ],
+          "AccessoryAnchor": [
+            792.0,
+            186.1
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 236.64
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            963,
+            46,
+            1241,
+            330
+          ],
+          "BodyBounds": [
+            971,
+            54,
+            1233,
+            322
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1102.0,
+            322
+          ],
+          "Grip": [
+            1102.0,
+            92.39999999999998
+          ],
+          "AccessoryAnchor": [
+            1102.0,
+            145.12
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 236.64
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "Choice": "Look2",
+      "Id": "RoseCinder",
+      "Label": "Rose Cinder",
+      "ScaleReference": 332,
+      "Frames": [
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            31,
+            328,
+            318,
+            618
+          ],
+          "BodyBounds": [
+            39,
+            336,
+            310,
+            610
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            174.5,
+            610
+          ],
+          "Grip": [
+            174.5,
+            386.79999999999995
+          ],
+          "AccessoryAnchor": [
+            174.5,
+            429.16
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            17,
+            326,
+            316,
+            621
+          ],
+          "BodyBounds": [
+            25,
+            332,
+            308,
+            617
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            166.5,
+            617
+          ],
+          "Grip": [
+            166.5,
+            389.0
+          ],
+          "AccessoryAnchor": [
+            166.5,
+            428.9
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            334,
+            364,
+            643,
+            631
+          ],
+          "BodyBounds": [
+            342,
+            372,
+            635,
+            623
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            488.5,
+            623
+          ],
+          "Grip": [
+            488.5,
+            395.0
+          ],
+          "AccessoryAnchor": [
+            488.5,
+            457.34
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            347,
+            328,
+            632,
+            618
+          ],
+          "BodyBounds": [
+            355,
+            336,
+            624,
+            610
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            489.5,
+            610
+          ],
+          "Grip": [
+            489.5,
+            386.79999999999995
+          ],
+          "AccessoryAnchor": [
+            489.5,
+            429.16
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            649,
+            331,
+            938,
+            626
+          ],
+          "BodyBounds": [
+            657,
+            339,
+            930,
+            618
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            793.5,
+            618
+          ],
+          "Grip": [
+            793.5,
+            394.79999999999995
+          ],
+          "AccessoryAnchor": [
+            793.5,
+            433.86
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            963,
+            329,
+            1242,
+            622
+          ],
+          "BodyBounds": [
+            971,
+            337,
+            1234,
+            614
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1102.5,
+            614
+          ],
+          "Grip": [
+            1102.5,
+            390.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1102.5,
+            431.18
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            646,
+            394,
+            950,
+            637
+          ],
+          "BodyBounds": [
+            654,
+            402,
+            942,
+            629
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            798.0,
+            629
+          ],
+          "Grip": [
+            798.0,
+            406
+          ],
+          "AccessoryAnchor": [
+            798.0,
+            479.18
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 235.77
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            963,
+            340,
+            1247,
+            631
+          ],
+          "BodyBounds": [
+            971,
+            348,
+            1239,
+            623
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1105.0,
+            623
+          ],
+          "Grip": [
+            1105.0,
+            395.0
+          ],
+          "AccessoryAnchor": [
+            1105.0,
+            441.5
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 235.77
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "Choice": "Look3",
+      "Id": "HoneyStar",
+      "Label": "Honey Star",
+      "ScaleReference": 337,
+      "Frames": [
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            31,
+            624,
+            320,
+            921
+          ],
+          "BodyBounds": [
+            39,
+            632,
+            312,
+            913
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            175.5,
+            913
+          ],
+          "Grip": [
+            175.5,
+            687.4
+          ],
+          "AccessoryAnchor": [
+            175.5,
+            727.54
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            16,
+            621,
+            320,
+            922
+          ],
+          "BodyBounds": [
+            24,
+            625,
+            312,
+            917
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            168.0,
+            917
+          ],
+          "Grip": [
+            168.0,
+            683.4
+          ],
+          "AccessoryAnchor": [
+            168.0,
+            724.28
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            335,
+            666,
+            645,
+            938
+          ],
+          "BodyBounds": [
+            343,
+            674,
+            637,
+            930
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            490.0,
+            930
+          ],
+          "Grip": [
+            490.0,
+            696.4
+          ],
+          "AccessoryAnchor": [
+            490.0,
+            761.04
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            346,
+            626,
+            633,
+            922
+          ],
+          "BodyBounds": [
+            354,
+            634,
+            625,
+            914
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            489.5,
+            914
+          ],
+          "Grip": [
+            489.5,
+            688.4
+          ],
+          "AccessoryAnchor": [
+            489.5,
+            729.2
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            646,
+            634,
+            942,
+            929
+          ],
+          "BodyBounds": [
+            654,
+            642,
+            934,
+            921
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            794.0,
+            921
+          ],
+          "Grip": [
+            794.0,
+            695.4
+          ],
+          "AccessoryAnchor": [
+            794.0,
+            736.86
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            960,
+            629,
+            1242,
+            927
+          ],
+          "BodyBounds": [
+            968,
+            637,
+            1234,
+            919
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1101.0,
+            919
+          ],
+          "Grip": [
+            1101.0,
+            693.4
+          ],
+          "AccessoryAnchor": [
+            1101.0,
+            732.88
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            648,
+            700,
+            952,
+            947
+          ],
+          "BodyBounds": [
+            656,
+            708,
+            944,
+            939
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            800.0,
+            939
+          ],
+          "Grip": [
+            800.0,
+            712
+          ],
+          "AccessoryAnchor": [
+            800.0,
+            786.54
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 237.51
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            963,
+            644,
+            1249,
+            938
+          ],
+          "BodyBounds": [
+            971,
+            652,
+            1241,
+            930
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1106.0,
+            930
+          ],
+          "Grip": [
+            1106.0,
+            696.4
+          ],
+          "AccessoryAnchor": [
+            1106.0,
+            746.52
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 237.51
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "Choice": "Look4",
+      "Id": "VioletWisp",
+      "Label": "Violet Wisp",
+      "ScaleReference": 342,
+      "Frames": [
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            29,
+            927,
+            323,
+            1225
+          ],
+          "BodyBounds": [
+            37,
+            935,
+            315,
+            1217
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            176.0,
+            1217
+          ],
+          "Grip": [
+            176.0,
+            991.4
+          ],
+          "AccessoryAnchor": [
+            176.0,
+            1030.88
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            15,
+            922,
+            314,
+            1230
+          ],
+          "BodyBounds": [
+            23,
+            927,
+            306,
+            1222
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            164.5,
+            1222
+          ],
+          "Grip": [
+            164.5,
+            986.0
+          ],
+          "AccessoryAnchor": [
+            164.5,
+            1027.3
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            339,
+            963,
+            648,
+            1233
+          ],
+          "BodyBounds": [
+            347,
+            971,
+            641,
+            1225
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            494.0,
+            1225
+          ],
+          "Grip": [
+            494.0,
+            989.0
+          ],
+          "AccessoryAnchor": [
+            494.0,
+            1057.36
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            345,
+            927,
+            635,
+            1225
+          ],
+          "BodyBounds": [
+            353,
+            935,
+            627,
+            1217
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            490.0,
+            1217
+          ],
+          "Grip": [
+            490.0,
+            991.4
+          ],
+          "AccessoryAnchor": [
+            490.0,
+            1030.88
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            649,
+            934,
+            940,
+            1229
+          ],
+          "BodyBounds": [
+            657,
+            942,
+            932,
+            1221
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            794.5,
+            1221
+          ],
+          "Grip": [
+            794.5,
+            995.4
+          ],
+          "AccessoryAnchor": [
+            794.5,
+            1036.86
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            960,
+            932,
+            1243,
+            1226
+          ],
+          "BodyBounds": [
+            968,
+            940,
+            1235,
+            1218
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1101.5,
+            1218
+          ],
+          "Grip": [
+            1101.5,
+            992.4
+          ],
+          "AccessoryAnchor": [
+            1101.5,
+            1034.52
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            649,
+            997,
+            947,
+            1241
+          ],
+          "BodyBounds": [
+            656,
+            1005,
+            939,
+            1233
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            797.5,
+            1233
+          ],
+          "Grip": [
+            797.5,
+            1009
+          ],
+          "AccessoryAnchor": [
+            797.5,
+            1082.52
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 241.86
+        },
+        {
+          "File": "ember-variants-motion.png",
+          "Width": 1254,
+          "Height": 1254,
+          "Bounds": [
+            961,
+            945,
+            1246,
+            1234
+          ],
+          "BodyBounds": [
+            969,
+            953,
+            1238,
+            1226
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1103.5,
+            1226
+          ],
+          "Grip": [
+            1103.5,
+            990.0
+          ],
+          "AccessoryAnchor": [
+            1103.5,
+            1045.82
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 241.86
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "Choice": "Look1",
+      "Id": "RoseQuartz",
+      "Label": "Rose Quartz",
+      "ScaleReference": 230,
+      "Frames": [
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            24,
+            42,
+            235,
+            248
+          ],
+          "BodyBounds": [
+            32,
+            50,
+            227,
+            240
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            129.5,
+            240
+          ],
+          "Grip": [
+            129.5,
+            87.19999999999999
+          ],
+          "AccessoryAnchor": [
+            129.5,
+            89.9
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            242,
+            44,
+            462,
+            247
+          ],
+          "BodyBounds": [
+            250,
+            52,
+            454,
+            239
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            352.0,
+            239
+          ],
+          "Grip": [
+            352.0,
+            86.19999999999999
+          ],
+          "AccessoryAnchor": [
+            352.0,
+            91.27
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            41,
+            674,
+            247
+          ],
+          "BodyBounds": [
+            470,
+            49,
+            669,
+            239
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            569.5,
+            239
+          ],
+          "Grip": [
+            569.5,
+            86.19999999999999
+          ],
+          "AccessoryAnchor": [
+            569.5,
+            88.9
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            674,
+            41,
+            886,
+            248
+          ],
+          "BodyBounds": [
+            679,
+            49,
+            878,
+            240
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            778.5,
+            240
+          ],
+          "Grip": [
+            778.5,
+            87.19999999999999
+          ],
+          "AccessoryAnchor": [
+            778.5,
+            89.11
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            896,
+            49,
+            1115,
+            247
+          ],
+          "BodyBounds": [
+            904,
+            57,
+            1107,
+            239
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1005.5,
+            239
+          ],
+          "Grip": [
+            1005.5,
+            86.19999999999999
+          ],
+          "AccessoryAnchor": [
+            1005.5,
+            95.22
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1117,
+            41,
+            1326,
+            248
+          ],
+          "BodyBounds": [
+            1125,
+            49,
+            1318,
+            240
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1221.5,
+            240
+          ],
+          "Grip": [
+            1221.5,
+            87.19999999999999
+          ],
+          "AccessoryAnchor": [
+            1221.5,
+            89.11
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            86,
+            1550,
+            248
+          ],
+          "BodyBounds": [
+            1338,
+            94,
+            1543,
+            240
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1440.5,
+            240
+          ],
+          "Grip": [
+            1440.5,
+            98
+          ],
+          "AccessoryAnchor": [
+            1440.5,
+            124.66
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 159.9
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            41,
+            1753,
+            248
+          ],
+          "BodyBounds": [
+            1558,
+            49,
+            1745,
+            240
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            240
+          ],
+          "Grip": [
+            1651.5,
+            87.19999999999999
+          ],
+          "AccessoryAnchor": [
+            1651.5,
+            89.11
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 159.9
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "Choice": "Look2",
+      "Id": "Aquamarine",
+      "Label": "Aquamarine",
+      "ScaleReference": 235,
+      "Frames": [
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            23,
+            250,
+            236,
+            462
+          ],
+          "BodyBounds": [
+            31,
+            258,
+            228,
+            454
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            129.5,
+            454
+          ],
+          "Grip": [
+            129.5,
+            297.2
+          ],
+          "AccessoryAnchor": [
+            129.5,
+            299.16
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            243,
+            256,
+            463,
+            461
+          ],
+          "BodyBounds": [
+            251,
+            264,
+            456,
+            453
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            353.5,
+            453
+          ],
+          "Grip": [
+            353.5,
+            296.2
+          ],
+          "AccessoryAnchor": [
+            353.5,
+            303.69
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            464,
+            253,
+            675,
+            462
+          ],
+          "BodyBounds": [
+            471,
+            261,
+            670,
+            454
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            570.5,
+            454
+          ],
+          "Grip": [
+            570.5,
+            297.2
+          ],
+          "AccessoryAnchor": [
+            570.5,
+            301.53
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            675,
+            252,
+            886,
+            462
+          ],
+          "BodyBounds": [
+            680,
+            260,
+            878,
+            454
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            779.0,
+            454
+          ],
+          "Grip": [
+            779.0,
+            297.2
+          ],
+          "AccessoryAnchor": [
+            779.0,
+            300.74
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            895,
+            264,
+            1115,
+            460
+          ],
+          "BodyBounds": [
+            903,
+            272,
+            1107,
+            452
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1005.0,
+            452
+          ],
+          "Grip": [
+            1005.0,
+            295.2
+          ],
+          "AccessoryAnchor": [
+            1005.0,
+            309.8
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1118,
+            252,
+            1326,
+            462
+          ],
+          "BodyBounds": [
+            1126,
+            260,
+            1318,
+            454
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1222.0,
+            454
+          ],
+          "Grip": [
+            1222.0,
+            297.2
+          ],
+          "AccessoryAnchor": [
+            1222.0,
+            300.74
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            299,
+            1550,
+            463
+          ],
+          "BodyBounds": [
+            1338,
+            307,
+            1543,
+            455
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1440.5,
+            455
+          ],
+          "Grip": [
+            1440.5,
+            311
+          ],
+          "AccessoryAnchor": [
+            1440.5,
+            338.08
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            252,
+            1753,
+            463
+          ],
+          "BodyBounds": [
+            1558,
+            260,
+            1745,
+            455
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            455
+          ],
+          "Grip": [
+            1651.5,
+            298.2
+          ],
+          "AccessoryAnchor": [
+            1651.5,
+            300.95
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 161.54
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "Choice": "Look3",
+      "Id": "Sunstone",
+      "Label": "Sunstone",
+      "ScaleReference": 233,
+      "Frames": [
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            23,
+            465,
+            236,
+            671
+          ],
+          "BodyBounds": [
+            31,
+            473,
+            228,
+            666
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            129.5,
+            666
+          ],
+          "Grip": [
+            129.5,
+            510.79999999999995
+          ],
+          "AccessoryAnchor": [
+            129.5,
+            513.53
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            243,
+            472,
+            464,
+            674
+          ],
+          "BodyBounds": [
+            251,
+            480,
+            456,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            353.5,
+            668
+          ],
+          "Grip": [
+            353.5,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            353.5,
+            519.48
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            464,
+            467,
+            674,
+            672
+          ],
+          "BodyBounds": [
+            472,
+            475,
+            670,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            571.0,
+            668
+          ],
+          "Grip": [
+            571.0,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            571.0,
+            515.53
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            675,
+            466,
+            886,
+            673
+          ],
+          "BodyBounds": [
+            679,
+            474,
+            878,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            778.5,
+            668
+          ],
+          "Grip": [
+            778.5,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            778.5,
+            514.74
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            895,
+            477,
+            1116,
+            675
+          ],
+          "BodyBounds": [
+            903,
+            485,
+            1108,
+            667
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1005.5,
+            667
+          ],
+          "Grip": [
+            1005.5,
+            511.79999999999995
+          ],
+          "AccessoryAnchor": [
+            1005.5,
+            523.22
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1117,
+            466,
+            1326,
+            672
+          ],
+          "BodyBounds": [
+            1125,
+            474,
+            1318,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1221.5,
+            668
+          ],
+          "Grip": [
+            1221.5,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            1221.5,
+            514.74
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1330,
+            516,
+            1550,
+            677
+          ],
+          "BodyBounds": [
+            1338,
+            524,
+            1543,
+            669
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1440.5,
+            669
+          ],
+          "Grip": [
+            1440.5,
+            528
+          ],
+          "AccessoryAnchor": [
+            1440.5,
+            554.45
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            467,
+            1753,
+            672
+          ],
+          "BodyBounds": [
+            1558,
+            475,
+            1745,
+            668
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            668
+          ],
+          "Grip": [
+            1651.5,
+            512.8
+          ],
+          "AccessoryAnchor": [
+            1651.5,
+            515.53
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 161.54
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "Choice": "Look4",
+      "Id": "AmethystDream",
+      "Label": "Amethyst Dream",
+      "ScaleReference": 230,
+      "Frames": [
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            24,
+            672,
+            237,
+            879
+          ],
+          "BodyBounds": [
+            32,
+            677,
+            229,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            130.5,
+            871
+          ],
+          "Grip": [
+            130.5,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            130.5,
+            717.74
+          ],
+          "State": "Neutral",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            243,
+            674,
+            461,
+            877
+          ],
+          "BodyBounds": [
+            251,
+            680,
+            454,
+            869
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            352.5,
+            869
+          ],
+          "Grip": [
+            352.5,
+            713.8
+          ],
+          "AccessoryAnchor": [
+            352.5,
+            719.69
+          ],
+          "State": "MoveA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            462,
+            673,
+            674,
+            878
+          ],
+          "BodyBounds": [
+            469,
+            677,
+            669,
+            870
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            569.0,
+            870
+          ],
+          "Grip": [
+            569.0,
+            714.8
+          ],
+          "AccessoryAnchor": [
+            569.0,
+            717.53
+          ],
+          "State": "MoveB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            675,
+            673,
+            885,
+            879
+          ],
+          "BodyBounds": [
+            680,
+            678,
+            877,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            778.5,
+            871
+          ],
+          "Grip": [
+            778.5,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            778.5,
+            718.53
+          ],
+          "State": "ClosedBlink",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            900,
+            679,
+            1116,
+            877
+          ],
+          "BodyBounds": [
+            908,
+            687,
+            1108,
+            869
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1008.0,
+            869
+          ],
+          "Grip": [
+            1008.0,
+            713.8
+          ],
+          "AccessoryAnchor": [
+            1008.0,
+            725.22
+          ],
+          "State": "CarrySquirmA",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1118,
+            673,
+            1326,
+            879
+          ],
+          "BodyBounds": [
+            1126,
+            677,
+            1318,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1222.0,
+            871
+          ],
+          "Grip": [
+            1222.0,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            1222.0,
+            717.74
+          ],
+          "State": "CarrySquirmB",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1331,
+            719,
+            1550,
+            880
+          ],
+          "BodyBounds": [
+            1339,
+            727,
+            1543,
+            872
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1441.0,
+            872
+          ],
+          "Grip": [
+            1441.0,
+            731
+          ],
+          "AccessoryAnchor": [
+            1441.0,
+            757.45
+          ],
+          "State": "EnterBed",
+          "AccessoryHeadWidth": 161.54
+        },
+        {
+          "File": "prism-variants.png",
+          "Width": 1774,
+          "Height": 887,
+          "Bounds": [
+            1551,
+            673,
+            1753,
+            879
+          ],
+          "BodyBounds": [
+            1558,
+            677,
+            1745,
+            871
+          ],
+          "SourceUnitScale": 1.0,
+          "Anchor": [
+            1651.5,
+            871
+          ],
+          "Grip": [
+            1651.5,
+            715.8
+          ],
+          "AccessoryAnchor": [
+            1651.5,
+            717.74
+          ],
+          "State": "Wake",
+          "AccessoryHeadWidth": 161.54
+        }
+      ]
+    }
+  ],
+  "OriginalOrbitCore": {
+    "Avatar": "Orbit",
+    "File": "orbit-core.png",
+    "Width": 1254,
+    "Height": 1254,
+    "ScaleReference": 325,
+    "Ringless": true,
+    "Frames": [
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          32,
+          45,
+          286,
+          303
+        ],
+        "BodyBounds": [
+          40,
+          53,
+          278,
+          295
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          159.0,
+          295
+        ],
+        "Grip": [
+          159.0,
+          101.39999999999998
+        ],
+        "AccessoryAnchor": [
+          159.0,
+          77.2
+        ],
+        "State": "OpenEyes",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          346,
+          45,
+          599,
+          303
+        ],
+        "BodyBounds": [
+          354,
+          53,
+          591,
+          295
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          472.5,
+          295
+        ],
+        "Grip": [
+          472.5,
+          101.39999999999998
+        ],
+        "AccessoryAnchor": [
+          472.5,
+          77.2
+        ],
+        "State": "HalfBlink",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          659,
+          45,
+          911,
+          303
+        ],
+        "BodyBounds": [
+          667,
+          53,
+          903,
+          295
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          785.0,
+          295
+        ],
+        "Grip": [
+          785.0,
+          101.39999999999998
+        ],
+        "AccessoryAnchor": [
+          785.0,
+          77.2
+        ],
+        "State": "ClosedBlink",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          972,
+          45,
+          1226,
+          303
+        ],
+        "BodyBounds": [
+          980,
+          53,
+          1218,
+          295
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          1099.0,
+          295
+        ],
+        "Grip": [
+          1099.0,
+          101.39999999999998
+        ],
+        "AccessoryAnchor": [
+          1099.0,
+          77.2
+        ],
+        "State": "Smile",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          31,
+          357,
+          288,
+          617
+        ],
+        "BodyBounds": [
+          39,
+          365,
+          280,
+          609
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          159.5,
+          609
+        ],
+        "Grip": [
+          159.5,
+          412.2
+        ],
+        "AccessoryAnchor": [
+          159.5,
+          389.4
+        ],
+        "State": "MouthClosed",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          345,
+          358,
+          601,
+          617
+        ],
+        "BodyBounds": [
+          353,
+          366,
+          593,
+          609
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          473.0,
+          609
+        ],
+        "Grip": [
+          473.0,
+          412.2
+        ],
+        "AccessoryAnchor": [
+          473.0,
+          390.3
+        ],
+        "State": "MouthSmallA",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          657,
+          356,
+          915,
+          617
+        ],
+        "BodyBounds": [
+          665,
+          364,
+          907,
+          609
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          786.0,
+          609
+        ],
+        "Grip": [
+          786.0,
+          412.2
+        ],
+        "AccessoryAnchor": [
+          786.0,
+          388.5
+        ],
+        "State": "MouthWideO",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          970,
+          356,
+          1227,
+          618
+        ],
+        "BodyBounds": [
+          978,
+          364,
+          1219,
+          610
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          1098.5,
+          610
+        ],
+        "Grip": [
+          1098.5,
+          413.2
+        ],
+        "AccessoryAnchor": [
+          1098.5,
+          388.6
+        ],
+        "State": "MouthHappy",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          31,
+          660,
+          286,
+          931
+        ],
+        "BodyBounds": [
+          39,
+          668,
+          278,
+          923
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          158.5,
+          923
+        ],
+        "Grip": [
+          158.5,
+          719.0
+        ],
+        "AccessoryAnchor": [
+          158.5,
+          693.5
+        ],
+        "State": "Carry",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          341,
+          666,
+          599,
+          931
+        ],
+        "BodyBounds": [
+          349,
+          674,
+          591,
+          923
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          470.0,
+          923
+        ],
+        "Grip": [
+          470.0,
+          719.0
+        ],
+        "AccessoryAnchor": [
+          470.0,
+          698.9
+        ],
+        "State": "Fall",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          653,
+          711,
+          912,
+          938
+        ],
+        "BodyBounds": [
+          661,
+          719,
+          904,
+          930
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          782.5,
+          930
+        ],
+        "Grip": [
+          782.5,
+          726.0
+        ],
+        "AccessoryAnchor": [
+          782.5,
+          740.1
+        ],
+        "State": "Land",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          970,
+          711,
+          1224,
+          933
+        ],
+        "BodyBounds": [
+          978,
+          719,
+          1216,
+          925
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          1097.0,
+          925
+        ],
+        "Grip": [
+          1097.0,
+          723
+        ],
+        "AccessoryAnchor": [
+          1097.0,
+          739.6
+        ],
+        "State": "Push",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          31,
+          980,
+          287,
+          1231
+        ],
+        "BodyBounds": [
+          39,
+          988,
+          279,
+          1223
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          159.0,
+          1223
+        ],
+        "Grip": [
+          159.0,
+          1031.8
+        ],
+        "AccessoryAnchor": [
+          159.0,
+          1011.5
+        ],
+        "State": "EnterNap",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          344,
+          979,
+          600,
+          1230
+        ],
+        "BodyBounds": [
+          352,
+          987,
+          592,
+          1222
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          472.0,
+          1222
+        ],
+        "Grip": [
+          472.0,
+          1030.8
+        ],
+        "AccessoryAnchor": [
+          472.0,
+          1010.5
+        ],
+        "State": "SettleNap",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          655,
+          980,
+          912,
+          1232
+        ],
+        "BodyBounds": [
+          663,
+          988,
+          904,
+          1224
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          783.5,
+          1224
+        ],
+        "Grip": [
+          783.5,
+          1032.8
+        ],
+        "AccessoryAnchor": [
+          783.5,
+          1011.6
+        ],
+        "State": "SleepInhale",
+        "AccessoryHeadWidth": 226.1
+      },
+      {
+        "File": "orbit-core.png",
+        "Width": 1254,
+        "Height": 1254,
+        "Bounds": [
+          968,
+          980,
+          1225,
+          1235
+        ],
+        "BodyBounds": [
+          976,
+          988,
+          1217,
+          1227
+        ],
+        "SourceUnitScale": 1.0,
+        "Anchor": [
+          1096.5,
+          1227
+        ],
+        "Grip": [
+          1096.5,
+          1035.8
+        ],
+        "AccessoryAnchor": [
+          1096.5,
+          1011.9
+        ],
+        "State": "SleepExhale",
+        "AccessoryHeadWidth": 226.1
+      }
+    ]
+  },
+  "Sheets": [
+    {
+      "File": "moonblob-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "f772b76deb9eb14b4f13418a7bae92097e17317a6166b0cb4390ccad00ff6331"
+    },
+    {
+      "File": "wink-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "31d718baddf1c31d53e1dddaf97be1d7fdc0ef89dfb0f8827676aeadf6641dc4"
+    },
+    {
+      "File": "nova-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "e5f33ca4366b9a1578bc0be970cb9be887953dc0ef7071070b9b887da42c9cc6"
+    },
+    {
+      "File": "mochi-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "f5961be4fe5172687cff8dea34e732775b4b16e7a86cbf046c5d329404cb899a"
+    },
+    {
+      "File": "puff-variants.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "a2c9a9446049ef016168051a1785f022a6035b514ac8fad8d824a45dac80f946"
+    },
+    {
+      "File": "puff-variants-motion.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "57e0b505e66a20999397d252eb961f04966629192548d3133eda19fb07fd3e71"
+    },
+    {
+      "File": "orbit-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "5f388691f99328713f68ddf5ed3b6e2abe2b9895108289787f3f22c5bbf6fd65"
+    },
+    {
+      "File": "ember-variants.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "881c0d927b4a41b6542e40bf102daab21f1088add944cc69be76dd4060fd2eb4"
+    },
+    {
+      "File": "ember-variants-motion.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "a08078ef1b3343cdd4df9ef758e7d15398d2263890f8e5d0cee7ceba0c39382e"
+    },
+    {
+      "File": "prism-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "5ccc033161ac4a37b11e208b396647d9e9714e8ee68f6e540da9bbbaed2c23cf"
+    },
+    {
+      "File": "orbit-core.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "c26c2f078331e56fe4c8c5cc8fa84b018d804f84e1fdebce38d7cab8ecb4b22d"
+    }
+  ]
+}

@@ -379,10 +379,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                 ? null : QuestItems.Preview(target) ?? QuestEmotes.Preview(target);
             previewBase = quest is { } required
                 ? new(selected.Id, selected.Address, required.Name, required.Kind == QuestActionKind.Emote ? "Emote" : "Use quest item",
-                    required.IconId, required.CanUse, required.Reason)
-                : new(selected.Id, selected.Address, selected.Name, action == SoftTargetAction.AttackEnemy ? "Target + attack"
-                    : action == SoftTargetAction.TargetEnemy ? "Target" : "Interact", 0,
-                    action != SoftTargetAction.None, string.Empty);
+                    required.IconId, required.CanUse, required.Reason) { QuestKind = required.Kind }
+                : null;
         }
         Volatile.Write(ref nextAction, previewBase == null ? null : previewBase with
         { CanUse = previewBase.CanUse && paused == null, Reason = paused ?? previewBase.Reason });

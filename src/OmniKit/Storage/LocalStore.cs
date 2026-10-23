@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 8;
+    private const int SchemaVersion = 9;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -179,6 +179,7 @@ public sealed class LocalStore
             if (schemaVersion < 6) fields = fields.Except(VersionSixFields);
             if (schemaVersion < 7) fields = fields.Except(VersionSevenFields);
             if (schemaVersion < 8) fields = fields.Except(VersionEightFields);
+            if (schemaVersion < 9) fields = fields.Except(VersionNineFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -291,6 +292,21 @@ public sealed class LocalStore
             settings.CompanionAutoRotateEnabled = false;
             settings.CompanionRotationInterval = 300f;
         }
+        if (settings.Version < 9)
+        {
+            settings.CompanionVariant = "Random";
+            settings.CompanionLookAutoRotateEnabled = false;
+            settings.CompanionLookInterval = 300f;
+            settings.LauncherHeight = 64f;
+            settings.CompanionHomeStyle = "Default";
+            settings.CompanionHolidayHomeEnabled = true;
+            settings.CompanionHolidayBodiesEnabled = true;
+            settings.CompanionHandStyle = "Default";
+            settings.CompanionGroundedEnabled = true;
+            settings.CompanionAutoHopEnabled = true;
+            settings.CompanionOrbitRingsEnabled = true;
+            settings.CompanionOrbitRingSpeed = 1f;
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -299,6 +315,9 @@ public sealed class LocalStore
 
     private static readonly string[] VersionThreeFields =
         [nameof(Settings.CompanionOutfit), nameof(Settings.CompanionPalette), nameof(Settings.CompanionMagicEnabled)];
+
+    private static readonly string[] VersionNineFields =
+        [nameof(Settings.CompanionVariant), nameof(Settings.CompanionLookAutoRotateEnabled), nameof(Settings.CompanionLookInterval), nameof(Settings.LauncherHeight), nameof(Settings.CompanionHomeStyle), nameof(Settings.CompanionHolidayHomeEnabled), nameof(Settings.CompanionHolidayBodiesEnabled), nameof(Settings.CompanionHandStyle), nameof(Settings.CompanionGroundedEnabled), nameof(Settings.CompanionAutoHopEnabled), nameof(Settings.CompanionOrbitRingsEnabled), nameof(Settings.CompanionOrbitRingSpeed)];
 
     private static readonly string[] VersionEightFields =
         [nameof(Settings.NextActionEnabled), nameof(Settings.NextActionLocked), nameof(Settings.NextActionX), nameof(Settings.NextActionY), nameof(Settings.QuestItemsBarEnabled), nameof(Settings.QuestItemsBarLocked), nameof(Settings.QuestItemsBarX), nameof(Settings.QuestItemsBarY), nameof(Settings.QuestItemsButtonSize), nameof(Settings.CompanionFourierBlinkEnabled), nameof(Settings.CompanionSeasonalEnabled), nameof(Settings.CompanionSeasonalTheme), nameof(Settings.CompanionAutoRotateEnabled), nameof(Settings.CompanionRotationInterval), nameof(Settings.LauncherWidth), nameof(Settings.LauncherTextScale), nameof(Settings.LauncherResultCount), nameof(Settings.LauncherCenterX), nameof(Settings.LauncherTop)];
@@ -359,6 +378,13 @@ public sealed class LocalStore
         if (!Configuration.SeasonalThemeNames.Contains(settings.CompanionSeasonalTheme) ||
             !FiniteRange(settings.CompanionRotationInterval, 30, 3600))
             throw new InvalidOperationException("Choose a supported seasonal look and companion rotation interval.");
+        if (!Configuration.CompanionVariantNames.Contains(settings.CompanionVariant) ||
+            !Configuration.HomeStyleNames.Contains(settings.CompanionHomeStyle) ||
+            !Configuration.HandStyleNames.Contains(settings.CompanionHandStyle))
+            throw new InvalidOperationException("Choose a supported companion, home and hand style.");
+        if (!FiniteRange(settings.LauncherHeight, 24, 120) || !FiniteRange(settings.CompanionLookInterval, 30, 3600) ||
+            !FiniteRange(settings.CompanionOrbitRingSpeed, .2f, 3f))
+            throw new InvalidOperationException("Appearance interval or ring speed is outside the supported range.");
         if (!Enum.IsDefined((Interaction.HudTextEffect)settings.InteractionHudEffect))
             throw new InvalidOperationException("Choose a supported HUD text effect.");
         if (!FiniteRange(settings.InteractionHudOutlineThickness, .5f, 4f))
@@ -476,6 +502,18 @@ public sealed class LocalStore
         target.CompanionSeasonalTheme = value.CompanionSeasonalTheme;
         target.CompanionAutoRotateEnabled = value.CompanionAutoRotateEnabled;
         target.CompanionRotationInterval = value.CompanionRotationInterval;
+        target.CompanionVariant = value.CompanionVariant;
+        target.CompanionLookAutoRotateEnabled = value.CompanionLookAutoRotateEnabled;
+        target.CompanionLookInterval = value.CompanionLookInterval;
+        target.LauncherHeight = value.LauncherHeight;
+        target.CompanionHomeStyle = value.CompanionHomeStyle;
+        target.CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled;
+        target.CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled;
+        target.CompanionHandStyle = value.CompanionHandStyle;
+        target.CompanionGroundedEnabled = value.CompanionGroundedEnabled;
+        target.CompanionAutoHopEnabled = value.CompanionAutoHopEnabled;
+        target.CompanionOrbitRingsEnabled = value.CompanionOrbitRingsEnabled;
+        target.CompanionOrbitRingSpeed = value.CompanionOrbitRingSpeed;
         target.InteractionTargets = (Interaction.InteractionTargets)value.InteractionTargets;
         target.EnemyInteractMode = (Interaction.EnemyInteractMode)value.EnemyInteractMode;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
@@ -581,6 +619,18 @@ public sealed class LocalStore
         public string CompanionSeasonalTheme = "Auto";
         public bool CompanionAutoRotateEnabled = false;
         public float CompanionRotationInterval = 300f;
+        public string CompanionVariant = "Random";
+        public bool CompanionLookAutoRotateEnabled = false;
+        public float CompanionLookInterval = 300f;
+        public float LauncherHeight = 64f;
+        public string CompanionHomeStyle = "Default";
+        public bool CompanionHolidayHomeEnabled = true;
+        public bool CompanionHolidayBodiesEnabled = true;
+        public string CompanionHandStyle = "Default";
+        public bool CompanionGroundedEnabled = true;
+        public bool CompanionAutoHopEnabled = true;
+        public bool CompanionOrbitRingsEnabled = true;
+        public float CompanionOrbitRingSpeed = 1f;
         public int InteractionTargets;
         public int EnemyInteractMode;
         public bool InteractionHudEnabled;
@@ -675,6 +725,18 @@ public sealed class LocalStore
             CompanionSeasonalTheme = value.CompanionSeasonalTheme,
             CompanionAutoRotateEnabled = value.CompanionAutoRotateEnabled,
             CompanionRotationInterval = value.CompanionRotationInterval,
+            CompanionVariant = value.CompanionVariant,
+            CompanionLookAutoRotateEnabled = value.CompanionLookAutoRotateEnabled,
+            CompanionLookInterval = value.CompanionLookInterval,
+            LauncherHeight = value.LauncherHeight,
+            CompanionHomeStyle = value.CompanionHomeStyle,
+            CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled,
+            CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled,
+            CompanionHandStyle = value.CompanionHandStyle,
+            CompanionGroundedEnabled = value.CompanionGroundedEnabled,
+            CompanionAutoHopEnabled = value.CompanionAutoHopEnabled,
+            CompanionOrbitRingsEnabled = value.CompanionOrbitRingsEnabled,
+            CompanionOrbitRingSpeed = value.CompanionOrbitRingSpeed,
             InteractionTargets = (int)value.InteractionTargets,
             EnemyInteractMode = (int)value.EnemyInteractMode,
             InteractionHudEnabled = value.InteractionHudEnabled,

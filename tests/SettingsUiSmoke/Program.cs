@@ -6,6 +6,7 @@ using Dalamud.Bindings.ImGui;
 using LauncherUiSmoke;
 
 var measureOnly = args.Contains("--measure-hotkeys");
+var appearance15Only = args.Contains("--appearance15");
 var caseFilter = args.FirstOrDefault(argument => argument.StartsWith("--case=", StringComparison.Ordinal))?[7..].Split(',');
 var scaleFilter = args.FirstOrDefault(argument => argument.StartsWith("--scale=", StringComparison.Ordinal))?[8..];
 var paths = args.Where(argument => !argument.StartsWith("--", StringComparison.Ordinal)).ToArray();
@@ -56,6 +57,22 @@ var cases = new[]
     (Name: "hud-outline", Section: 2, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud-long", Section: 2, Tab: 0, Enabled: true, Scroll: false),
     (Name: "appearance", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "appearance15-looks-default", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-random", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-timer-off", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-specific", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-orbit-on", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-orbit-off", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-looks-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-styles-default", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-styles-random", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-styles-specific", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-styles-holiday", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-home-style-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-hand-style-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-grounded-on", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-grounded-off", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "appearance15-hop-off", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "companion-navigation", Section: 3, Tab: 0, Enabled: false, Scroll: false),
     (Name: "frame-on", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "frame-static", Section: 3, Tab: 0, Enabled: true, Scroll: true),
@@ -134,6 +151,7 @@ foreach (var scale in new[] { 1f, 1.5f, 2f })
 foreach (var scenario in cases)
 {
     if (measureOnly && scenario.Name != "launcher") continue;
+    if (appearance15Only && !scenario.Name.StartsWith("appearance15-", StringComparison.Ordinal)) continue;
     if (caseFilter is not null && !caseFilter.Contains(scenario.Name)) continue;
     if (scaleFilter is not null && scale.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) != scaleFilter) continue;
     Render(scenario.Name, scenario.Section, scenario.Tab, scenario.Enabled, scale, scroll: false);
@@ -147,7 +165,33 @@ Console.WriteLine($"PASS: {renders} actual compiled settings renders completed w
 unsafe void Render(string name, int section, int tab, bool enabled, float scale, bool scroll)
 {
     var config = Activator.CreateInstance(Type("OmniKit.Configuration"))!;
+    var appearance15 = name.StartsWith("appearance15-", StringComparison.Ordinal);
     Set(config, "Avatar", "Moonblob");
+    if (appearance15)
+    {
+        Set(config, "AvatarEnabled", true);
+        Set(config, "CompanionFrameInteractionEnabled", false);
+        Set(config, "CompanionHomeEnabled", true); Set(config, "CompanionGrabHandEnabled", true);
+        Set(config, "CompanionHolidayHomeEnabled", name == "appearance15-styles-holiday");
+        Set(config, "CompanionVariant", name.Contains("random", StringComparison.Ordinal) || name.Contains("timer", StringComparison.Ordinal) ? "Random"
+            : name.EndsWith("specific", StringComparison.Ordinal) ? "Look4" : "Default");
+        Set(config, "CompanionLookAutoRotateEnabled", name == "appearance15-looks-random");
+        Set(config, "CompanionLookInterval", 30f);
+        if (name.Contains("orbit", StringComparison.Ordinal))
+        {
+            Set(config, "Avatar", "Orbit"); Set(config, "CompanionOrbitRingsEnabled", name.EndsWith("on", StringComparison.Ordinal));
+            Set(config, "CompanionOrbitRingSpeed", 3f);
+        }
+        if (name.StartsWith("appearance15-styles-", StringComparison.Ordinal))
+        {
+            Set(config, "CompanionHomeStyle", name.EndsWith("random", StringComparison.Ordinal) ? "Random"
+                : name.EndsWith("specific", StringComparison.Ordinal) ? "CrystalPod" : "Default");
+            Set(config, "CompanionHandStyle", name.EndsWith("random", StringComparison.Ordinal) ? "Random"
+                : name.EndsWith("specific", StringComparison.Ordinal) ? "HologramMitt" : "Default");
+        }
+        Set(config, "CompanionGroundedEnabled", name != "appearance15-grounded-off");
+        Set(config, "CompanionAutoHopEnabled", name != "appearance15-hop-off");
+    }
     var persistField = config.GetType().GetField("Persist", flags)!;
     persistField.SetValue(config, System.Linq.Expressions.Expression.Lambda(persistField.FieldType,
         System.Linq.Expressions.Expression.Empty(), System.Linq.Expressions.Expression.Parameter(config.GetType())).Compile());
@@ -214,7 +258,9 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(ui, "section", section); Set(ui, "companionTab", tab); Set(ui, "shownCompanionTab", -1);
     Set(ui, "selectSettingsTab", true);
     Set(ui, "hotkeys", Activator.CreateInstance(Type("OmniKit.Ui.HotkeyCapture"), nonPublic: true));
-    Set(ui, "roaming", RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Ui.RoamingCompanion")));
+    var fixtureRoaming = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Ui.RoamingCompanion"));
+    Set(fixtureRoaming, "assetDirectory", Path.GetFullPath("assets"));
+    Set(ui, "roaming", fixtureRoaming);
     var interactionType = Type("OmniKit.Interaction.SoftInteractionService");
     var interaction = RuntimeHelpers.GetUninitializedObject(interactionType);
     if (name == "interact-quest-error")
@@ -370,6 +416,11 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "conversation-help" => "Connection choices",
             "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
         };
+        var appearanceHeader = !appearance15 ? null : name.Contains("looks-", StringComparison.Ordinal) ? "Looks"
+            : name.Contains("styles-", StringComparison.Ordinal) || name.Contains("style-menu", StringComparison.Ordinal) ? "Home & personality" : null;
+        var appearanceTarget = !appearance15 ? null : name == "appearance15-hand-style-menu" || name == "appearance15-styles-random" ? "Hand style"
+            : appearanceHeader == "Home & personality" ? "Home style"
+            : appearanceHeader == "Looks" ? "Look" : "Draw roaming area";
         bool PointAt(string label, bool click, bool scrollTo = true)
         {
             var key = measured.ContainsKey(label) ? label : measured.Keys.FirstOrDefault(key => key.Contains(label, StringComparison.Ordinal));
@@ -379,13 +430,52 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 if(click) io.AddMouseButtonEvent(0,true);
                 return true;
             }
-            if(scrollTo) { io.AddMousePosEvent(280*scale,250*scale); io.AddMouseWheelEvent(0,-2); }
+            if(scrollTo)
+            {
+                io.AddMousePosEvent(280*scale,250*scale);
+                var direction = key != null && measured[key].Max.Y < io.DisplaySize.Y * .5f ? 1 : -1;
+                io.AddMouseWheelEvent(0, direction);
+            }
             return false;
         }
         var clickedFrame = -1;
-        var totalFrames = providerSwitch ? 40 : navigationCase ? 28 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
+        var appearanceReady = -1; var appearanceScrolled = false;
+        (int Left, int Top, int Right, int Bottom)? appearanceMenuBounds = null;
+        var appearanceSelection = name switch
+        {
+            "appearance15-looks-menu" => (Field: "CompanionVariant", Value: "Look1",
+                Label: (string)fixtureRoaming.GetType().GetMethod("LookLabel", flags)!.Invoke(fixtureRoaming, ["Moonblob", "Look1"])!),
+            "appearance15-home-style-menu" => (Field: "CompanionHomeStyle", Value: "CrystalPod", Label: "Crystal pod"),
+            "appearance15-hand-style-menu" => (Field: "CompanionHandStyle", Value: "HologramMitt", Label: "Hologram mitt"),
+            _ => (Field: "", Value: "", Label: ""),
+        };
+        var totalFrames = appearance15 ? 80 : providerSwitch ? 40 : navigationCase ? 28 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
         for (var frame = 0; frame < totalFrames; frame++)
         {
+            if (appearance15 && frame >= 3)
+            {
+                if (appearanceHeader != null && clickedFrame < 0)
+                { if (PointAt(appearanceHeader, true)) clickedFrame = frame; }
+                else if (appearanceHeader != null && frame == clickedFrame + 1) io.AddMouseButtonEvent(0, false);
+                else if (appearanceReady < 0 && (appearanceHeader == null || frame >= clickedFrame + 3))
+                { if (PointAt(appearanceTarget!, popupCase)) appearanceReady = frame; }
+                else if (popupCase && frame == appearanceReady + 1) io.AddMouseButtonEvent(0, false);
+                else if (!popupCase && !appearanceScrolled && appearanceReady >= 0 && frame >= appearanceReady + 3)
+                {
+                    // Settle the chosen row near the content top, so the
+                    // disclosed controls below it are visible in the proof.
+                    var top = measured[appearanceTarget!].Min.Y;
+                    if (Math.Abs(top - 150 * scale) <= 12 * scale) appearanceScrolled = true;
+                    else
+                    {
+                        io.AddMousePosEvent(280 * scale, 250 * scale);
+                        io.AddMouseWheelEvent(0, top < 150 * scale ? .25f : -.25f);
+                    }
+                }
+            }
+            if (appearance15 && popupCase && frame == 75 && !PointAt(appearanceSelection.Label, true, false))
+                throw new InvalidOperationException("The appearance menu selection is not visible: " + appearanceSelection.Label);
+            if (appearance15 && popupCase && frame == 76) io.AddMouseButtonEvent(0, false);
             if (providerSwitch)
             {
                 if (frame is 3 or 12 or 21 or 30)
@@ -453,6 +543,14 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
             finally { ImGui.PopStyleColor(15); ImGui.PopStyleVar(6); }
             ImGui.Render();
+            if (appearance15 && popupCase && frame == 74)
+            {
+                if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+                    throw new InvalidOperationException("The appearance dropdown did not open: " + name);
+                if (name == "appearance15-looks-menu" && appearanceSelection.Label == "Look 1")
+                    throw new InvalidOperationException("The Looks menu did not use reviewed artwork names.");
+                appearanceMenuBounds = renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"{name}-top-scale{scale:0.0}.png"));
+            }
             if (providerSwitch && frame is 11 or 20 or 29 or 38)
             {
                 var expected = frame switch { 11 => "CodexCli", 20 => "ClaudeCli", 29 => "ChatGpt", _ => "ApiKey" };
@@ -475,6 +573,23 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
         }
         observer.SetValue(null,null);
+        if (appearance15)
+        {
+            if (appearanceReady < 0 || appearanceHeader != null && clickedFrame < 0)
+            {
+                renderer.Save(ImGui.GetDrawData(), Path.Combine(output, name + "-unreachable.png"));
+                throw new InvalidOperationException("New appearance controls were not reachable: " + name
+                    + $" (header frame {clickedFrame}, target frame {appearanceReady}; {string.Join(", ", measured.Keys)})");
+            }
+            foreach (var item in measured.Values.Where(item => item.Visible))
+                if (item.Min.X < 8 * scale || item.Min.Y < 8 * scale || item.Max.X > io.DisplaySize.X - 8 * scale || item.Max.Y > io.DisplaySize.Y - 8 * scale)
+                    throw new InvalidOperationException("New appearance item escaped the viewport gutter: " + name);
+            if (popupCase)
+            {
+                if (appearanceMenuBounds == null || !Equals(config.GetType().GetField(appearanceSelection.Field)!.GetValue(config), appearanceSelection.Value))
+                    throw new InvalidOperationException("Selecting an appearance option did not save the expected fixture choice: " + name);
+            }
+        }
         if(targetControl != null && clickedFrame<0) throw new InvalidOperationException("Control was not reachable: "+targetControl+" in "+name);
         if (browserCaptureCase)
         {
@@ -502,7 +617,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         }
         if (popupCase)
         {
-            if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+            if (!appearance15 && !ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
                 throw new InvalidOperationException(id + " did not open a native dropdown.");
             foreach (var (field, value) in new[] { ("Avatar", "Moonblob"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
                 if (!Equals(config.GetType().GetField(field)!.GetValue(config), value))
@@ -516,7 +631,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                     throw new InvalidOperationException("Opening the effect menu changed the saved effect.");
             }
         }
-        var bounds = renderer.Save(ImGui.GetDrawData(), Path.Combine(output, id + ".png"));
+        var bounds = appearanceMenuBounds ?? renderer.Save(ImGui.GetDrawData(), Path.Combine(output, id + ".png"));
         if (name == "data-confirm")
         {
             if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))

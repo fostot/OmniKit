@@ -12,6 +12,19 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private readonly CompanionMotion motion = new();
     private readonly CompanionGait gait = new();
     private readonly CompanionPhysics physics = new();
+    private readonly CompanionPhysics napPhysics = new();
+    private readonly CompanionBodyMotion bodyMotion = new();
+    private readonly OrbitRingRenderer orbitRings = new();
+    private CompanionHomeStyleLibrary? styles;
+    private CompanionStyleSelection? styleSelection;
+    private CompanionHomeStyleFrame? homeStyleFrame;
+    private bool stylesFaulted;
+    private readonly List<CompanionSurface> napSurfaces = [];
+    private CompanionLayout navigationLayout;
+    private Vector2 navigationMinimum;
+    private Vector2 navigationMaximum;
+    private CompanionPhysicsOptions navigationOptions;
+    private CompanionSurface? navigationObstacle;
     private readonly CompanionHomeRoutine homeRoutine = new();
     private readonly CompanionSurfaces surfaceReader = new();
     private readonly SeasonalCompanionService seasonal = new(config);
@@ -20,6 +33,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private string displayAvatar = "Moonblob";
     private bool seasonalFaulted;
     private bool seasonalVisible;
+    private CompanionVariantLibrary? variants;
+    private CompanionVariantSelection? variantSelection;
+    private CompanionHolidayLibrary? holidayBodies;
+    private bool lookSelectionInitialized;
+    private CompanionVariantLook? currentLook;
+    private CompanionVariantLook? cachedLook;
+    private CompanionSpriteAtlas? lookAtlas;
+    private Vector2? visualGrip;
     private readonly string assetDirectory = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets");
     private long lastTick;
     private float animationTime;
@@ -59,6 +80,18 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     public bool IsChoosingArea { get; private set; }
     public CompanionPose PreviewPose { get; set; } = CompanionPose.Automatic;
     public string SeasonalStatus => seasonal?.Status ?? string.Empty;
+    public string LookLabel(string avatar, string choice)
+    {
+        if (choice is "Default" or "Random") return choice;
+        EnsureVariants();
+        return variants?.Find(avatar, choice)?.Label ?? choice.Replace("Look", "Look ", StringComparison.Ordinal);
+    }
+    private void EnsureVariants()
+    {
+        if (variants != null || string.IsNullOrEmpty(assetDirectory)) return;
+        variants = new CompanionVariantLibrary(assetDirectory);
+        variantSelection = new CompanionVariantSelection(variants);
+    }
     public void Update()
     {
         if (seasonalFaulted || seasonal == null) return;
@@ -116,9 +149,15 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             lastTick = 0;
             return;
         }
-        displayAvatar = rotation.Update(config.Avatar, config.CompanionAutoRotateEnabled, config.CompanionRotationInterval,
-            Environment.TickCount64, !physics.Active && !homeRoutine.Active && !pointerPressed && !houseDragging
-                && !hoverPausedLastFrame && PreviewPose == CompanionPose.Automatic);
+        var canSwitch = !physics.IsCarried && physics.Placement is not (CompanionPlacement.Falling or CompanionPlacement.Jumping)
+            && !homeRoutine.Active && !pointerPressed && !houseDragging && !hoverPausedLastFrame && PreviewPose == CompanionPose.Automatic;
+        var requestedAvatar = rotation.Update(config.Avatar, config.CompanionAutoRotateEnabled, config.CompanionRotationInterval,
+            Environment.TickCount64, canSwitch);
+        EnsureVariants();
+        var baseLook = variantSelection?.Resolve(requestedAvatar, config.CompanionVariant, config.CompanionLookAutoRotateEnabled,
+            config.CompanionLookInterval, Environment.TickCount64 / 1000d, canSwitch);
+        displayAvatar = variantSelection?.Avatar is { Length: > 0 } selectedAvatar ? selectedAvatar : requestedAvatar;
+        ResolveLook(baseLook, canSwitch);
         if (lastAvatar != displayAvatar)
         {
             lastAvatar = displayAvatar;
@@ -134,15 +173,16 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             config.CompanionSize, scale, aspect);
         seasonalArtwork ??= new SeasonalCompanionRenderer(assetDirectory);
         seasonalVisible = false;
-        if (seasonal?.CurrentTheme != null && seasonalArtwork.IsAvailable)
+        if (layout.IsVisible && config.CompanionSeasonalEnabled && seasonal?.CurrentTheme != null && seasonalArtwork.IsAvailable)
         {
-            var padding = layout.SpriteSize * SeasonalCompanionRenderer.RequiredVisualPaddingFraction;
-            if (layout.Maximum.X - layout.Minimum.X >= layout.SpriteSize.X + padding.X * 2
-                && layout.Maximum.Y - layout.Minimum.Y >= layout.SpriteSize.Y + padding.Y * 2)
-            {
-                seasonalVisible = true;
-                layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding };
-            }
+            var fraction = SeasonalCompanionRenderer.RequiredVisualPaddingFraction;
+            var room = layout.Maximum - layout.Minimum;
+            var fit = Math.Clamp(Math.Min(room.X / (layout.SpriteSize.X * (1 + fraction * 2)),
+                room.Y / (layout.SpriteSize.Y * (1 + fraction * 2))), 0, 1);
+            var sprite = layout.SpriteSize * fit;
+            var padding = sprite * fraction;
+            seasonalVisible = fit > 0;
+            layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding, SpriteSize = sprite };
         }
         if (layout != lastLayout) gait.Rebase();
         lastLayout = layout;
@@ -153,23 +193,28 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         lastTick = now;
         if (!config.CompanionHomeEnabled) FinishHouseDrag(false);
         var roamLayout = layout;
-        var home = HomeBounds(layout);
+        var home = CompanionHomeGeometry.Bounds(layout, viewport.Pos, viewport.Size,
+            new(config.CompanionHomeX, config.CompanionHomeY));
         houseMirrored = CompanionPhysics.HomeFacesLeft((home.Minimum.X + home.Maximum.X) * .5f,
             viewport.Pos.X, viewport.Size.X, houseMirrored);
+        UpdateHomeStyle(home, viewport.Pos, viewport.Size);
+        if (homeStyleFrame is { } styledHome) home = new(styledHome.Minimum, styledHome.Maximum);
         CompanionSurface? homeObstacle = config.CompanionHomeEnabled
             ? new CompanionSurface(0, home.Minimum, home.Maximum, 0, 0) : null;
         // Initialize/clamp the dormant roaming position before physics uses it as
         // its return destination. Its approved movement and gait are unchanged.
         motion.Update(roamLayout, 0, false, homeObstacle);
         var frameFeature = config.CompanionFrameInteractionEnabled;
-        if (!frameFeature || !config.CompanionPickupEnabled && physics.IsCarried)
+        var grounded = config.CompanionGroundedEnabled;
+        if (!frameFeature && !grounded || !config.CompanionPickupEnabled && physics.IsCarried)
         {
             if (physics.IsCarried) pointerPressed = false;
             physics.Reset();
             if (frameFeature) pointerPressed = false;
         }
         IReadOnlyList<CompanionSurface> surfaces = frameFeature ? surfaceReader.Read(viewport.Pos, viewport.Size) : [];
-        var options = new CompanionPhysicsOptions(config.CompanionPerchEnabled, config.CompanionContainmentEnabled, config.CompanionFallingEnabled);
+        var options = new CompanionPhysicsOptions(frameFeature && config.CompanionPerchEnabled,
+            frameFeature && config.CompanionContainmentEnabled, config.CompanionFallingEnabled, grounded, config.CompanionAutoHopEnabled);
         var pointer = ImGui.GetMousePos();
         if (physics.IsCarried)
         {
@@ -183,27 +228,43 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         if (config.AnimationsEnabled)
             animationTime = (animationTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
         var wasAttached = physics.Active;
+        if (homeRoutine.Active) physics.Reset();
         physics.Update(surfaces, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, elapsed,
-            config.AnimationsEnabled && PreviewPose == CompanionPose.Automatic, hoverPausedLastFrame && !physics.IsCarried, options, motion.Position, homeObstacle);
+            config.AnimationsEnabled && PreviewPose == CompanionPose.Automatic, hoverPausedLastFrame && !physics.IsCarried,
+            options, motion.Position, homeObstacle, grounded && !homeRoutine.Active ? roamLayout : null);
         napArtwork ??= new CompanionNapArtwork(assetDirectory);
         var wasHomeActive = homeRoutine.Active;
-        if (physics.Active) homeRoutine.Reset(config.CompanionNapInterval);
-        homeRoutine.Update(elapsed, config.CompanionHomeEnabled && config.CompanionNapsEnabled && !physics.Active
+        var napEligible = !physics.Active || grounded && (physics.Placement is CompanionPlacement.Perched or CompanionPlacement.Floor);
+        if (physics.IsCarried || !grounded && physics.Active) { homeRoutine.Reset(config.CompanionNapInterval); napPhysics.Reset(); }
+        PrepareHomeNavigation(surfaces, roamLayout, home, viewport.Pos, viewport.Size, options);
+        var current = physics.Active ? physics.Position : motion.Position;
+        var currentFacing = physics.Active ? physics.FacingLeft : motion.FacingLeft;
+        homeRoutine.Update(elapsed, config.CompanionHomeEnabled && config.CompanionNapsEnabled
             && napArtwork.TryGet(displayAvatar, config.CompanionOutfit, out _),
-            !config.AnimationsEnabled || PreviewPose != CompanionPose.Automatic || hoverPausedLastFrame || pointerPressed || housePressed || houseDragging,
-            motion.Position, motion.FacingLeft, layout, home, houseMirrored, config.CompanionNapInterval,
-            config.CompanionNapDuration, viewport.Pos, viewport.Pos + viewport.Size, config.CompanionHomeEnabled);
-        if (wasHomeActive && !homeRoutine.Active && !physics.Active) { motion.ResumeAt(homeRoutine.Position, roamLayout); gait.Rebase(); }
+            !config.AnimationsEnabled || PreviewPose != CompanionPose.Automatic || hoverPausedLastFrame || pointerPressed
+                || housePressed || houseDragging || !napEligible && !homeRoutine.Active,
+            current, currentFacing, layout, home, houseMirrored, config.CompanionNapInterval,
+            config.CompanionNapDuration, viewport.Pos, viewport.Pos + viewport.Size, config.CompanionHomeEnabled,
+            homeStyleFrame, grounded ? NavigateHome : null);
+        if (homeRoutine.Active) physics.Reset();
+        if (wasHomeActive && !homeRoutine.Active)
+        {
+            if (grounded) physics.NavigateFrom(homeRoutine.Position, homeRoutine.FacingLeft);
+            else if (!physics.Active) motion.ResumeAt(homeRoutine.Position, roamLayout);
+            napPhysics.Reset(); gait.Rebase();
+        }
         motion.Update(roamLayout, elapsed, config.AnimationsEnabled && !hoverPausedLastFrame && !pointerPressed
-            && !houseDragging && !wasAttached && !physics.Active && !homeRoutine.Active && PreviewPose == CompanionPose.Automatic, homeObstacle);
+            && !houseDragging && !wasAttached && !physics.Active && !homeRoutine.Active && !grounded && PreviewPose == CompanionPose.Automatic, homeObstacle);
         if (!layout.IsVisible) return;
         var position = physics.Active ? physics.Position : homeRoutine.Active ? homeRoutine.Position : motion.Position;
         var facingLeft = physics.Active ? physics.FacingLeft : homeRoutine.Active ? homeRoutine.FacingLeft : motion.FacingLeft;
         var pose = !config.AnimationsEnabled ? CompanionPose.Idle : PreviewPose == CompanionPose.Automatic
-            ? physics.Active ? physics.Pose : homeRoutine.Active ? homeRoutine.UsesNapArt ? CompanionPose.Idle : CompanionPose.Walk
+            ? physics.Active ? physics.Pose : homeRoutine.Active ? homeRoutine.UsesNapArt ? CompanionPose.Idle : homeRoutine.TravelPose
                 : motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
         poseTime = pose != lastPose || !config.AnimationsEnabled ? 0 : (poseTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
         lastPose = pose;
+        bodyMotion.Update(elapsed, config.AnimationsEnabled, pose == CompanionPose.Walk);
+        orbitRings.Update(elapsed, config.AnimationsEnabled && config.CompanionOrbitRingsEnabled, config.CompanionOrbitRingSpeed);
         artwork ??= new CompanionAnimationLibrary(assetDirectory);
         var hasAtlas = artwork.TryGet(displayAvatar, config.CompanionOutfit, out var atlas);
         var artTexture = hasAtlas ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, atlas!.File)).GetWrapOrDefault() : null;
@@ -223,6 +284,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         if (displayAvatar == "Wink" && pose == CompanionPose.Idle)
             frameIndex = 8 + Math.Clamp((int)MathF.Round(blink * 3), 0, 3);
         var draw = ImGui.GetForegroundDrawList();
+        visualGrip = null;
         DrawHome(draw, layout);
         var hitStart = position + layout.SpriteSize * .18f;
         var hitEnd = position + layout.SpriteSize * .82f;
@@ -237,6 +299,10 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             if (homeRoutine.UsesNapArt && DrawNap(draw, layout, out var napBounds))
             {
                 (hitStart, hitEnd) = napBounds;
+            }
+            else if (TryDrawLook(draw, position, layout.SpriteSize, facingLeft, pose, blink, out var lookBounds))
+            {
+                (hitStart, hitEnd) = lookBounds;
             }
             else if (artTexture != null)
             {
@@ -253,16 +319,21 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                     seasonalFrame = 0;
                     body = new(atlas.Frames[0].Rect, atlas.SourceScale, roll.A, roll.B, roll.D);
                 }
-                else if (pose == CompanionPose.Walk || fourierWink && pose == CompanionPose.Idle)
+                else if (pose == CompanionPose.Walk || pose == CompanionPose.Idle
+                    && (fourierWink || displayAvatar is "Ember" or "Mochi" or "Puff"))
                 {
                     // Optional idle blinking keeps the same frame-0 body and
                     // frozen float phase as the last step; only the lid moves.
                     var floating = atlas!.GetFloat(gait.Phase, facingLeft, position, layout.SpriteSize);
-                    draw.AddImageQuad(artTexture.Handle, floating.A, floating.B, floating.C, floating.D,
-                        floating.UvA, floating.UvB, floating.UvC, floating.UvD, tint);
+                    if (displayAvatar is "Ember" or "Mochi" or "Puff")
+                        (hitStart, hitEnd) = bodyMotion.Draw(draw, artTexture.Handle, displayAvatar, floating, position,
+                            layout.SpriteSize, gait.Phase, facingLeft, config.AnimationsEnabled, tint);
+                    else
+                        draw.AddImageQuad(artTexture.Handle, floating.A, floating.B, floating.C, floating.D,
+                            floating.UvA, floating.UvB, floating.UvC, floating.UvD, tint);
                     if (displayAvatar == "Wink" && blink > 0)
                         DrawWinkBlink(draw, artTexture.Handle, floating, blink, tint);
-                    (hitStart, hitEnd) = floating.HitBounds;
+                    if (displayAvatar is not ("Ember" or "Mochi" or "Puff")) (hitStart, hitEnd) = floating.HitBounds;
                     seasonalFrame = 0;
                     body = new(atlas.Frames[0].Rect, atlas.SourceScale, floating.A, floating.B, floating.D);
                 }
@@ -273,7 +344,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                     (hitStart, hitEnd) = atlas.HitBounds(frameIndex, facingLeft, position, layout.SpriteSize);
                     body = SeasonalBodyTransform.FromFrame(atlas.Frames[frameIndex].Rect, atlas.SourceScale, frame, facingLeft);
                 }
-                var extra = DrawSeasonal(draw, seasonalFrame, false, body);
+                var extra = DrawSeasonal(draw, seasonalFrame, false, body, position: position, size: layout.SpriteSize,
+                    mirrored: facingLeft, deform: (pose is CompanionPose.Walk or CompanionPose.Idle) && (displayAvatar is "Ember" or "Mochi" or "Puff"));
                 if (extra is { } bounds) { hitStart = Vector2.Min(hitStart, bounds.Minimum); hitEnd = Vector2.Max(hitEnd, bounds.Maximum); }
             }
             else
@@ -300,7 +372,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             return;
         }
         var commentHasInput = DrawComment(draw, position, layout.SpriteSize, viewport.Pos, viewport.Size, scale);
-        Vector2? handReady = hoveredLastFrame ? CompanionGrabAnchor.Center(position, layout.SpriteSize) : null;
+        Vector2? handReady = hoveredLastFrame ? visualGrip ?? CompanionGrabAnchor.Center(position, layout.SpriteSize) : null;
         if (handReady == null && homeVisible)
         {
             var (houseMin, houseMax) = HomeBounds(layout);
@@ -308,7 +380,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             if (ImGui.IsMouseHoveringRect(houseMin + houseSize * new Vector2(.08f, .035f), houseMax - houseSize * new Vector2(.08f, .08f), false))
                 handReady = CompanionGrabAnchor.Center(houseMin, houseSize);
         }
-        Vector2? heldGrip = physics.IsCarried ? CompanionGrabAnchor.Center(position, layout.SpriteSize)
+        Vector2? heldGrip = physics.IsCarried ? visualGrip ?? CompanionGrabAnchor.Center(position, layout.SpriteSize)
             : houseDragging ? CompanionGrabAnchor.Center(home.Minimum, home.Size) : null;
         DrawGrabHand(draw, viewport.Pos, viewport.Size, layout.SpriteSize, elapsed, physics.IsCarried || houseDragging, handReady, heldGrip);
         if (commentHasInput && !pointerPressed && !physics.IsCarried && !housePressed) return;
@@ -344,18 +416,77 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
 
     private CompanionHomeRect HomeBounds(CompanionLayout layout)
     {
+        if (homeStyleFrame is { } styled) return new(styled.Minimum, styled.Maximum);
         var viewport = ImGui.GetMainViewport();
         return CompanionHomeGeometry.Bounds(layout, viewport.Pos, viewport.Size,
             new Vector2(config.CompanionHomeX, config.CompanionHomeY));
     }
 
+    private void UpdateHomeStyle(CompanionHomeRect available, Vector2 viewportPosition, Vector2 viewportSize)
+    {
+        if (stylesFaulted) { homeStyleFrame = null; return; }
+        try
+        {
+            styles ??= new CompanionHomeStyleLibrary(assetDirectory);
+            styleSelection ??= new CompanionStyleSelection(styles);
+            var style = styleSelection.ResolveHome(config.CompanionHomeStyle, config.CompanionHolidayHomeEnabled,
+                seasonal?.CurrentTheme?.ToString(), !homeRoutine.Active && !houseDragging);
+            var frame = style.Place(available.Minimum, available.Maximum, houseMirrored);
+            var anchor = new Vector2(config.CompanionHomeX, config.CompanionHomeY);
+            var desired = viewportPosition + Vector2.Clamp(anchor, Vector2.Zero, Vector2.One) * viewportSize
+                - new Vector2(frame.Size.X * .5f, frame.Size.Y);
+            var minimum = Vector2.Clamp(desired, viewportPosition, Vector2.Max(viewportPosition, viewportPosition + viewportSize - frame.Size));
+            homeStyleFrame = frame with { Minimum = minimum, Maximum = minimum + frame.Size };
+        }
+        catch (Exception error)
+        {
+            stylesFaulted = true; homeStyleFrame = null;
+            Services.Log.Error("Companion styles stopped ({ErrorType}).", error.GetType().Name);
+        }
+    }
+
+    private void PrepareHomeNavigation(IReadOnlyList<CompanionSurface> surfaces, CompanionLayout layout,
+        CompanionHomeRect house, Vector2 viewportPosition, Vector2 viewportSize, CompanionPhysicsOptions options)
+    {
+        navigationLayout = layout; navigationMinimum = viewportPosition; navigationMaximum = viewportPosition + viewportSize;
+        navigationOptions = options with { Grounded = true, Perch = true, Contain = false };
+        navigationObstacle = config.CompanionHomeEnabled ? new(0, house.Minimum, house.Maximum, 0, 0, false) : null;
+        napSurfaces.Clear();
+        if (options.Perch) foreach (var surface in surfaces) napSurfaces.Add(surface);
+        if (!config.CompanionHomeEnabled) return;
+        var last = Vector2.Max(viewportPosition, navigationMaximum - layout.SpriteSize);
+        var corner = Vector2.Clamp(CompanionHomeGeometry.Corner(layout, house, houseMirrored, true), viewportPosition, last);
+        var outside = Vector2.Clamp(homeStyleFrame?.OutsidePosition(layout.SpriteSize, grounded: true)
+            ?? CompanionHomeGeometry.Outside(layout, house, houseMirrored, true), viewportPosition, last);
+        // This is the narrow foreground threshold at the house's ground level,
+        // never its roof or wall. Other changes of elevation need actual supports.
+        var footY = outside.Y + layout.SpriteSize.Y * .9f;
+        // Leave a clear landing beyond either side wall. A plane ending at the
+        // corner's centre forces the bounded hop to land inside the wall footprint.
+        var minimumX = Math.Min(corner.X, outside.X) - layout.SpriteSize.X * .6f;
+        var maximumX = Math.Max(corner.X, outside.X) + layout.SpriteSize.X * 1.6f;
+        napSurfaces.Add(new(ulong.MaxValue - 2, new(minimumX, footY), new(maximumX, footY + 1), 1, int.MaxValue - 1, false));
+    }
+
+    private CompanionHomeTravel NavigateHome(Vector2 start, Vector2 destination, float elapsed, bool forecourt)
+    {
+        if (!napPhysics.Active || Vector2.DistanceSquared(start, napPhysics.Position) > .01f)
+            napPhysics.NavigateFrom(start, homeRoutine.FacingLeft);
+        napPhysics.Update(napSurfaces, navigationMinimum, navigationMaximum, navigationLayout.SpriteSize, elapsed,
+            config.AnimationsEnabled, false, navigationOptions, null, forecourt ? null : navigationObstacle,
+            navigationLayout, destination, 2);
+        return new(napPhysics.Position, napPhysics.FacingLeft, napPhysics.Pose,
+            napPhysics.NavigationStatus == CompanionNavigationStatus.Blocked);
+    }
+
     private bool DrawNap(ImDrawListPtr draw, CompanionLayout layout,
         out (Vector2 Minimum, Vector2 Maximum) bounds)
     {
+        if (DrawLookNap(draw, layout, out bounds)) return true;
         bounds = default;
         if (napArtwork?.TryGet(displayAvatar, config.CompanionOutfit, out var sheet) != true) return false;
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, sheet!.File)).GetWrapOrDefault();
-        var houseTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, "companion-house.png")).GetWrapOrDefault();
+        var houseTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, homeStyleFrame?.File ?? "companion-house.png")).GetWrapOrDefault();
         if (texture == null || houseTexture == null) return false;
         var tint = ProceduralCompanion.IsProcedural(displayAvatar)
             ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(Vector4.One, ProceduralCompanion.Palette(config.CompanionPalette), .36f))
@@ -366,7 +497,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var napBounds = bounds;
         NapAccessory(homeRoutine.ArtFrame, 1 - blend);
         if (homeRoutine.Sleeping) NapAccessory(3, blend);
-        if (homeVisible) CompanionHomeRenderer.DrawHouseWalls(draw, houseTexture.Handle, HomeBounds(layout), houseMirrored);
+        if (homeVisible && !homeRoutine.InFrontOfHome) CompanionHomeRenderer.DrawHouseWalls(draw, houseTexture.Handle, HomeBounds(layout), houseMirrored, homeStyleFrame);
         bounds = napBounds;
         return true;
 
@@ -381,22 +512,182 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         }
     }
 
-    private (Vector2 Minimum, Vector2 Maximum)? DrawSeasonal(ImDrawListPtr draw, int index, bool nap,
-        SeasonalBodyTransform body, uint tint = 0xFFFFFFFFu)
+    private void ResolveLook(CompanionVariantLook? baseLook, bool canSwitch)
     {
-        if (!seasonalVisible || seasonal?.CurrentTheme is not { } theme || seasonalArtwork == null
+        if (lookSelectionInitialized && !canSwitch) return;
+        lookSelectionInitialized = true;
+        var theme = config.CompanionHolidayBodiesEnabled ? seasonal?.CurrentTheme : null;
+        if (theme is { } currentTheme)
+        {
+            holidayBodies ??= new CompanionHolidayLibrary(assetDirectory);
+            currentLook = holidayBodies.FindHoliday(displayAvatar, currentTheme) ?? baseLook;
+        }
+        else currentLook = baseLook;
+    }
+
+    private bool TryDrawLook(ImDrawListPtr draw, Vector2 position, Vector2 size, bool mirrored, CompanionPose pose,
+        float blink, out (Vector2 Minimum, Vector2 Maximum) bounds)
+    {
+        bounds = default;
+        var orbit = displayAvatar == "Orbit";
+        if (currentLook == null && (!orbit || variants?.OriginalOrbitCore.Count != 16)) return false;
+        var normal = currentLook?.Normal ?? variants!.OriginalOrbitCore[0];
+        var variantPose = pose switch
+        {
+            CompanionPose.Carry => (int)(poseTime / .4f) % 2 == 0 ? CompanionVariantPose.CarrySquirmA : CompanionVariantPose.CarrySquirmB,
+            CompanionPose.Push => CompanionVariantPose.CarrySquirmA,
+            CompanionPose.Talk => (int)(poseTime / .3f) % 2 == 0 ? CompanionVariantPose.MoveB : CompanionVariantPose.Wake,
+            CompanionPose.Idle when displayAvatar != "Wink" && blink > .6f => CompanionVariantPose.ClosedBlink,
+            _ => CompanionVariantPose.Neutral
+        };
+        var coreIndex = pose switch { CompanionPose.Carry => 8, CompanionPose.Fall => 9, CompanionPose.Land => 10,
+            CompanionPose.Push => 11, CompanionPose.Talk => 6, _ => blink > .7f ? 2 : blink > .1f ? 1 : 0 };
+        var source = currentLook?[variantPose] ?? variants!.OriginalOrbitCore[coreIndex];
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, source.File)).GetWrapOrDefault();
+        if (texture == null) return false;
+        var tint = ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(Vector4.One, ProceduralCompanion.Palette(config.CompanionPalette), .36f));
+        SeasonalBodyTransform body;
+        var deformed = false;
+        if (orbit)
+        {
+            var placed = OrbitRingRenderer.Place(source, normal, position, size, mirrored);
+            if (pose == CompanionPose.Carry)
+            {
+                var start = OrbitRingRenderer.Place(normal, normal, position, size, mirrored);
+                var initialGrip = SeasonalBodyTransform.FromFrame(normal.Bounds, normal.SourceScale, start.Frame, mirrored).Map(normal.Grip);
+                var lift = Math.Clamp(poseTime / CompanionGrabAnchor.CenteringSeconds, 0, 1);
+                lift = lift * lift * (3 - 2 * lift);
+                var desiredGrip = Vector2.Lerp(initialGrip, position + size * .5f, lift);
+                var mappedGrip = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, placed.Frame, mirrored).Map(source.Grip);
+                var shift = desiredGrip - mappedGrip;
+                placed = placed with { Frame = placed.Frame with { Position = placed.Frame.Position + shift }, Center = placed.Center + shift };
+            }
+            var back = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), false);
+            var core = CompanionVariantRenderer.Draw(draw, texture.Handle, placed.Frame, tint);
+            var front = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), true);
+            bounds = (Vector2.Min(core.Minimum, Vector2.Min(back.Minimum, front.Minimum)), Vector2.Max(core.Maximum, Vector2.Max(back.Maximum, front.Maximum)));
+            body = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, placed.Frame, mirrored);
+        }
+        else if (variantPose == CompanionVariantPose.Neutral && pose is CompanionPose.Walk or CompanionPose.Idle)
+        {
+            if (!ReferenceEquals(cachedLook, currentLook)) { cachedLook = currentLook; lookAtlas = currentLook!.NormalAtlas; }
+            if (displayAvatar == "Moonblob" && pose == CompanionPose.Walk)
+            {
+                var roll = lookAtlas!.GetRoll(gait.Phase, mirrored, position, size);
+                draw.AddImageQuad(texture.Handle, roll.A, roll.B, roll.C, roll.D, roll.UvA, roll.UvB, roll.UvC, roll.UvD, tint);
+                bounds = roll.HitBounds; body = new(source.Bounds, source.SourceScale, roll.A, roll.B, roll.D);
+            }
+            else
+            {
+                var floating = lookAtlas!.GetFloat(gait.Phase, mirrored, position, size);
+                if (displayAvatar is "Ember" or "Mochi" or "Puff")
+                {
+                    deformed = true;
+                    bounds = bodyMotion.Draw(draw, texture.Handle, displayAvatar, floating, position, size, gait.Phase, mirrored, config.AnimationsEnabled, tint);
+                }
+                else
+                {
+                    draw.AddImageQuad(texture.Handle, floating.A, floating.B, floating.C, floating.D, floating.UvA, floating.UvB, floating.UvC, floating.UvD, tint);
+                    bounds = floating.HitBounds;
+                }
+                if (displayAvatar == "Wink" && blink > 0)
+                {
+                    var lidTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, currentLook![CompanionVariantPose.ClosedBlink].File)).GetWrapOrDefault();
+                    if (lidTexture != null) CompanionVariantRenderer.DrawWinkBlink(draw, lidTexture.Handle, currentLook, floating, blink, tint);
+                }
+                body = new(source.Bounds, source.SourceScale, floating.A, floating.B, floating.D);
+            }
+        }
+        else
+        {
+            var lift = Math.Clamp(poseTime / CompanionGrabAnchor.CenteringSeconds, 0, 1);
+            lift = lift * lift * (3 - 2 * lift);
+            var grip = Vector2.Lerp(normal.Map(normal.Grip, position, size, mirrored), position + size * .5f, lift);
+            var frame = pose == CompanionPose.Carry
+                ? CompanionVariantRenderer.CarriedFrame(currentLook!, variantPose == CompanionVariantPose.CarrySquirmB, grip, size, mirrored)
+                : source.GetFrame(position, size, mirrored);
+            bounds = CompanionVariantRenderer.Draw(draw, texture.Handle, frame, tint);
+            body = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, frame, mirrored);
+        }
+        var gripPoint = body.Map(source.Grip);
+        visualGrip = deformed ? bodyMotion.WarpAttachment(displayAvatar, gripPoint, position, size, gait.Phase, mirrored, config.AnimationsEnabled) : gripPoint;
+        var accessory = DrawLookAccessory(draw, source, body, position, size, mirrored,
+            deformed);
+        if (accessory is { } hat) bounds = (Vector2.Min(bounds.Minimum, hat.Minimum), Vector2.Max(bounds.Maximum, hat.Maximum));
+        return true;
+    }
+
+    private (Vector2 Minimum, Vector2 Maximum)? DrawLookAccessory(ImDrawListPtr draw, CompanionVariantFrame source,
+        SeasonalBodyTransform body, Vector2 position, Vector2 size, bool mirrored, bool deform)
+    {
+        if (!homeRoutine.AccessoriesVisible || !seasonalVisible || seasonal?.CurrentTheme is not { } theme || seasonalArtwork == null
+            || !seasonalArtwork.TryGetQuad(theme, body, new SeasonalAccessoryFit(source.AccessoryAnchor, source.AccessoryHeadWidth), out var quad)) return null;
+        if (deform)
+        {
+            var anchor = body.Map(source.AccessoryAnchor);
+            var shift = Warp(anchor) - anchor;
+            quad = quad with { A = quad.A + shift, B = quad.B + shift, C = quad.C + shift, D = quad.D + shift };
+        }
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault();
+        return texture == null ? null : SeasonalCompanionRenderer.Draw(draw, texture.Handle, quad);
+        Vector2 Warp(Vector2 point) => bodyMotion.WarpAttachment(displayAvatar, point, position, size, gait.Phase, mirrored, config.AnimationsEnabled);
+    }
+
+    private bool DrawLookNap(ImDrawListPtr draw, CompanionLayout layout, out (Vector2 Minimum, Vector2 Maximum) bounds)
+    {
+        bounds = default;
+        var orbit = displayAvatar == "Orbit";
+        if (currentLook == null && (!orbit || variants?.OriginalOrbitCore.Count != 16)) return false;
+        var pose = homeRoutine.State switch
+        {
+            CompanionHomeState.Sleeping => CompanionVariantPose.ClosedBlink,
+            CompanionHomeState.Waking => CompanionVariantPose.Wake,
+            _ => CompanionVariantPose.EnterBed
+        };
+        var index = homeRoutine.State switch { CompanionHomeState.Sleeping => 14, CompanionHomeState.Waking => 13, _ => 12 };
+        var source = currentLook?[pose] ?? variants!.OriginalOrbitCore[index];
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, source.File)).GetWrapOrDefault();
+        var houseTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, homeStyleFrame?.File ?? "companion-house.png")).GetWrapOrDefault();
+        if (texture == null || houseTexture == null) return false;
+        var size = layout.SpriteSize;
+        var breathing = homeRoutine.Sleeping ? MathF.Sin(homeRoutine.SleepPhase * MathF.Tau / 3.2f) * .015f : 0;
+        var painted = size * homeRoutine.ArtScale * new Vector2(1 + breathing, 1 - breathing);
+        var anchor = homeRoutine.Position + size * new Vector2(.5f, .9f);
+        var frame = source.GetFrame(Vector2.Zero, painted, homeRoutine.FacingLeft);
+        frame = frame with { Position = frame.Position + anchor - painted * new Vector2(.5f, .9f) };
+        bounds = CompanionVariantRenderer.Draw(draw, texture.Handle, frame);
+        var transform = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, frame, homeRoutine.FacingLeft);
+        visualGrip = transform.Map(source.Grip);
+        var extra = DrawLookAccessory(draw, source, transform, homeRoutine.Position, size, homeRoutine.FacingLeft, false);
+        if (extra is { } hat) bounds = (Vector2.Min(bounds.Minimum, hat.Minimum), Vector2.Max(bounds.Maximum, hat.Maximum));
+        if (homeVisible && !homeRoutine.InFrontOfHome) CompanionHomeRenderer.DrawHouseWalls(draw, houseTexture.Handle, HomeBounds(layout), houseMirrored, homeStyleFrame);
+        return true;
+    }
+
+    private (Vector2 Minimum, Vector2 Maximum)? DrawSeasonal(ImDrawListPtr draw, int index, bool nap,
+        SeasonalBodyTransform body, uint tint = 0xFFFFFFFFu, Vector2 position = default, Vector2 size = default,
+        bool mirrored = false, bool deform = false)
+    {
+        if (!homeRoutine.AccessoriesVisible || !seasonalVisible || seasonal?.CurrentTheme is not { } theme || seasonalArtwork == null
             || !seasonalArtwork.TryGetQuad(theme, displayAvatar, index, nap, body, out var quad)) return null;
+        if (deform && seasonalArtwork.TryGetSourceAnchor(displayAvatar, index, nap, out var sourceAnchor))
+        {
+            var anchor = body.Map(sourceAnchor);
+            var shift = Warp(anchor) - anchor;
+            quad = quad with { A = quad.A + shift, B = quad.B + shift, C = quad.C + shift, D = quad.D + shift };
+        }
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault();
         return texture == null ? null : SeasonalCompanionRenderer.Draw(draw, texture.Handle, quad, tint);
+        Vector2 Warp(Vector2 point) => bodyMotion.WarpAttachment(displayAvatar, point, position, size, gait.Phase, mirrored, config.AnimationsEnabled);
     }
 
     private void DrawSleepZs(ImDrawListPtr draw, CompanionHomeRect house, Vector2 viewportPosition, Vector2 viewportSize)
-        => CompanionHomeRenderer.DrawZs(draw, house, houseMirrored, homeRoutine.SleepPhase, viewportPosition, viewportSize);
+        => CompanionHomeRenderer.DrawZs(draw, house, houseMirrored, homeRoutine.SleepPhase, viewportPosition, viewportSize, homeStyleFrame);
     private void DrawHome(ImDrawListPtr draw, CompanionLayout layout)
     {
         homeVisible = false;
         if (!config.CompanionHomeEnabled || !layout.IsVisible) return;
-        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, "companion-house.png")).GetWrapOrDefault();
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, homeStyleFrame?.File ?? "companion-house.png")).GetWrapOrDefault();
         if (texture == null) return;
         homeVisible = true;
         var (top, bottom) = HomeBounds(layout);
@@ -404,7 +695,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var middle = (top.X + bottom.X) * .5f;
         houseMirrored = CompanionPhysics.HomeFacesLeft(middle, viewport.Pos.X, viewport.Size.X, houseMirrored);
         draw.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, true);
-        CompanionHomeRenderer.DrawHouse(draw, texture.Handle, new CompanionHomeRect(top, bottom), houseMirrored);
+        CompanionHomeRenderer.DrawHouse(draw, texture.Handle, new CompanionHomeRect(top, bottom), houseMirrored, homeStyleFrame);
         draw.PopClipRect();
     }
 
@@ -472,13 +763,20 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     {
         if (!config.CompanionGrabHandEnabled || !config.AnimationsEnabled)
         { handWasDragging = false; handTime = 1; return; }
-        if (dragging != handWasDragging) handTime = 0;
+        if (dragging != handWasDragging)
+        {
+            handTime = 0;
+            if (dragging) styleSelection?.BeginPickup(config.CompanionHandStyle);
+        }
         handWasDragging = dragging;
         handTime += float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
         if (dragging && gripPoint.HasValue) handPoint = gripPoint.Value;
         var ready = !dragging && handTime >= .25f && readyPoint.HasValue;
         if (!dragging && handTime >= .25f && !ready) return;
-        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, "companion-grab-hand.png")).GetWrapOrDefault();
+        var style = ready ? styleSelection?.ReadyHand(config.CompanionHandStyle) : styleSelection?.CurrentHand;
+        var handPose = ready ? CompanionHandPose.Ready : !dragging ? CompanionHandPose.Release
+            : handTime < .25f ? CompanionHandPose.OpenReach : CompanionHandPose.ClosedHold;
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, style?.Pose(handPose).File ?? "companion-grab-hand.png")).GetWrapOrDefault();
         if (texture == null) return;
         var incoming = Math.Clamp(handTime / .2f, 0, 1);
         var ease = 1 - MathF.Pow(1 - incoming, 3);
@@ -493,7 +791,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var start = new Vector2(frame % 2, frame / 2) * .5f;
         var opacity = ready || dragging ? 1 : Math.Clamp(1 - handTime / .25f, 0, 1);
         draw.PushClipRect(viewportPosition, viewportPosition + viewportSize, true);
-        draw.AddImage(texture.Handle, top, top + size, start, start + new Vector2(.5f), ((uint)(opacity * 255) << 24) | 0xFFFFFF);
+        var tint = ((uint)(opacity * 255) << 24) | 0xFFFFFFu;
+        if (style != null)
+        {
+            var contact = (ready ? readyPoint!.Value : handPoint)
+                - new Vector2(0, edge * (ready ? 0 : dragging ? (1 - ease) * .8f : handTime * 1.4f));
+            CompanionStyleRenderer.DrawQuad(draw, texture.Handle, style.Frame(handPose, contact, edge), tint);
+        }
+        else draw.AddImage(texture.Handle, top, top + size, start, start + new Vector2(.5f), tint);
         draw.PopClipRect();
     }
 

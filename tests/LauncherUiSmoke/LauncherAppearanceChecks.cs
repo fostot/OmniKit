@@ -20,7 +20,7 @@ internal static class LauncherAppearanceChecks
                 io.FontGlobalScale = scale; io.Fonts.AddFontDefault(); io.Fonts.Build();
                 ImGui.StyleColorsDark(); ImGui.GetStyle().ScaleAllSizes(scale);
                 var renderer = new SoftwareRenderer();
-                var config = new Configuration { LauncherWidth = 1000, LauncherTextScale = 1.25f,
+                var config = new Configuration { LauncherWidth = 1000, LauncherHeight = 28, LauncherTextScale = 1.25f,
                     LauncherResultCount = 10, LauncherCenterX = .8f, LauncherTop = .7f };
                 var saves = 0;
                 var resetMin = Vector2.Zero; var resetMax = Vector2.Zero;
@@ -53,10 +53,10 @@ internal static class LauncherAppearanceChecks
                             failures.Add($"Appearance controls scale{scale}: controls escape the minimum panel or its gutter.");
                     }
                 }
-                if (saves != 1 || config.LauncherWidth != 640 || config.LauncherTextScale != 1
+                if (saves != 1 || config.LauncherWidth != 640 || config.LauncherHeight != 64 || config.LauncherTextScale != 1
                     || config.LauncherResultCount != 7 || config.LauncherCenterX != .5f || config.LauncherTop != .2f)
-                    failures.Add($"Appearance controls scale{scale}: Reset did not restore all five defaults and save exactly once.");
-                foreach (var row in new[] { 0, 2, 4 })
+                    failures.Add($"Appearance controls scale{scale}: Reset did not restore all six defaults and save exactly once.");
+                foreach (var row in new[] { 0, 1, 3, 5 })
                 {
                     var style = ImGui.GetStyle();
                     var y = 40 * scale + style.WindowPadding.Y + style.CellPadding.Y + ImGui.GetFrameHeight() / 2

@@ -1,3 +1,47 @@
+# 0.1.0.0015: expressive companions and complete seasonal looks
+
+The eight companions now have four additional everyday looks each and nine
+painted holiday bodies each: 112 looks including the originals. Random look
+selection has a separate optional timer. Holiday bodies, fitted accessories and
+holiday homes have independent switches. A chosen body remains stable while
+carried or napping; movement uses one connected body rather than alternating
+whole-body images. Ember curls and flickers, Mochi squashes, Puff billows and
+Orbit has a steady core with rotating, tilting rings and depth-correct layering.
+Wink's moving lid uses the selected look's own palette.
+
+Home & personality offers Default, Crystal Pod, Cloud Cushion, Lantern Hut and
+nine holiday homes, plus Random. Five hand designs also support Random. The
+selected hand stays consistent through pickup/release and meets the body's grip.
+Measured front openings, walls, beds and chimneys follow each home's true bounds.
+House artwork can sit flush against the screen edge. Companions shrink another
+10% inside, step outward while small, then grow in front of the house. Accessories
+hide on entry and return outside only when enabled.
+
+Optional flat-surface roaming uses real supports, bounded hops and open-edge
+falls. Nap travel uses the same physical navigation, with a front porch lane;
+a route that cannot reach its destination stops at its actual point instead of
+switching to free-space travel or teleporting. Normal roaming stays in the drawn
+area. Compatible FFXIV, Umbra and plugin frames remain read-only observations,
+not universal support for full-screen canvases.
+
+The launcher now adjusts height as well as width, reducing top/bottom whitespace
+with a smaller height. Quest-item tooltips show the complete wrapped name/reason
+without a fixed-height scrolling child. Next Action appears only for a matched
+quest item or quest emote on the current candidate, including in unlocked mode;
+ordinary interactions and enemy targeting show no extra action button. Pausing
+hides it. Existing guarded item/emote mappings and one-press action limits remain.
+
+Settings use schema 9. Versions 1–8 migrate atomically, preserving prior choices,
+chords and local AI consent. Twelve new fields cover the added appearance,
+physics and launcher options; imports cannot grant AI consent. Artwork, comments,
+rotation and naps make no model requests. Credentials and personal configuration
+are excluded from source, exports and releases.
+
+Source-linked state/storage checks, compiled-DLL interaction/UI checks and native
+offscreen artwork rendering cover this batch. They do not establish live FFXIV
+surface, focus, inventory or festival behavior. See the acceptance checklist.
+The base remains 0.1.0; source count 15 produces 0.1.0.0015 with its own commit
+hash. Previously published releases remain unchanged.
 # 0.1.0.0013: action icons, launcher layout and seasonal accessories
 
 Next Action previews the same guarded resolver used by Interact. Locked, it is

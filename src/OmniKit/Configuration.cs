@@ -13,13 +13,14 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 8;
+    public int Version { get; set; } = 9;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
     public bool SetupCompleted = false;
     public bool LauncherEnabled = true;
     public float LauncherWidth = 640f;
+    public float LauncherHeight = 64f;
     public float LauncherTextScale = 1f;
     public int LauncherResultCount = 7;
     public float LauncherCenterX = .5f;
@@ -90,8 +91,25 @@ public sealed class Configuration : IPluginConfiguration
     public string CompanionSeasonalTheme = "Auto";
     public bool CompanionAutoRotateEnabled = false;
     public float CompanionRotationInterval = 300f;
+    public string CompanionVariant = "Random";
+    public bool CompanionLookAutoRotateEnabled = false;
+    public float CompanionLookInterval = 300f;
+    public string CompanionHomeStyle = "Default";
+    public bool CompanionHolidayHomeEnabled = true;
+    public bool CompanionHolidayBodiesEnabled = true;
+    public string CompanionHandStyle = "Default";
+    public bool CompanionGroundedEnabled = true;
+    public bool CompanionAutoHopEnabled = true;
+    public bool CompanionOrbitRingsEnabled = true;
+    public float CompanionOrbitRingSpeed = 1f;
     public static IReadOnlyList<string> SeasonalThemeNames { get; } = Array.AsReadOnly(new[]
     { "Auto", "AllSaintsWake", "Starlight", "Heavensturn", "Valentione", "LittleLadies", "HatchingTide", "MakeItRain", "MoonfireFaire", "TheRising" });
+    public static IReadOnlyList<string> CompanionVariantNames { get; } = Array.AsReadOnly(new[]
+    { "Default", "Random", "Look1", "Look2", "Look3", "Look4" });
+    public static IReadOnlyList<string> HomeStyleNames { get; } = Array.AsReadOnly(new[]
+    { "Default", "Random", "CrystalPod", "CloudCushion", "LanternHut" }.Concat(SeasonalThemeNames.Skip(1)).ToArray());
+    public static IReadOnlyList<string> HandStyleNames { get; } = Array.AsReadOnly(new[]
+    { "Default", "Random", "IvoryChibi", "StarlightGlove", "MagicalPaw", "HologramMitt" });
     public float CompanionBoxLeft = .72f;
     public float CompanionBoxTop = .55f;
     public float CompanionBoxRight = .95f;
