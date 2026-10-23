@@ -35,6 +35,13 @@ does not imply that every listed component is separately distributed by OmniKit.
 
 ## Host-provided interfaces and artwork
 
+The browser helper distributes Microsoft.Web.WebView2 Core and WinForms SDK
+assemblies and the x64 WebView2Loader from SDK 1.0.3719.77. Their upstream
+[license](licenses/WebView2-LICENSE.txt) and
+[third-party notice](licenses/WebView2-NOTICE.txt) are copied unchanged and
+included with the helper. The Microsoft Edge WebView2 Evergreen Runtime is
+host-provided and is not bundled by OmniKit.
+
 Dalamud, Umbra, Una.Drawing, Lumina and FFXIVClientStructs are referenced through
 the installed host environment, not copied into OmniKit's release. Their upstream
 projects retain their own licenses. Font Awesome glyphs and game icons are drawn
@@ -48,6 +55,14 @@ and the limbless Moonblob atlas have their own
 [Moonblob prompts](../assets/MOONBLOB-ROLL-PROMPTS.md). They are not copied game
 characters or third-party stock art. This provenance statement does not change third-party
 library licenses.
+The original moon house and four-pose grab hand were generated with the built-in
+OpenAI image tool. Their exact prompts and provenance are recorded in
+[HOUSE-PROMPT.md](../assets/HOUSE-PROMPT.md) and
+[GRAB-HAND-PROMPT.md](../assets/GRAB-HAND-PROMPT.md).
+The replacement Bimble Navigator/Stargazer rig artwork is also original built-in
+OpenAI output; exact prompts and hashes are in
+[BIMBLE-V2-PROMPTS.md](../assets/BIMBLE-V2-PROMPTS.md). Older source assets are
+retained unchanged.
 
 ## Microsoft.Data.Sqlite MIT license
 

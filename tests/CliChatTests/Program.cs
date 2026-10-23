@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using OmniKit.Assistant;
 
@@ -30,6 +31,24 @@ var badHelp = Alias("bad-help-claude");
 CliChatBackend Backend(string name, string executable, int timeoutMs = 5000) => new(new DirectoryInfo(Path.Combine(scratch, name)),
     _ => [executable], TimeSpan.FromMilliseconds(timeoutMs), TimeSpan.FromSeconds(5));
 
+var discovered = 0;
+using (var paused = new CliChatBackend(new DirectoryInfo(Path.Combine(scratch, "paused")),
+    _ => { Interlocked.Increment(ref discovered); throw new Exception("Paused chat must not discover or launch a CLI."); },
+    TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5)))
+{
+    foreach (var kind in new[] { AiConnectionKind.CodexCli, AiConnectionKind.ClaudeCli })
+        Check(await paused.AskAsync(kind, "Synthetic instructions", "Synthetic question", "", default)
+            == CliChatBackend.SingleRequestLimitNotice, "Production CLI chat must fail closed.");
+    Check(discovered == 0 && !Directory.Exists(Path.Combine(scratch, "paused")), "Paused chat performs no discovery, process launch or workspace creation.");
+}
+
+// This reflection-only fixture exercises suspended transport against our own fake
+// executable. The public generation entry point above must remain unavailable.
+static Task<string> AskSuspendedFixture(CliChatBackend backend, AiConnectionKind kind,
+    string instructions, string question, string model, CancellationToken ct) =>
+    (Task<string>)typeof(CliChatBackend).GetMethod("AskCoreAsync", BindingFlags.Instance | BindingFlags.NonPublic)!
+        .Invoke(backend, [kind, instructions, question, model, ct])!;
+
 using (var backend = Backend("codex", codex))
 {
     var status = await backend.ProbeAsync(AiConnectionKind.CodexCli, default);
@@ -38,7 +57,7 @@ using (var backend = Backend("codex", codex))
     const string question = "--model injected\n\"; Write-Output 'must stay text'; #\n$(not-a-command) `literal` Ω おはよう";
     Environment.SetEnvironmentVariable("OMNIKIT_UNSAFE_INHERIT_FIXTURE", "fixture-only");
     string answer;
-    try { answer = await backend.AskAsync(AiConnectionKind.CodexCli, "Trusted companion instructions.", question, "gpt-test", default); }
+    try { answer = await AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Trusted companion instructions.", question, "gpt-test", default); }
     finally { Environment.SetEnvironmentVariable("OMNIKIT_UNSAFE_INHERIT_FIXTURE", null); }
     Check(answer == question, "Standard input must preserve Unicode, newlines, and shell-like text literally.");
     var recordPath = Directory.GetFiles(Path.Combine(scratch, "codex"), "fixture.json", SearchOption.AllDirectories).Single();
@@ -50,17 +69,17 @@ using (var backend = Backend("codex", codex))
     Check(!argv.Any(x => x.Contains("dangerously")), "No bypass flags may be used.");
     Check(argv.Contains("--ignore-user-config") && argv.Contains("mcp_servers={}") && argv.Contains("apps._default.enabled=false"), "Codex must disable configured connectors.");
     Check(!backend.Status.Contains(question), "Status must not copy assistant conversation text.");
-    Check((await backend.AskAsync(AiConnectionKind.CodexCli, "Rules", "fixture:malformed", "", default)).Contains("valid final text"), "Malformed final events must be rejected.");
-    Check((await backend.AskAsync(AiConnectionKind.CodexCli, "Rules", "fixture:failed", "", default)).Contains("could not complete"), "Nonzero exit must return a fixed error.");
+    Check((await AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Rules", "fixture:malformed", "", default)).Contains("valid final text"), "Malformed final events must be rejected.");
+    Check((await AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Rules", "fixture:failed", "", default)).Contains("could not complete"), "Nonzero exit must return a fixed error.");
     Check(!backend.Status.Contains("PRIVATE_FIXTURE_DETAIL"), "Failed stderr must never be exposed.");
-    Check((await backend.AskAsync(AiConnectionKind.CodexCli, "Rules", "fixture:output-limit", "", default)).Contains("too much data"), "Combined stdout/stderr must be bounded and terminate the process.");
-    Check((await backend.AskAsync(AiConnectionKind.CodexCli, "Rules", "hello", "--unsafe", default)).Contains("valid CLI model"), "Option-shaped model names must fail validation.");
+    Check((await AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Rules", "fixture:output-limit", "", default)).Contains("too much data"), "Combined stdout/stderr must be bounded and terminate the process.");
+    Check((await AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Rules", "hello", "--unsafe", default)).Contains("valid CLI model"), "Option-shaped model names must fail validation.");
 }
 
 using (var backend = Backend("claude", claude))
 {
     Check((await backend.ProbeAsync(AiConnectionKind.ClaudeCli, default)).Contains("is signed in"), "Claude auth JSON can establish login without exposing account fields.");
-    Check(await backend.AskAsync(AiConnectionKind.ClaudeCli, "Trusted persona", "hello Claude", "", default) == "hello Claude", "Claude returns only the result text.");
+    Check(await AskSuspendedFixture(backend, AiConnectionKind.ClaudeCli, "Trusted persona", "hello Claude", "", default) == "hello Claude", "Claude returns only the result text.");
     var path = Directory.GetFiles(Path.Combine(scratch, "claude"), "fixture.json", SearchOption.AllDirectories).Single();
     using var record = JsonDocument.Parse(File.ReadAllText(path));
     var argv = record.RootElement.GetProperty("args").EnumerateArray().Select(x => x.GetString()!).ToArray();
@@ -87,7 +106,7 @@ async Task TreeTest(string name, bool cancel, bool unload, bool orphan)
 {
     using var backend = Backend(name, codex, cancel || unload ? 5000 : 800);
     using var cts = new CancellationTokenSource();
-    var task = backend.AskAsync(AiConnectionKind.CodexCli, "Rules", orphan ? "fixture:orphan" : "fixture:hang", "", cts.Token);
+    var task = AskSuspendedFixture(backend, AiConnectionKind.CodexCli, "Rules", orphan ? "fixture:orphan" : "fixture:hang", "", cts.Token);
     string? pidPath = null;
     var watch = Stopwatch.StartNew();
     while (watch.Elapsed < TimeSpan.FromSeconds(5))
@@ -119,7 +138,7 @@ Check(CliChatBackend.ReadAnswer(AiConnectionKind.CodexCli,
     "{\"type\":\"item.completed\",\"item\":{\"type\":\"reasoning\",\"text\":\"PRIVATE_FIXTURE_DETAIL\"}}\n" +
     "{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"phase\":\"commentary\",\"text\":\"intermediate\"}}\n" +
     "{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"final only\"}}\n{\"type\":\"turn.completed\"}") == "final only", "Reasoning and commentary never become final answers.");
-Console.WriteLine("PASS: CLI stdin/argument isolation, auth/error sanitizing, required flags/version gates, JSON final-only parsing, concurrent output bound, cancellation/timeout/unload/orphan process-tree shutdown.");
+Console.WriteLine("PASS: production CLI inference paused with zero process launches; suspended synthetic transport stdin/argument isolation, auth/error sanitizing, required flags/version gates, JSON final-only parsing, concurrent output bound, cancellation/timeout/unload/orphan process-tree shutdown.");
 
 static void Check(bool passed, string message) { if (!passed) throw new Exception(message); }
 

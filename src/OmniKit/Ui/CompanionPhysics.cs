@@ -9,7 +9,7 @@ internal readonly record struct CompanionSurface(ulong Id, Vector2 Minimum, Vect
 }
 
 internal readonly record struct CompanionPhysicsOptions(bool Perch, bool Contain, bool Fall);
-internal enum CompanionPlacement { None, Carried, Perched, Contained, Falling, Floor }
+internal enum CompanionPlacement { None, Carried, Perched, Contained, Falling, Floor, Returning }
 
 /// <summary>Companion-only motion. Surfaces are immutable observations; no foreign UI is changed.</summary>
 internal sealed class CompanionPhysics
@@ -22,6 +22,8 @@ internal sealed class CompanionPhysics
     private CompanionPose reaction;
     private bool reactionFacingLeft;
     private float direction = 1;
+    private float perchWalkTime;
+    private bool perchTurnPending;
 
     public CompanionPlacement Placement { get; private set; }
     public bool Active => Placement != CompanionPlacement.None;
@@ -39,6 +41,7 @@ internal sealed class CompanionPhysics
         surfaceId = 0;
         velocity = Vector2.Zero;
         reactionTime = 0;
+        perchTurnPending = false;
         Pose = CompanionPose.Idle;
     }
 
@@ -69,6 +72,8 @@ internal sealed class CompanionPhysics
         Vector2 viewportMaximum, Vector2 size, CompanionPhysicsOptions options)
     {
         if (!IsCarried) return;
+        ClipMinimum = viewportMinimum;
+        ClipMaximum = viewportMaximum;
         CompanionSurface? best = null;
         foreach (var surface in surfaces)
             if (surface.Contains(pointer) && (best == null || surface.Order > best.Value.Order)) best = surface;
@@ -94,11 +99,12 @@ internal sealed class CompanionPhysics
                 return;
             }
         }
-        if (options.Fall) BeginFall(); else Reset();
+        if (options.Fall) BeginFall(); else BeginReturn();
     }
 
     public void Update(IReadOnlyList<CompanionSurface> surfaces, Vector2 viewportMinimum, Vector2 viewportMaximum,
-        Vector2 size, float elapsed, bool animate, bool hoverPaused, CompanionPhysicsOptions options)
+        Vector2 size, float elapsed, bool animate, bool hoverPaused, CompanionPhysicsOptions options,
+        Vector2? homePosition = null)
     {
         if (!Active || !Fits(viewportMinimum, viewportMaximum, size)) { Reset(); return; }
         ClipMinimum = viewportMinimum;
@@ -109,26 +115,39 @@ internal sealed class CompanionPhysics
         {
             foreach (var surface in surfaces) if (surface.Id == surfaceId) { attached = surface; break; }
             if (attached == null || Placement == CompanionPlacement.Perched && !options.Perch
-                || Placement == CompanionPlacement.Contained && !options.Contain) { Reset(); return; }
-            var current = attached.Value;
-            Position += current.Minimum - lastSurfaceOrigin;
-            lastSurfaceOrigin = current.Minimum;
-            if (Placement == CompanionPlacement.Contained)
+                || Placement == CompanionPlacement.Contained && !options.Contain)
             {
-                ClipMinimum = Vector2.Max(viewportMinimum, current.Minimum + new Vector2(4, Math.Max(4, current.HeaderHeight)));
-                ClipMaximum = Vector2.Min(viewportMaximum, current.Maximum - new Vector2(4));
-                if (!Fits(ClipMinimum, ClipMaximum, size)) { Reset(); return; }
-                Position = Clamp(Position, ClipMinimum, ClipMaximum, size);
+                if (options.Fall) BeginFall(); else BeginReturn();
             }
             else
             {
-                if (!CanPerch(current, size, viewportMinimum)) { Reset(); return; }
-                Position = new Vector2(Position.X, current.Minimum.Y - size.Y * .9f);
-                Position = Clamp(Position, viewportMinimum, viewportMaximum, size);
+                var current = attached.Value;
+                Position += current.Minimum - lastSurfaceOrigin;
+                lastSurfaceOrigin = current.Minimum;
+                if (Placement == CompanionPlacement.Contained)
+                {
+                    var innerMinimum = Vector2.Max(viewportMinimum, current.Minimum + new Vector2(4, Math.Max(4, current.HeaderHeight)));
+                    var innerMaximum = Vector2.Min(viewportMaximum, current.Maximum - new Vector2(4));
+                    if (!Fits(innerMinimum, innerMaximum, size))
+                    { if (options.Fall) BeginFall(); else BeginReturn(); }
+                    else
+                    {
+                        ClipMinimum = innerMinimum;
+                        ClipMaximum = innerMaximum;
+                        Position = Clamp(Position, ClipMinimum, ClipMaximum, size);
+                    }
+                }
+                else if (!CanPerch(current, size, viewportMinimum))
+                { if (options.Fall) BeginFall(); else BeginReturn(); }
+                else
+                {
+                    Position = new Vector2(Position.X, current.Minimum.Y - size.Y * .9f);
+                    Position = Clamp(Position, viewportMinimum, viewportMaximum, size);
+                }
             }
         }
         if (IsCarried) { Pose = animate ? CompanionPose.Carry : CompanionPose.Idle; return; }
-        if (Placement == CompanionPlacement.Falling && !options.Fall) { Reset(); return; }
+        if (Placement == CompanionPlacement.Falling && !options.Fall) BeginReturn();
         // A resized viewport must contain the entire cell even while animation is frozen.
         Position = Clamp(Position, viewportMinimum, viewportMaximum, size);
         if (!animate || dt <= 0) { Pose = CompanionPose.Idle; return; }
@@ -141,28 +160,32 @@ internal sealed class CompanionPhysics
         }
 
         var speed = Math.Max(16, size.Y * .34f);
+        if (Placement == CompanionPlacement.Floor && homePosition.HasValue) BeginReturn();
+        if (Placement == CompanionPlacement.Returning)
+        {
+            if (homePosition is not { } home || !Finite(home)) { Pose = CompanionPose.Idle; return; }
+            var destination = Clamp(home, viewportMinimum, viewportMaximum, size);
+            var delta = destination - Position;
+            var distance = delta.Length();
+            if (distance <= speed * dt)
+            {
+                Position = destination;
+                Reset();
+                return;
+            }
+            direction = CompanionGait.FacingFor(delta, direction < 0) ? -1 : 1;
+            Position += delta / distance * (speed * dt);
+            Pose = CompanionPose.Walk;
+            return;
+        }
         if (Placement == CompanionPlacement.Falling)
         {
-            var oldFoot = Position.Y + size.Y * .9f;
             velocity.Y = Math.Min(700, velocity.Y + 900 * dt);
             Position += velocity * dt;
             Position = new Vector2(Math.Clamp(Position.X, viewportMinimum.X, viewportMaximum.X - size.X), Position.Y);
-            var foot = Position.Y + size.Y * .9f;
-            var center = Position.X + size.X * .5f;
-            CompanionSurface? landing = null;
-            if (options.Perch)
-                foreach (var surface in surfaces)
-                    if (CanPerch(surface, size, viewportMinimum) && center >= surface.Minimum.X && center <= surface.Maximum.X
-                        && oldFoot <= surface.Minimum.Y && foot >= surface.Minimum.Y
-                        && (landing == null || surface.Minimum.Y < landing.Value.Minimum.Y
-                            || surface.Minimum.Y == landing.Value.Minimum.Y && surface.Order > landing.Value.Order)) landing = surface;
-            if (landing is { } ledge)
-            {
-                Attach(ledge, CompanionPlacement.Perched);
-                Position = new Vector2(Position.X, ledge.Minimum.Y - size.Y * .9f);
-                React(CompanionPose.Land, .5f);
-            }
-            else if (Position.Y + size.Y >= viewportMaximum.Y)
+            // Only an explicit drop attaches to a frame. A walk-off falls all
+            // the way to the screen floor before beginning the walk home.
+            if (Position.Y + size.Y >= viewportMaximum.Y)
             {
                 Placement = CompanionPlacement.Floor;
                 Position = Clamp(Position, viewportMinimum, viewportMaximum, size);
@@ -176,6 +199,14 @@ internal sealed class CompanionPhysics
         var proposed = Position + new Vector2(direction * speed * dt, 0);
         if (Placement == CompanionPlacement.Perched && attached is { } ledgeSurface)
         {
+            perchWalkTime += dt;
+            if (perchTurnPending && perchWalkTime >= 1.4f)
+            {
+                perchTurnPending = false;
+                direction = -direction;
+                React(CompanionPose.Idle, .3f);
+                return;
+            }
             var center = proposed.X + size.X * .5f;
             if (center < ledgeSurface.Minimum.X || center > ledgeSurface.Maximum.X)
             {
@@ -208,8 +239,40 @@ internal sealed class CompanionPhysics
         surfaceId = surface.Id;
         lastSurfaceOrigin = surface.Minimum;
         velocity = Vector2.Zero;
+        perchWalkTime = 0;
+        perchTurnPending = placement == CompanionPlacement.Perched;
     }
-    private void BeginFall() { Placement = CompanionPlacement.Falling; surfaceId = 0; velocity.Y = 0; Pose = CompanionPose.Fall; }
+    private void BeginFall() { Placement = CompanionPlacement.Falling; surfaceId = 0; velocity.Y = 0; reactionTime = 0; Pose = CompanionPose.Fall; }
+    private void BeginReturn() { Placement = CompanionPlacement.Returning; surfaceId = 0; velocity = Vector2.Zero; reactionTime = 0; Pose = CompanionPose.Walk; }
+
+    public static CompanionLayout HomeArea(CompanionLayout layout, bool enabled)
+    {
+        if (!enabled || !layout.IsVisible) return layout;
+        var home = layout.Clamp(new Vector2((layout.Minimum.X + layout.Maximum.X - layout.SpriteSize.X) * .5f,
+            layout.Maximum.Y - layout.SpriteSize.Y));
+        return new CompanionLayout(Vector2.Max(layout.Minimum, home - layout.SpriteSize * new Vector2(1, .65f)),
+            Vector2.Min(layout.Maximum, home + layout.SpriteSize * new Vector2(2, 1)), layout.SpriteSize);
+    }
+
+    public static (Vector2 Minimum, Vector2 Maximum) HomeBounds(CompanionLayout layout)
+    {
+        var room = layout.Maximum - layout.Minimum;
+        var edge = Math.Max(0, Math.Min(Math.Min(room.X, room.Y), layout.SpriteSize.Y * 1.3f));
+        var top = new Vector2((layout.Minimum.X + layout.Maximum.X - edge) * .5f, layout.Maximum.Y - edge);
+        return (top, top + new Vector2(edge));
+    }
+
+    public static Vector4 TranslateHomeBox(Vector4 original, Vector2 delta)
+    {
+        if (!Finite(delta)) return original;
+        var minimum = Vector2.Min(new Vector2(original.X, original.Y), new Vector2(original.Z, original.W));
+        var maximum = Vector2.Max(new Vector2(original.X, original.Y), new Vector2(original.Z, original.W));
+        var translation = Vector2.Clamp(delta, -minimum, Vector2.One - maximum);
+        return new Vector4(minimum + translation, maximum.X + translation.X, maximum.Y + translation.Y);
+    }
+
+    public static bool HomeFacesLeft(float middle, float viewportLeft, float viewportWidth, bool previous)
+        => middle > viewportLeft + viewportWidth * .55f || middle >= viewportLeft + viewportWidth * .45f && previous;
     private void React(CompanionPose pose, float duration)
     {
         reaction = Pose = pose;

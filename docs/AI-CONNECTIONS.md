@@ -1,14 +1,28 @@
 # Optional AI connections
 
 Open **Settings → Companion → AI**. Choose a connection, connect it, choose a
-model where required, then enable AI chat. The launcher, voice action matcher,
+model where required, then enable AI chat. ChatGPT and API connections can answer
+questions; CLI chat is paused as described below. The launcher, voice action matcher,
 HUD and soft interaction work without AI. **No AI** leaves those local features
 available and sends no questions to a provider.
 
-All connection choices use the selected companion's XIV/OmniKit instructions.
+Available chat connections use the selected companion's XIV/OmniKit instructions.
 These instructions guide answers; they are not an absolute prompt-injection
 guarantee. AI replies are displayed as text and cannot invoke the game's action
 catalogue, run commands, change settings or operate another plugin.
+
+Each explicit **Ask companion** submission makes at most one inference request.
+The service rejects overlapping submissions immediately instead of queuing them.
+It does not retry failures, switch providers, regenerate, continue tool calls or
+send follow-up questions automatically. Cancellation and timeout do not trigger
+another request. A spoken question fills the question field; press **Ask
+companion** to send it. The roaming companion's comments are local text and
+never call AI. Sign-in, token refresh and model-list requests are authentication
+or metadata operations, not inference.
+
+This limits OmniKit's requests, not the provider's token price or bill. A single
+answer can use a variable number of tokens. Canceling cannot guarantee that the
+provider stops processing or billing; there is no hard billing cap.
 
 ## Continue with ChatGPT
 
@@ -37,32 +51,36 @@ message distinguishes any unconfirmed remote revocation.
 OmniKit sends the question and companion instructions to the official Responses
 endpoint with storage disabled. A streamed reply is accepted only after a
 successful completion event. It does not read ChatGPT conversation history,
-upload game state or buy additional credits.
+upload game state or buy additional credits. No action tools are supplied. The
+subscription flow does not accept the API's `max_output_tokens` option, so OmniKit
+does not send that unsupported field. Input and displayed answer length remain
+bounded locally; that display limit is not a provider token budget.
 
 ## Codex CLI and Claude CLI
 
-These choices run a separately installed native CLI and use that CLI's own
+**CLI chat is paused: the single-request limit cannot be verified. Use ChatGPT
+or API for questions.** Neither CLI's generation entry point discovers an
+executable or starts a process. Saved CLI choices and model preferences remain
+intact.
+
+Connection and sign-in controls use a separately installed native CLI and its own
 authentication. **Check connection** checks installation, isolation support and
 login without asking the model a question. **Sign in** invokes the CLI's own
 browser login. OmniKit does not read, copy or export its credentials.
 
-Each request uses a new empty working directory, fixed arguments and the
-question on standard input. OmniKit disables action tools and connectors,
-bounds captured output, and stops the process tree on cancellation, timeout or
-unload. No game or project directory is supplied. Output is accepted only from
-the CLI's final assistant reply.
+One CLI process is not proof of one inference: the CLI may retry internally or
+continue an agent loop. Earlier isolation checks established restricted tool
+access, not a single-request guarantee. Those checks used Codex
+`0.163.0-alpha.11.1`; Claude's restricted/safe-mode options were checked with
+`2.1.304`. The connection check keeps those compatibility checks, but passing
+them does not enable generation. Re-enabling CLI chat requires a separately
+verified supported request limit.
 
-Codex can still add its usual global instructions and runtime context. Claude
-uses restricted/safe mode and can remain subject to managed CLI policies.
-These are CLI features, so CLI modes should not be treated as an empty provider
-context identical to a direct API request. CLI requests consume the selected
-CLI account's normal usage allowance.
-
-Compatibility is checked before a request. Codex's tool surface changes between
-versions; this preview supports the specifically tested `0.163.0-alpha.11.1`
-native binary and refuses other versions rather than silently enabling tools.
-Claude requires its restricted/safe-mode options (tested with `2.1.304`). A blank
-CLI model field uses that CLI's default. Model aliases must be valid for that CLI.
+The suspended transport also showed that Codex adds global instructions and
+runtime context; Claude can remain subject to managed policies. Those contexts
+must not be described as only the submitted question. Process-isolation tests
+use synthetic executables and do not establish subscription entitlement or
+provider cost.
 
 ## API key or local Responses server
 
@@ -74,7 +92,10 @@ embedded URL credentials, query strings and fragments are rejected.
 
 API billing is separate from a ChatGPT or Claude subscription. A compatible
 local server can work without a key. Only the submitted question and companion
-instructions are included in the API request; no game state is collected.
+instructions are included in the API request; no game state is collected. One
+Responses POST supplies an empty tool list and requests `max_output_tokens=1000`
+with storage disabled. Provider errors are shown without an automatic retry or
+fallback.
 
 ## Local data
 

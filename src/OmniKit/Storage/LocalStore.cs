@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 5;
+    private const int SchemaVersion = 6;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -176,6 +176,7 @@ public sealed class LocalStore
             if (schemaVersion < 3) fields = fields.Except(VersionThreeFields);
             if (schemaVersion < 4) fields = fields.Except(VersionFourFields);
             if (schemaVersion < 5) fields = fields.Except(VersionFiveFields);
+            if (schemaVersion < 6) fields = fields.Except(VersionSixFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -239,6 +240,23 @@ public sealed class LocalStore
             settings.InteractionHudOutline = false;
             settings.InteractionHudEffect = (int)Interaction.HudTextEffect.Shadow;
         }
+        if (settings.Version < 6)
+        {
+            settings.InteractionHudEffectIntensity = 1f;
+            settings.InteractionHudEffectSpeed = 1f;
+            settings.InteractionHudEffectAnimated = true;
+            settings.CompanionHomeEnabled = true;
+            settings.CompanionGrabHandEnabled = true;
+            settings.CompanionCommentsEnabled = true;
+            settings.CompanionCommentInterval = 120f;
+            settings.CompanionBlinkEnabled = true;
+            settings.CompanionBlinkInterval = 3f;
+            settings.BrowserInterceptLinks = false;
+            settings.QuestItemUseEnabled = false;
+        }
+        // Web commands now always use the in-game browser, including imported
+        // settings that still contain the former external-browser preference.
+        settings.WikiInGame = true;
         settings.Version = SchemaVersion;
     }
 
@@ -247,6 +265,11 @@ public sealed class LocalStore
 
     private static readonly string[] VersionFiveFields =
         [nameof(Settings.InteractionHudOutline), nameof(Settings.InteractionHudEffect)];
+
+    private static readonly string[] VersionSixFields =
+        [nameof(Settings.InteractionHudEffectIntensity), nameof(Settings.InteractionHudEffectSpeed), nameof(Settings.InteractionHudEffectAnimated),
+        nameof(Settings.CompanionHomeEnabled), nameof(Settings.CompanionGrabHandEnabled), nameof(Settings.CompanionCommentsEnabled), nameof(Settings.CompanionCommentInterval),
+        nameof(Settings.CompanionBlinkEnabled), nameof(Settings.CompanionBlinkInterval), nameof(Settings.BrowserInterceptLinks), nameof(Settings.QuestItemUseEnabled)];
 
     private static readonly string[] VersionFourFields =
     [
@@ -283,6 +306,11 @@ public sealed class LocalStore
             throw new InvalidOperationException("Unsupported configuration version.");
         if (!Enum.IsDefined((Interaction.HudTextEffect)settings.InteractionHudEffect))
             throw new InvalidOperationException("Choose a supported HUD text effect.");
+        if (!FiniteRange(settings.InteractionHudEffectIntensity, 0f, 2f) ||
+            !FiniteRange(settings.InteractionHudEffectSpeed, .1f, 3f))
+            throw new InvalidOperationException("HUD effect intensity or speed is outside the supported range.");
+        if (!FiniteRange(settings.CompanionCommentInterval, 30f, 600f) || !FiniteRange(settings.CompanionBlinkInterval, 1f, 10f))
+            throw new InvalidOperationException("Companion comment or blink timing is outside the supported range.");
         if ((settings.InteractionTargets & ~(int)Interaction.InteractionTargets.All) != 0 ||
             !Enum.IsDefined((Interaction.EnemyInteractMode)settings.EnemyInteractMode))
             throw new InvalidOperationException("Choose supported interaction target types and an enemy action.");
@@ -365,6 +393,7 @@ public sealed class LocalStore
         target.SettingsKey = (VirtualKey)value.SettingsKey;
         target.SettingsModifier = (ModifierKeys)value.SettingsModifier;
         target.SoftInteractEnabled = value.SoftInteractEnabled;
+        target.QuestItemUseEnabled = value.QuestItemUseEnabled;
         target.InteractionTargets = (Interaction.InteractionTargets)value.InteractionTargets;
         target.EnemyInteractMode = (Interaction.EnemyInteractMode)value.EnemyInteractMode;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
@@ -378,6 +407,9 @@ public sealed class LocalStore
         target.InteractionHudScale = value.InteractionHudScale;
         target.InteractionHudOutline = value.InteractionHudOutline;
         target.InteractionHudEffect = (Interaction.HudTextEffect)value.InteractionHudEffect;
+        target.InteractionHudEffectIntensity = value.InteractionHudEffectIntensity;
+        target.InteractionHudEffectSpeed = value.InteractionHudEffectSpeed;
+        target.InteractionHudEffectAnimated = value.InteractionHudEffectAnimated;
         target.GatheringAutoSwitch = value.GatheringAutoSwitch;
         target.GatheringRestore = value.GatheringRestore;
         target.MinerGearset = value.MinerGearset;
@@ -393,12 +425,19 @@ public sealed class LocalStore
         target.CompanionPerchEnabled = value.CompanionPerchEnabled;
         target.CompanionContainmentEnabled = value.CompanionContainmentEnabled;
         target.CompanionFallingEnabled = value.CompanionFallingEnabled;
+        target.CompanionHomeEnabled = value.CompanionHomeEnabled;
+        target.CompanionGrabHandEnabled = value.CompanionGrabHandEnabled;
+        target.CompanionCommentsEnabled = value.CompanionCommentsEnabled;
+        target.CompanionCommentInterval = value.CompanionCommentInterval;
+        target.CompanionBlinkEnabled = value.CompanionBlinkEnabled;
+        target.CompanionBlinkInterval = value.CompanionBlinkInterval;
         target.CompanionBoxLeft = value.CompanionBoxLeft;
         target.CompanionBoxTop = value.CompanionBoxTop;
         target.CompanionBoxRight = value.CompanionBoxRight;
         target.CompanionBoxBottom = value.CompanionBoxBottom;
         target.CompanionSize = value.CompanionSize;
         target.WikiInGame = value.WikiInGame;
+        target.BrowserInterceptLinks = value.BrowserInterceptLinks;
         target.WikiOverlayName = value.WikiOverlayName;
         target.VoiceEnabled = value.VoiceEnabled;
         target.AiEnabled = value.AiEnabled;
@@ -431,6 +470,7 @@ public sealed class LocalStore
         public int SettingsKey;
         public int SettingsModifier;
         public bool SoftInteractEnabled;
+        public bool QuestItemUseEnabled;
         public int InteractionTargets;
         public int EnemyInteractMode;
         public bool InteractionHudEnabled;
@@ -444,6 +484,9 @@ public sealed class LocalStore
         public float InteractionHudScale = 1f;
         public bool InteractionHudOutline;
         public int InteractionHudEffect = (int)Interaction.HudTextEffect.Shadow;
+        public float InteractionHudEffectIntensity = 1f;
+        public float InteractionHudEffectSpeed = 1f;
+        public bool InteractionHudEffectAnimated = true;
         public bool GatheringAutoSwitch;
         public bool GatheringRestore;
         public int MinerGearset;
@@ -459,12 +502,19 @@ public sealed class LocalStore
         public bool CompanionPerchEnabled = true;
         public bool CompanionContainmentEnabled = true;
         public bool CompanionFallingEnabled = true;
+        public bool CompanionHomeEnabled = true;
+        public bool CompanionGrabHandEnabled = true;
+        public bool CompanionCommentsEnabled = true;
+        public float CompanionCommentInterval = 120f;
+        public bool CompanionBlinkEnabled = true;
+        public float CompanionBlinkInterval = 3f;
         public float CompanionBoxLeft = .72f;
         public float CompanionBoxTop = .55f;
         public float CompanionBoxRight = .95f;
         public float CompanionBoxBottom = .92f;
         public float CompanionSize = 96f;
-        public bool WikiInGame;
+        public bool WikiInGame = true;
+        public bool BrowserInterceptLinks = false;
         public string WikiOverlayName = "omnikit";
         public bool VoiceEnabled;
         public bool AiEnabled;
@@ -486,6 +536,7 @@ public sealed class LocalStore
             SettingsKey = (int)value.SettingsKey,
             SettingsModifier = (int)value.SettingsModifier,
             SoftInteractEnabled = value.SoftInteractEnabled,
+            QuestItemUseEnabled = value.QuestItemUseEnabled,
             InteractionTargets = (int)value.InteractionTargets,
             EnemyInteractMode = (int)value.EnemyInteractMode,
             InteractionHudEnabled = value.InteractionHudEnabled,
@@ -499,6 +550,9 @@ public sealed class LocalStore
             InteractionHudScale = value.InteractionHudScale,
             InteractionHudOutline = value.InteractionHudOutline,
             InteractionHudEffect = (int)value.InteractionHudEffect,
+            InteractionHudEffectIntensity = value.InteractionHudEffectIntensity,
+            InteractionHudEffectSpeed = value.InteractionHudEffectSpeed,
+            InteractionHudEffectAnimated = value.InteractionHudEffectAnimated,
             GatheringAutoSwitch = value.GatheringAutoSwitch,
             GatheringRestore = value.GatheringRestore,
             MinerGearset = value.MinerGearset,
@@ -514,12 +568,19 @@ public sealed class LocalStore
             CompanionPerchEnabled = value.CompanionPerchEnabled,
             CompanionContainmentEnabled = value.CompanionContainmentEnabled,
             CompanionFallingEnabled = value.CompanionFallingEnabled,
+            CompanionHomeEnabled = value.CompanionHomeEnabled,
+            CompanionGrabHandEnabled = value.CompanionGrabHandEnabled,
+            CompanionCommentsEnabled = value.CompanionCommentsEnabled,
+            CompanionCommentInterval = value.CompanionCommentInterval,
+            CompanionBlinkEnabled = value.CompanionBlinkEnabled,
+            CompanionBlinkInterval = value.CompanionBlinkInterval,
             CompanionBoxLeft = value.CompanionBoxLeft,
             CompanionBoxTop = value.CompanionBoxTop,
             CompanionBoxRight = value.CompanionBoxRight,
             CompanionBoxBottom = value.CompanionBoxBottom,
             CompanionSize = value.CompanionSize,
             WikiInGame = value.WikiInGame,
+            BrowserInterceptLinks = value.BrowserInterceptLinks,
             WikiOverlayName = value.WikiOverlayName,
             VoiceEnabled = value.VoiceEnabled,
             AiEnabled = value.AiEnabled,

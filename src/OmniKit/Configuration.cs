@@ -13,7 +13,7 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 5;
+    public int Version { get; set; } = 6;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
@@ -24,6 +24,7 @@ public sealed class Configuration : IPluginConfiguration
     public VirtualKey SettingsKey = VirtualKey.F10;
     public ModifierKeys SettingsModifier = ModifierKeys.Control;
     public bool SoftInteractEnabled = false;
+    public bool QuestItemUseEnabled = false;
     public InteractionTargets InteractionTargets = InteractionTargets.DefaultWorld;
     public EnemyInteractMode EnemyInteractMode = EnemyInteractMode.Choose;
     public bool InteractionHudEnabled = true;
@@ -37,6 +38,9 @@ public sealed class Configuration : IPluginConfiguration
     public float InteractionHudScale = 1f;
     public bool InteractionHudOutline = false;
     public HudTextEffect InteractionHudEffect = HudTextEffect.Shadow;
+    public float InteractionHudEffectIntensity = 1f;
+    public float InteractionHudEffectSpeed = 1f;
+    public bool InteractionHudEffectAnimated = true;
     public bool GatheringAutoSwitch = false;
     public bool GatheringRestore = true;
     public int MinerGearset = -1;
@@ -52,6 +56,12 @@ public sealed class Configuration : IPluginConfiguration
     public bool CompanionPerchEnabled = true;
     public bool CompanionContainmentEnabled = true;
     public bool CompanionFallingEnabled = true;
+    public bool CompanionHomeEnabled = true;
+    public bool CompanionGrabHandEnabled = true;
+    public bool CompanionCommentsEnabled = true;
+    public float CompanionCommentInterval = 120f;
+    public bool CompanionBlinkEnabled = true;
+    public float CompanionBlinkInterval = 3f;
     public float CompanionBoxLeft = .72f;
     public float CompanionBoxTop = .55f;
     public float CompanionBoxRight = .95f;
@@ -66,7 +76,8 @@ public sealed class Configuration : IPluginConfiguration
     public string CodexModel = "";
     public string ClaudeModel = "";
     public List<VoiceBinding> VoiceBindings = [];
-    public bool WikiInGame = false;
+    public bool WikiInGame = true;
+    public bool BrowserInterceptLinks = false;
     public string WikiOverlayName = "omnikit";
 
     [NonSerialized] internal Action<Configuration>? Persist;

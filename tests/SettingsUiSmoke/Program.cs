@@ -44,6 +44,8 @@ var cases = new[]
     (Name: "launcher", Section: 0, Tab: 0, Enabled: false, Scroll: true),
     (Name: "interact", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-types", Section: 1, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "interact-quest-on", Section: 1, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "interact-quest-error", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact-enemy-choose", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact-enemy-target", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-enemy-attack", Section: 1, Tab: 0, Enabled: true, Scroll: false),
@@ -83,11 +85,48 @@ var cases = new[]
     (Name: "ai-cli-cancel", Section: 3, Tab: 2, Enabled: true, Scroll: false),
     (Name: "ai-cli-error", Section: 3, Tab: 2, Enabled: true, Scroll: true),
     (Name: "data", Section: 4, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "data-browser-capture", Section: 4, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "data-browser-capture-off", Section: 4, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "data-browser-capture-error", Section: 4, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "data-browser-capture-long", Section: 4, Tab: 0, Enabled: true, Scroll: true),
     (Name: "about", Section: 5, Tab: 0, Enabled: false, Scroll: true),
     (Name: "conversation-local", Section: -1, Tab: 0, Enabled: false, Scroll: false),
     (Name: "conversation-ai", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-codex", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-claude", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-busy", Section: -1, Tab: 2, Enabled: true, Scroll: false),
     (Name: "conversation-setup", Section: -1, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "launcher-help", Section: 0, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "launcher-examples", Section: 0, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "interact-off", Section: 1, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "interact-gathering", Section: 1, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "interact-fine", Section: 1, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "interact-enemy-help", Section: 1, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "hud-help", Section: 2, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "hud-effects", Section: 2, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "hud-none", Section: 2, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "hud-effects-static", Section: 2, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "hud-effect-menu", Section: 2, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "hud-effect-bottom-menu", Section: 2, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "frame-help", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "home", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "home-only", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "home-off", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "home-wink", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "home-wink-off", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "voice-help", Section: 3, Tab: 1, Enabled: true, Scroll: false),
+    (Name: "ai-cli-help", Section: 3, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "data-import", Section: 4, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "data-confirm", Section: 4, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "data-plugins", Section: 4, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "data-browser", Section: 4, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "data-browser-error", Section: 4, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "about-source", Section: 5, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "about-credits", Section: 5, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "conversation-help", Section: -1, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "status-error", Section: 2, Tab: 0, Enabled: true, Scroll: false),
 };
+CheckBrowserStatus();
 var renders = 0;
 foreach (var scale in new[] { 1f, 1.5f, 2f })
 foreach (var scenario in cases)
@@ -96,7 +135,10 @@ foreach (var scenario in cases)
     if (caseFilter is not null && !caseFilter.Contains(scenario.Name)) continue;
     if (scaleFilter is not null && scale.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) != scaleFilter) continue;
     Render(scenario.Name, scenario.Section, scenario.Tab, scenario.Enabled, scale, scroll: false);
-    if (scenario.Scroll && !measureOnly) Render(scenario.Name, scenario.Section, scenario.Tab, scenario.Enabled, scale, scroll: true);
+    var expanded = new[] { "launcher-help", "launcher-examples", "interact-gathering", "interact-fine", "interact-enemy-help",
+        "hud-help", "hud-effects", "hud-effects-static", "frame-help", "voice-help", "ai-cli-help", "ai-endpoint",
+        "data-import", "data-plugins", "data-browser", "about-source", "about-credits", "conversation-help" }.Contains(scenario.Name);
+    if ((scenario.Scroll || expanded) && !measureOnly) Render(scenario.Name, scenario.Section, scenario.Tab, scenario.Enabled, scale, scroll: true);
 }
 Console.WriteLine($"PASS: {renders} actual compiled settings renders completed without starting game, voice or network services.");
 
@@ -113,14 +155,25 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     if (name == "ai-provider-switch")
         foreach (var field in new[] { "AiModel", "ChatGptModel", "CodexModel", "ClaudeModel" }) Set(config, field, field + "-fixture");
     var chatGptCase = name.StartsWith("ai-chatgpt", StringComparison.Ordinal) || name.StartsWith("ai-account-", StringComparison.Ordinal) || name.StartsWith("ai-model-", StringComparison.Ordinal);
-    var cliCase = name is "ai-codex" or "ai-claude" or "ai-cli-busy" or "ai-cli-error" or "ai-cli-cancel";
+    var cliCase = name is "ai-codex" or "ai-claude" or "ai-cli-busy" or "ai-cli-error" or "ai-cli-cancel" or "ai-cli-help" or "conversation-codex" or "conversation-claude";
     if (chatGptCase || cliCase)
         Set(config, "AiConnection", Enum.Parse(Type("OmniKit.Assistant.AiConnectionKind"),
-            chatGptCase ? "ChatGpt" : name == "ai-claude" ? "ClaudeCli" : "CodexCli"));
+            chatGptCase ? "ChatGpt" : name is "ai-claude" or "conversation-claude" ? "ClaudeCli" : "CodexCli"));
     if (name.StartsWith("frame-", StringComparison.Ordinal))
     {
         Set(config, "CompanionFrameInteractionEnabled", true);
         Set(config, "AnimationsEnabled", name != "frame-static");
+    }
+    if (name.StartsWith("home",StringComparison.Ordinal))
+    {
+        Set(config,"CompanionFrameInteractionEnabled",name!="home-only");
+        if(name.Contains("wink",StringComparison.Ordinal)) Set(config,"Avatar","Wink");
+        if(name.EndsWith("off",StringComparison.Ordinal))
+        {
+            Set(config,"CompanionHomeEnabled",false); Set(config,"CompanionCommentsEnabled",false);
+            Set(config,"CompanionBlinkEnabled",false); Set(config,"AnimationsEnabled",false);
+            Set(config,"CompanionGrabHandEnabled",false);
+        }
     }
     if (name.StartsWith("interact-enemy-", StringComparison.Ordinal))
     {
@@ -129,10 +182,11 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             name.EndsWith("target", StringComparison.Ordinal) ? "TargetOnly" : name.EndsWith("attack", StringComparison.Ordinal) ? "StartAttack" : "Choose"));
     }
     if (name == "interact-none") Set(config, "InteractionTargets", Enum.Parse(Type("OmniKit.Interaction.InteractionTargets"), "None"));
+    if (name is "interact-quest-on" or "interact-quest-error") Set(config, "QuestItemUseEnabled", true);
     if (section == -1)
     {
         Set(config, "Avatar", "Moonblob");
-        Set(config, "SetupCompleted", name != "conversation-setup");
+        Set(config, "SetupCompleted", name is not ("conversation-setup" or "conversation-help"));
         Set(config, "VoiceEnabled", name == "conversation-ai");
     }
     var ui = RuntimeHelpers.GetUninitializedObject(uiType);
@@ -140,6 +194,14 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(ui, "config", config);
     Set(ui, "providerEndpoint", config.GetType().GetField("AiEndpoint")!.GetValue(config));
     Set(ui, "settingsOpen", true);
+    if(name=="status-error") Set(ui,"status","Could not save settings. Synthetic failure details remain available here instead of being erased by a routine Saved message.");
+    if(name=="data-confirm") Set(ui,"confirmImport",true);
+    if(name=="hud-none") Set(config,"InteractionHudEffect",Enum.Parse(Type("OmniKit.Interaction.HudTextEffect"),"None"));
+    if(name.StartsWith("hud-effects",StringComparison.Ordinal))
+    {
+        Set(config,"InteractionHudEffect",Enum.Parse(Type("OmniKit.Interaction.HudTextEffect"),"Flame"));
+        Set(config,"InteractionHudEffectAnimated",name!="hud-effects-static");
+    }
     Set(ui, "companionOpen", section == -1);
     Set(ui, "section", section); Set(ui, "companionTab", tab); Set(ui, "shownCompanionTab", -1);
     Set(ui, "selectSettingsTab", true);
@@ -147,6 +209,12 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(ui, "roaming", RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Ui.RoamingCompanion")));
     var interactionType = Type("OmniKit.Interaction.SoftInteractionService");
     var interaction = RuntimeHelpers.GetUninitializedObject(interactionType);
+    if (name == "interact-quest-error")
+    {
+        var itemService = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Interaction.QuestItemService"));
+        Set(itemService, "<Status>k__BackingField", "The item is not usable on this target right now. Check your range and state.");
+        Set(interaction, "<QuestItems>k__BackingField", itemService);
+    }
     if (name == "hud-long")
     {
         var candidateType = interactionType.GetNestedType("Candidate", BindingFlags.NonPublic)!;
@@ -155,13 +223,45 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             Enum.Parse(Type("OmniKit.Interaction.InteractionTargets"), "Npcs")));
     }
     Set(ui, "interaction", interaction);
+    var wiki = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Integration.WikiBrowser"));
+    Set(wiki, "status", "In-game browser ready.");
+    if(name=="data-browser-error")
+    {
+        Set(wiki,"status","Browser could not start. Check the WebView2 / .NET Desktop runtimes and update OmniKit.");
+        Set(wiki,"hasError",true); Set(ui,"expandBrowserSettings",true);
+        Set(ui,"status","A separate settings warning remains visible.");
+    }
+    Set(ui,"wiki",wiki);
+    var browserCaptureCase = name.StartsWith("data-browser-capture", StringComparison.Ordinal);
+    var captureStatusCalls = 0;
+    Vector2? captureStatusPosition = null;
+    if (browserCaptureCase)
+    {
+        Set(config, "BrowserInterceptLinks", enabled);
+        Set(ui, "expandBrowserSettings", true);
+        var captureStatus = name switch
+        {
+            "data-browser-capture-error" => "Web-link capture failed. Standard browser opening remains available.",
+            "data-browser-capture-long" => "Web-link capture is enabled for standard HTTP and HTTPS links in the game process. Authentication links and non-web actions pass through. Custom launchers and other processes cannot be captured. This is deliberately long synthetic status text for checking the complete hover detail.",
+            _ => "Web-link capture enabled for this game process.",
+        };
+        uiType.GetProperty("BrowserInterceptionStatus", flags)!.SetValue(ui, (Func<string>)(() =>
+        {
+            captureStatusCalls++;
+            captureStatusPosition = ImGui.GetCursorScreenPos();
+            return captureStatus;
+        }));
+    }
     Set(ui, "voice", Activator.CreateInstance(Type("OmniKit.Assistant.VoiceInput"), nonPublic: true));
     // HasApiKey inspects only an empty harness path, never the user's credential store.
     var chat = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Assistant.ChatService"));
     Set(chat, "config", config);
+    if (name == "conversation-busy") Set(chat, "busy", 1);
+    if (name is "conversation-busy" or "conversation-codex" or "conversation-claude")
+        Set(ui, "question", "Synthetic question must remain unsent.");
     var emptyCredentials = new DirectoryInfo(Path.Combine(output, "empty-credentials-" + Guid.NewGuid().ToString("N")));
     Set(chat, "credentials", Activator.CreateInstance(Type("OmniKit.Assistant.CredentialStore"), emptyCredentials));
-    using var chatGpt = (IDisposable)Activator.CreateInstance(Type("OmniKit.Assistant.ChatGptConnection"), emptyCredentials)!;
+    using var chatGpt = (IDisposable)Activator.CreateInstance(Type("OmniKit.Assistant.ChatGptConnection"), [emptyCredentials, null])!;
     Set(chat, "<ChatGpt>k__BackingField", chatGpt);
     var cli = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Assistant.CliChatBackend"));
     Set(cli, "status", name == "ai-cli-error" ? "This Codex CLI version has not passed OmniKit's isolation check. No question was sent." : "Choose a CLI and check its connection.");
@@ -242,75 +342,87 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         io.Fonts.Build();
         var renderer = new SoftwareRenderer();
         ImGui.StyleColorsDark();
-        var extraInteraction = popupCase || name is "ai-endpoint" or "ai-cli-cancel";
-        for (var frame = 0; frame < (providerSwitch ? 40 : navigationCase ? 28 : extraInteraction ? 11 : 6); frame++)
+        var measured = new Dictionary<string, (Vector2 Min, Vector2 Max, bool Visible)>();
+        var observer = Type("OmniKit.Ui.UiText").GetProperty("ItemMeasured", BindingFlags.Static | BindingFlags.NonPublic)!;
+        observer.SetValue(null, (Action<string, Vector2, Vector2, bool>)((label, min, max, visible) => measured[label] = (min,max,visible)));
+        var targetControl = name switch
+        {
+            "companion-menu" => "Companion", "outfit-menu" => "Outfit", "palette-menu" => "Aura / shape color",
+            "pose-menu" => "Preview animation", "ai-provider-menu" => "##ai-connection",
+            "ai-account-menu" or "ai-account-tooltip" => "##chatgpt-account", "ai-model-menu" or "ai-model-tooltip" => "##chatgpt-model",
+            "ai-endpoint" => "Other provider or local AI server", "ai-cli-cancel" => "Cancel connection",
+            "launcher-help" => "Shortcut help", "launcher-examples" => "Search examples", "hud-help" => "HUD help",
+            "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
+            "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
+            "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => "Home & personality",
+            "interact-enemy-help" => "Enemy behavior", "frame-help" => "Frame behavior", "voice-help" => "Voice shortcut help",
+            "ai-cli-help" => "CLI privacy & limits", "data-import" => "Import settings", "data-plugins" => "Plugins & Umbra",
+            "data-browser" => "In-game browser", "about-source" => "Source details", "about-credits" => "Credits",
+            "conversation-help" => "Connection choices",
+            "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
+        };
+        bool PointAt(string label, bool click, bool scrollTo = true)
+        {
+            var key = measured.ContainsKey(label) ? label : measured.Keys.FirstOrDefault(key => key.Contains(label, StringComparison.Ordinal));
+            if (key != null && measured[key] is { Visible:true } item)
+            {
+                io.AddMousePosEvent((item.Min.X+item.Max.X)/2,(item.Min.Y+item.Max.Y)/2);
+                if(click) io.AddMouseButtonEvent(0,true);
+                return true;
+            }
+            if(scrollTo) { io.AddMousePosEvent(280*scale,250*scale); io.AddMouseWheelEvent(0,-2); }
+            return false;
+        }
+        var clickedFrame = -1;
+        var totalFrames = providerSwitch ? 40 : navigationCase ? 28 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
+        for (var frame = 0; frame < totalFrames; frame++)
         {
             if (providerSwitch)
             {
                 if (frame is 3 or 12 or 21 or 30)
                 {
                     Set(config, "AiEnabled", true);
-                    io.AddMousePosEvent(200 * scale, 247 * scale); io.AddMouseButtonEvent(0, true);
+                    if(!PointAt("##ai-connection",true)) throw new InvalidOperationException("Provider chooser is not visible.");
                 }
                 if (frame is 4 or 13 or 22 or 31 or 8 or 17 or 26 or 35) io.AddMouseButtonEvent(0, false);
                 if (frame is 7 or 16 or 25 or 34)
                 {
-                    var y = frame switch { 7 => 320, 16 => 342, 25 => 298, _ => 276 };
-                    io.AddMousePosEvent(200 * scale, y * scale); io.AddMouseButtonEvent(0, true);
+                    var label=frame switch {7=>"Codex CLI",16=>"Claude CLI",25=>"Continue with ChatGPT",_=>"API key / local server"};
+                    if(!PointAt(label,true)) throw new InvalidOperationException("Provider option is not visible: "+label);
                 }
             }
             if (navigationCase)
             {
                 if (frame is 3 or 7 or 11 or 15)
                 {
-                    var x = frame == 7 ? 92 : frame == 11 ? 155 : 195;
-                    io.AddMousePosEvent(x * scale, 145 * scale);
-                    io.AddMouseButtonEvent(0, true);
+                    var label=frame==7 ? "Appearance" : frame==11 ? "Voice" : "AI";
+                    if(!PointAt("tab:"+label,true)) throw new InvalidOperationException("Companion tab is not visible: "+label);
                 }
-                if (frame is 4 or 8 or 12 or 16) io.AddMouseButtonEvent(0, false);
-                if (frame is 19 or 23) Set(ui, "companionTab", frame == 19 ? 0 : 2);
+                if (frame is 4 or 8 or 12 or 16) io.AddMouseButtonEvent(0,false);
+                if (frame is 19 or 23) Set(ui,"companionTab",frame==19 ? 0 : 2);
             }
-            if (extraInteraction)
+            if(targetControl != null && frame>=3)
             {
-                // Targets are grounded in the actual minimum-size screenshots. No choice is selected.
-                if (frame == 3 && name is "palette-menu" or "pose-menu" or "ai-account-menu" or "ai-model-menu" or "ai-account-tooltip" or "ai-model-tooltip" or "ai-endpoint" or "ai-cli-cancel")
-                {
-                    io.AddMousePosEvent(200 * scale, 210 * scale);
-                    io.AddMouseWheelEvent(0, name == "palette-menu" ? -1 : name == "pose-menu" ? -2 : -30);
-                }
-                if (frame == 6)
-                {
-                    var y = name switch { "companion-menu" => 237, "outfit-menu" => 267, "palette-menu" => 212,
-                        "ai-provider-menu" => 247, "ai-account-menu" or "ai-account-tooltip" => 141, "ai-model-menu" or "ai-model-tooltip" => 261,
-                        "ai-endpoint" or "ai-cli-cancel" => 260, _ => 218 };
-                    io.AddMousePosEvent((name == "ai-cli-cancel" ? 110 : 200) * scale, y * scale);
-                    io.AddMouseButtonEvent(0, true);
-                }
-                if (frame == 7) io.AddMouseButtonEvent(0, false);
-                if (name == "ai-endpoint" && frame == 8) io.AddMouseWheelEvent(0, -30);
-                if (frame == 8 && name.EndsWith("-tooltip", StringComparison.Ordinal))
-                    io.AddMousePosEvent(180 * scale, (name == "ai-account-tooltip" ? 170 : 291) * scale);
+                if(clickedFrame<0 && PointAt(targetControl,true)) clickedFrame=frame;
+                else if(frame==clickedFrame+1) io.AddMouseButtonEvent(0,false);
+                if(clickedFrame>=0 && frame>=clickedFrame+2 && name.EndsWith("-tooltip",StringComparison.Ordinal))
+                    PointAt(name=="ai-account-tooltip" ? "##fixture-account-a" : "##fixture-model-a",false,false);
+                if(name=="hud-effect-bottom-menu" && frame==clickedFrame+3 && PointAt("None",false,false))
+                    io.AddMouseWheelEvent(0,-10);
+                if(scroll && !popupCase && name!="ai-cli-cancel" && frame==clickedFrame+3)
+                { io.AddMousePosEvent(280*scale,250*scale); io.AddMouseWheelEvent(0,-15); }
             }
-            if (scroll && frame >= 3)
-            {
-                io.AddMousePosEvent(io.DisplaySize.X / 2, io.DisplaySize.Y / 2);
-                io.AddMouseWheelEvent(0, -15);
-            }
-            else if (name is "ai-middle" or "ai-chatgpt-middle" && frame == 3)
-            {
-                io.AddMousePosEvent(io.DisplaySize.X / 2, io.DisplaySize.Y / 2);
-                io.AddMouseWheelEvent(0, name == "ai-chatgpt-middle" ? -3 : -1);
-            }
-            else if (section == 1 && frame == 3 && name != "interact")
-            {
-                io.AddMousePosEvent(200 * scale, 210 * scale);
-                io.AddMouseWheelEvent(0, name.StartsWith("interact-enemy-", StringComparison.Ordinal) ? -5 : -2);
-            }
-            else if (name.StartsWith("frame-", StringComparison.Ordinal) && frame == 3)
-            {
-                io.AddMousePosEvent(200 * scale, 210 * scale);
-                io.AddMouseWheelEvent(0, -4);
-            }
+            if(scroll && frame>=3 && targetControl==null && !(name == "data-browser-capture-long" && frame >= 5))
+            { io.AddMousePosEvent(io.DisplaySize.X/2,io.DisplaySize.Y/2); io.AddMouseWheelEvent(0,-15); }
+            else if(name is "ai-middle" or "ai-chatgpt-middle" && frame==3)
+            { io.AddMousePosEvent(io.DisplaySize.X/2,io.DisplaySize.Y/2); io.AddMouseWheelEvent(0,-1); }
+            else if(section==1 && frame==3 && name!="interact" && targetControl==null)
+            { io.AddMousePosEvent(200*scale,210*scale); io.AddMouseWheelEvent(0,-2); }
+            else if(name.StartsWith("frame-",StringComparison.Ordinal) && frame==3 && targetControl==null)
+            { io.AddMousePosEvent(200*scale,210*scale); io.AddMouseWheelEvent(0,-2); }
+            if (name == "data-browser-capture-long" && frame >= 5 && captureStatusPosition is { } capturePosition)
+                io.AddMousePosEvent(capturePosition.X + 60 * scale, capturePosition.Y + 8 * scale);
+            measured.Clear();
             ImGui.NewFrame();
             if (frame > 0) ImGui.SetWindowSize(section == -1 ? "Moon companion###OmniKit.Companion.Minimal" : "OmniKit Settings###OmniKit.Settings.Minimal", new Vector2(480, 330) * scale);
             ImGui.SetNextWindowPos(new Vector2(40, 40) * scale);
@@ -353,6 +465,26 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                     throw new InvalidOperationException($"Companion tab navigation at frame {frame}: expected {expected}, actual {actual}, scale {scale}.");
             }
         }
+        observer.SetValue(null,null);
+        if(targetControl != null && clickedFrame<0) throw new InvalidOperationException("Control was not reachable: "+targetControl+" in "+name);
+        if (browserCaptureCase)
+        {
+            if ((captureStatusCalls > 0) != enabled)
+                throw new InvalidOperationException("Browser capture status must only be queried when enabled.");
+            if (!Equals(config.GetType().GetField("BrowserInterceptLinks")!.GetValue(config), enabled))
+                throw new InvalidOperationException("Rendering browser capture status changed its setting.");
+            if (scroll)
+                foreach (var label in new[] { "Open browser", "Browser controls", "Open setup again" })
+                    if (!measured.TryGetValue(label, out var item) || !item.Visible)
+                        throw new InvalidOperationException("Expanded browser control is not reachable: " + label);
+        }
+        if (name is "conversation-busy" or "conversation-codex" or "conversation-claude")
+        {
+            if (uiType.GetField("pendingAnswer", flags)!.GetValue(ui) != null)
+                throw new InvalidOperationException("Clicking the disabled Ask control submitted a question: " + name);
+            if (!measured.TryGetValue("Search wiki", out var wikiControl) || !wikiControl.Visible)
+                throw new InvalidOperationException("The local wiki action must remain visible while AI is paused.");
+        }
         var id = $"{name}-{(scroll ? "bottom" : "top")}-scale{scale:0.0}";
         if (name == "ai-cli-cancel" && (!pendingCancellation.IsCancellationRequested || uiType.GetField("pendingConnection", flags)!.GetValue(ui) != null))
         {
@@ -366,9 +498,26 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             foreach (var (field, value) in new[] { ("Avatar", "Bimble"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
                 if (!Equals(config.GetType().GetField(field)!.GetValue(config), value))
                     throw new InvalidOperationException(id + " unexpectedly selected a different setting.");
+            if (name.StartsWith("hud-effect-",StringComparison.Ordinal))
+            {
+                var label=name=="hud-effect-bottom-menu" ? "Light sweep" : "None";
+                if (!measured.TryGetValue(label,out var item) || !item.Visible)
+                    throw new InvalidOperationException("HUD effect menu option is not reachable: "+label);
+                if (config.GetType().GetField("InteractionHudEffect")!.GetValue(config)!.ToString() != "Shadow")
+                    throw new InvalidOperationException("Opening the effect menu changed the saved effect.");
+            }
         }
         var bounds = renderer.Save(ImGui.GetDrawData(), Path.Combine(output, id + ".png"));
-        if (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= io.DisplaySize.X - 2 || bounds.Bottom >= io.DisplaySize.Y - 2)
+        if (name == "data-confirm")
+        {
+            if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
+                throw new InvalidOperationException("Import confirmation did not open.");
+            foreach (var label in new[] { "Import", "Cancel" })
+                if (!measured.TryGetValue(label, out var item) || !item.Visible || item.Min.X < 8 * scale || item.Min.Y < 8 * scale
+                    || item.Max.X > io.DisplaySize.X - 8 * scale || item.Max.Y > io.DisplaySize.Y - 8 * scale)
+                    throw new InvalidOperationException("Import confirmation button escaped the viewport gutter: " + label);
+        }
+        else if (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= io.DisplaySize.X - 2 || bounds.Bottom >= io.DisplaySize.Y - 2)
             throw new InvalidOperationException(id + " reaches the viewport edge.");
         renders++;
     }
@@ -377,6 +526,32 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
 
 Type Type(string name) => assembly.GetType(name, throwOnError: true)!;
 void Set(object target, string name, object? value) => target.GetType().GetField(name, flags)!.SetValue(target, value);
+
+void CheckBrowserStatus()
+{
+    var ui=RuntimeHelpers.GetUninitializedObject(uiType);
+    var wiki=RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Integration.WikiBrowser"));
+    foreach(var field in uiType.GetFields(flags).Where(field=>field.FieldType==typeof(string))) field.SetValue(ui,"");
+    Set(ui,"wiki",wiki); Set(ui,"hotkeys",Activator.CreateInstance(Type("OmniKit.Ui.HotkeyCapture"),nonPublic:true));
+    var publish=wiki.GetType().GetMethod("SetStatus",flags)!;
+    var track=uiType.GetMethod("TrackBrowserRequest",flags)!;
+    var poll=uiType.GetMethod("UpdateBrowserStatus",flags)!;
+    track.Invoke(ui,[(Action)(()=>publish.Invoke(wiki,["Opening in-game browser…",false]))]);
+    publish.Invoke(wiki,["Page loaded in game.",false]); poll.Invoke(ui,null);
+    if((string)uiType.GetField("status",flags)!.GetValue(ui)! != "Page loaded in game.")
+        throw new InvalidOperationException("Async browser status did not replace its initial opening message.");
+    Set(ui,"status","Unrelated settings warning.");
+    publish.Invoke(wiki,["Browser files missing. Update OmniKit.",true]); poll.Invoke(ui,null);
+    if((string)uiType.GetField("status",flags)!.GetValue(ui)! != "Unrelated settings warning."
+        || !(bool)uiType.GetField("settingsOpen",flags)!.GetValue(ui)!
+        || !(bool)uiType.GetField("expandBrowserSettings",flags)!.GetValue(ui)!
+        || (int)uiType.GetField("section",flags)!.GetValue(ui)! != 4)
+        throw new InvalidOperationException("Browser failure was not revealed separately from unrelated status.");
+    Set(ui,"settingsOpen",false);
+    publish.Invoke(wiki,["Browser files missing. Update OmniKit.",true]); poll.Invoke(ui,null);
+    if((bool)uiType.GetField("settingsOpen",flags)!.GetValue(ui)!)
+        throw new InvalidOperationException("The same browser failure repeatedly reopened settings.");
+}
 
 unsafe string RenderCompanions(string name, bool animated, float time)
 {

@@ -28,6 +28,8 @@ internal sealed unsafe class CompanionSurfaces
             var name = window.Name == null ? string.Empty : Encoding.UTF8.GetString(new ReadOnlySpan<byte>(window.Name, nameLength));
             if (name.Contains("##OmniKitRoamingCompanion", StringComparison.Ordinal)
                 || name.Contains("##OmniKitChooseCompanionArea", StringComparison.Ordinal)
+                || name.Contains("##OmniKitCompanionComment", StringComparison.Ordinal)
+                || name.Contains("##OmniKitCompanionHouse", StringComparison.Ordinal)
                 || name.Contains("##OmniKitVisibleTarget", StringComparison.Ordinal)
                 || name.Contains("##OmniKitInteract", StringComparison.Ordinal)) continue;
             var header = (window.Flags & ImGuiWindowFlags.NoTitleBar) != 0 ? Math.Min(12, window.Size.Y)

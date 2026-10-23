@@ -18,4 +18,5 @@ internal sealed class Services
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IDataManager Data { get; private set; } = null!;
     [PluginService] internal static ITextureProvider Textures { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider Interop { get; private set; } = null!;
 }

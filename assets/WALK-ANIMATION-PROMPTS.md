@@ -2,6 +2,10 @@
 
 The four 1254 × 1254 RGBA sheets were generated with the built-in OpenAI image-generation tool. The project PNGs preserve the generated outputs byte for byte. The runtime articulates the supplied body parts; no offline image edits, recoloring, resampling or frame synthesis were applied to the shipping PNGs.
 
+Bimble's current idle/walk artwork supersedes the two original Bimble sheets
+below. Its replacement prompts, hashes and validation are in
+[BIMBLE-V2-PROMPTS.md](BIMBLE-V2-PROMPTS.md). The original PNGs remain preserved.
+
 | Character | Outfit | Asset | SHA-256 |
 | --- | --- | --- | --- |
 | Bimble | Navigator | `bimble-walk-rig.png` | `ff260b7ec283f666f79d4c0395dc4f65d8c76fa4c398b40346b9673ec90874b7` |
@@ -37,6 +41,14 @@ Focused production-quad checks additionally cover all four rigs at 72 travel hea
 These checks validate source crops and assembled poses. The GIF provides moving playback for review; the available image-inspection tool exposes static images. This does not establish perceived smoothness or live rendering performance inside FFXIV.
 
 ## Generation prompt set
+
+The 0.1.0.0009 fit correction preserves those four original PNGs. Independent
+source-art sleeve anchors place arms behind the cape, separated hip offsets
+keep legs connected under the shorts, and paws preserve the measured source
+aspect. Idle/walk comparisons cover both outfits at 96/192 px; exact comparisons
+of 392 poses preserve sole paths, phase and stance flags. Phase/cadence and the
+other companions' motion are unchanged. These are rendered/native geometry
+checks, separate from FFXIV acceptance.
 
 Two earlier full-body eight-frame walk sheets were rejected because the poses did not alternate convincingly. Neither rejected output is included in the project. The accepted method uses the following part-sheet prompts, with transparent background enabled for every call.
 

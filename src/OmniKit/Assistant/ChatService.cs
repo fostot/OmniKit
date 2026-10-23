@@ -35,12 +35,12 @@ public sealed class ChatService : IDisposable
     private int busy;
     private bool disposed;
 
-    public ChatService(Configuration config)
+    public ChatService(Configuration config, Func<IDisposable>? externalBrowserScope = null)
     {
         this.config = config;
         credentials = new CredentialStore(Services.PluginInterface.ConfigDirectory);
         cli = new CliChatBackend(Services.PluginInterface.ConfigDirectory);
-        ChatGpt = new ChatGptConnection(Services.PluginInterface.ConfigDirectory);
+        ChatGpt = new ChatGptConnection(Services.PluginInterface.ConfigDirectory, externalBrowserScope);
         client = new HttpClient(new HttpClientHandler
         {
             AllowAutoRedirect = false,
@@ -54,6 +54,7 @@ public sealed class ChatService : IDisposable
 
     public ChatGptConnection ChatGpt { get; }
     public string CliStatus => cli.Status;
+    public bool IsBusy => Volatile.Read(ref busy) != 0;
 
     public async Task<string> ProbeCliAsync(CancellationToken ct)
     {
@@ -92,6 +93,8 @@ public sealed class ChatService : IDisposable
         if (question.Length > MaximumQuestionLength) return "Please shorten your question to 4,000 characters or fewer.";
         var connection = config.AiConnection;
         if (!Enum.IsDefined(connection)) return "Choose a supported AI connection in settings.";
+        if (connection is AiConnectionKind.CodexCli or AiConnectionKind.ClaudeCli)
+            return CliChatBackend.SingleRequestLimitNotice;
         Uri? endpoint = null;
         if (connection == AiConnectionKind.ApiKey && !TryGetEndpoint(config.AiEndpoint, out endpoint))
             return "Use an HTTPS Responses endpoint, or an HTTP endpoint on a literal loopback address. URLs cannot contain credentials, queries, or fragments.";
@@ -105,6 +108,8 @@ public sealed class ChatService : IDisposable
         if (model.Length > 200 || model.Any(char.IsControl)
             || (model.Length == 0 && connection is AiConnectionKind.ApiKey or AiConnectionKind.ChatGpt))
             return "Choose a valid model name in OmniKit settings first.";
+        // Reject concurrent submissions immediately. Never queue, retry, switch
+        // providers, or generate a follow-up without another explicit submission.
         if (Interlocked.CompareExchange(ref busy, 1, 0) != 0)
             return "I am still answering your previous question.";
 
@@ -117,8 +122,6 @@ public sealed class ChatService : IDisposable
             var instructions = InstructionsFor(config.Avatar);
             if (connection == AiConnectionKind.ChatGpt)
                 return await ChatGpt.AskAsync(instructions, question, model, token).ConfigureAwait(false);
-            if (connection is AiConnectionKind.CodexCli or AiConnectionKind.ClaudeCli)
-                return await cli.AskAsync(connection, instructions, question, model, token).ConfigureAwait(false);
             string? key = credentials.Read(endpoint!);
             if (key is null && !IsLoopback(endpoint!))
                 return "Save an API key for this exact provider endpoint in OmniKit settings first.";

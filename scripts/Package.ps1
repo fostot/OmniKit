@@ -52,8 +52,14 @@ $runtimeFiles = @(
     'assets/moonblob-motion.png', 'assets/wink-motion.png', 'assets/nova-motion.png',
     'assets/abstract-companions.frames.json', 'assets/lunar-companions.frames.json',
     'assets/bimble-walk-rig.png', 'assets/bimble-walk-rig-stargazer.png',
+    'assets/bimble-walk-rig-v2.png', 'assets/bimble-walk-rig-stargazer-v2.png',
     'assets/moonbear-walk-rig.png', 'assets/moonbear-walk-rig-stargazer.png',
-    'assets/moonblob-limbless.png', 'assets/lunar-walk-rigs.json'
+    'assets/moonblob-limbless.png', 'assets/lunar-walk-rigs.json',
+    'assets/companion-house.png', 'assets/companion-grab-hand.png',
+    'browser/OmniKit.Browser.exe', 'browser/OmniKit.Browser.dll', 'browser/OmniKit.Browser.deps.json',
+    'browser/OmniKit.Browser.runtimeconfig.json', 'browser/OmniKit.Browser.build.json',
+    'browser/Microsoft.Web.WebView2.Core.dll', 'browser/Microsoft.Web.WebView2.WinForms.dll', 'browser/WebView2Loader.dll',
+    'browser/WebView2-LICENSE.txt', 'browser/WebView2-NOTICE.txt'
 )
 foreach ($relative in $runtimeFiles) {
     $source = Join-Path $releasePath $relative
@@ -63,12 +69,18 @@ if (-not (Test-Path -LiteralPath $umbraPath -PathType Leaf)) { throw 'Missing Um
 $manifest = Get-Content -LiteralPath (Join-Path $releasePath 'OmniKit.json') -Raw | ConvertFrom-Json
 $manifestAssemblyVersion = [string]$manifest.AssemblyVersion
 if ($manifestAssemblyVersion -cne $expectedAssemblyVersion -or $manifest.DalamudApiLevel -ne 15 -or $manifest.Author -cne 'Zero') { throw 'Manifest version, author or API level does not match the expected build.' }
-foreach ($binary in @((Join-Path $releasePath 'OmniKit.dll'), $umbraPath)) {
+$browserBuild = Get-Content -LiteralPath (Join-Path $releasePath 'browser/OmniKit.Browser.build.json') -Raw | ConvertFrom-Json
+if ($browserBuild.CommitSha -cne $sourceCommit -or $browserBuild.CommitCount -ne $commitCount -or
+    $browserBuild.ArtifactVersion -cne $Revision -or $browserBuild.AssemblyVersion -cne $expectedAssemblyVersion -or
+    $browserBuild.DisplayVersion -cne $displayVersion -or $browserBuild.Author -cne 'Zero') { throw 'Browser helper was built from a different source commit.' }
+foreach ($binary in @((Join-Path $releasePath 'OmniKit.dll'), $umbraPath, (Join-Path $releasePath 'browser/OmniKit.Browser.dll'))) {
     $assemblyVersion = [Reflection.AssemblyName]::GetAssemblyName($binary).Version.ToString()
     $info = [Diagnostics.FileVersionInfo]::GetVersionInfo($binary)
     if ($assemblyVersion -cne $expectedAssemblyVersion -or $info.FileVersion -cne $expectedAssemblyVersion) { throw 'DLL assembly/file versions do not match the expected build.' }
     if ($info.ProductVersion -cne $displayVersion -or $info.CompanyName -cne 'Zero') { throw 'DLL source version or author does not match the expected build.' }
 }
+$browserExeInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $releasePath 'browser/OmniKit.Browser.exe'))
+if ($browserExeInfo.FileVersion -cne $expectedAssemblyVersion -or $browserExeInfo.ProductVersion -cne $displayVersion -or $browserExeInfo.CompanyName -cne 'Zero') { throw 'Browser app host version does not match the source.' }
 
 New-Item -ItemType Directory -Path $stagingPath, $distributionPath | Out-Null
 foreach ($relative in $runtimeFiles) {
@@ -88,7 +100,7 @@ $feed = [ordered]@{
     Author = 'Zero'; Name = 'OmniKit'; InternalName = 'OmniKit'
     AssemblyVersion = $manifestAssemblyVersion; DalamudApiLevel = 15; ApplicableVersion = 'any'
     Punchline = 'Your everyday toolkit for XIV.'
-    Description = "Preview $displayVersion by Zero. Minimal search, configurable target types, styled target HUD, animated frame companions, optional AI connections, gathering gear, voice shortcuts and Umbra integration."
+    Description = "Preview $displayVersion by Zero. Minimal search, configurable interaction, styled target HUD, animated companions, in-game browser, optional AI chat, gathering gear, voice shortcuts and Umbra integration."
     RepoUrl = 'https://github.com/fostot/OmniKit'
     Tags = @('search', 'utility', 'accessibility', 'umbra')
     DownloadLinkInstall = $download; DownloadLinkUpdate = $download; DownloadLinkTesting = $download

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "coordinateSystem": "Source rectangles use pixels with exclusive right/bottom edges. Pivots are normalized within each crop. Body rectangle is logical cell [left,top,width,height]; joints and lengths are normalized cell units.",
+  "coordinateSystem": "Source rectangles use pixels with exclusive right/bottom edges. Part pivots and shoulder UVs are normalized within their source crop. Body rectangle is logical cell [left,top,width,height]; hip offsets and lengths use logical cell units. footSize is an aspect-preserving fit box.",
   "partOrder": [
     "body",
     "nearArm",
@@ -12,18 +12,18 @@
     "nearFoot",
     "farFoot"
   ],
-  "rendering": "Use source PNGs unchanged. Internal proximal and distal pivots overlap painted capsule ends at joints. Fixed part scale and skeletal lengths preserve planted feet; body bands provide bounded ear follow-through.",
+  "rendering": "Use source PNGs unchanged. Independent shoulder anchors follow the painted body; cape and shorts cover all limb roots. Fixed capsule scale and skeletal lengths preserve foot paths. Paw images fit uniformly above their unchanged sole trajectories.",
   "rigs": [
     {
       "character": "Bimble",
       "outfit": "Navigator",
-      "file": "bimble-walk-rig.png",
+      "file": "bimble-walk-rig-v2.png",
       "size": [
         1254,
         1254
       ],
       "format": "RGBA",
-      "sha256": "ff260b7ec283f666f79d4c0395dc4f65d8c76fa4c398b40346b9673ec90874b7",
+      "sha256": "490b15a289de58f2cd232e90885e106b3be63deffffceb27eabbf7da6390816b",
       "alphaStatistics": {
         "minimum": 0,
         "maximum": 255,
@@ -34,234 +34,256 @@
           "index": 0,
           "name": "body",
           "rect": [
-            34,
-            11,
-            459,
-            480
+            13,
+            5,
+            479,
+            550
           ],
           "coreBounds96": [
-            40,
-            16,
-            453,
-            474
+            19,
+            11,
+            473,
+            544
           ],
-          "edgeAlphaMaximum": 2
+          "edgeAlphaMaximum": 2,
+          "widthScale": 1.0
         },
         {
           "index": 1,
           "name": "near arm",
           "rect": [
-            583,
-            163,
-            777,
-            509
+            620,
+            189,
+            853,
+            547
           ],
           "coreBounds96": [
-            589,
-            169,
-            772,
-            503
+            625,
+            194,
+            848,
+            541
           ],
-          "edgeAlphaMaximum": 2,
+          "edgeAlphaMaximum": 1,
           "pivot": [
             0.5,
-            0.15
+            0.18
           ],
           "endPivot": [
-            0.5,
-            0.8
-          ]
+            0.55,
+            0.84
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 2,
           "name": "far arm",
           "rect": [
-            975,
-            162,
-            1174,
-            510
+            1010,
+            199,
+            1200,
+            553
           ],
           "coreBounds96": [
-            981,
-            167,
-            1169,
-            505
+            1015,
+            205,
+            1194,
+            547
           ],
-          "edgeAlphaMaximum": 2,
+          "edgeAlphaMaximum": 1,
           "pivot": [
             0.5,
-            0.15
+            0.18
           ],
           "endPivot": [
-            0.5,
-            0.8
-          ]
+            0.55,
+            0.84
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 3,
           "name": "near thigh",
           "rect": [
-            154,
-            550,
+            105,
+            582,
             372,
-            883
+            898
           ],
           "coreBounds96": [
-            160,
-            556,
+            111,
+            588,
             366,
-            877
+            892
           ],
-          "edgeAlphaMaximum": 1,
+          "edgeAlphaMaximum": 3,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 4,
           "name": "far thigh",
           "rect": [
-            527,
-            548,
-            767,
-            887
+            506,
+            583,
+            772,
+            898
           ],
           "coreBounds96": [
-            533,
-            553,
-            761,
-            881
+            513,
+            589,
+            765,
+            892
           ],
           "edgeAlphaMaximum": 3,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 5,
           "name": "near shin",
           "rect": [
-            983,
-            571,
-            1151,
-            881
+            959,
+            598,
+            1155,
+            900
           ],
           "coreBounds96": [
-            989,
-            577,
-            1145,
-            875
+            965,
+            604,
+            1149,
+            894
           ],
           "edgeAlphaMaximum": 2,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 6,
           "name": "far shin",
           "rect": [
-            182,
-            911,
-            341,
-            1234
+            115,
+            929,
+            313,
+            1229
           ],
           "coreBounds96": [
-            188,
-            916,
-            335,
-            1228
+            121,
+            935,
+            306,
+            1223
           ],
           "edgeAlphaMaximum": 2,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 7,
           "name": "near foot",
           "rect": [
-            461,
-            996,
-            823,
-            1198
+            494,
+            951,
+            814,
+            1211
           ],
           "coreBounds96": [
-            467,
-            1002,
-            817,
-            1193
-          ],
-          "edgeAlphaMaximum": 1,
-          "pivot": [
-            0.28,
-            0.1
-          ]
-        },
-        {
-          "index": 8,
-          "name": "far foot",
-          "rect": [
-            886,
-            996,
-            1237,
-            1200
-          ],
-          "coreBounds96": [
-            892,
-            1002,
-            1231,
-            1195
+            499,
+            957,
+            808,
+            1205
           ],
           "edgeAlphaMaximum": 2,
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
+        },
+        {
+          "index": 8,
+          "name": "far foot",
+          "rect": [
+            929,
+            954,
+            1220,
+            1216
+          ],
+          "coreBounds96": [
+            935,
+            960,
+            1215,
+            1211
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.28,
+            0.1
+          ],
+          "widthScale": 1.0
         }
       ],
       "bodyRect": [
-        0.24,
-        0.17500000000000002,
-        0.52,
-        0.56
+        0.1720697247706422,
+        0.055,
+        0.5814311926605505,
+        0.68
       ],
       "hip": [
         0.55,
         0.715
       ],
-      "shoulder": [
-        0.6,
-        0.545
-      ],
       "thighLength": 0.09,
       "shinLength": 0.11,
       "footSize": [
-        0.18,
-        0.075
+        0.2,
+        0.12
       ],
-      "armLength": 0.16,
-      "cycleDistance": 0.34
+      "armLength": 0.14,
+      "cycleDistance": 0.34,
+      "nearShoulderUv": [
+        0.92,
+        0.75
+      ],
+      "farShoulderUv": [
+        0.36,
+        0.75
+      ],
+      "nearHipOffset": [
+        0.05,
+        -0.04
+      ],
+      "farHipOffset": [
+        -0.05,
+        -0.044
+      ],
+      "sharedIdle": true
     },
     {
       "character": "Moonbear",
@@ -319,7 +341,8 @@
           "endPivot": [
             0.5,
             0.8
-          ]
+          ],
+          "widthScale": 1.15
         },
         {
           "index": 2,
@@ -344,7 +367,8 @@
           "endPivot": [
             0.5,
             0.8
-          ]
+          ],
+          "widthScale": 1.15
         },
         {
           "index": 3,
@@ -369,7 +393,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 4,
@@ -394,7 +419,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 5,
@@ -419,7 +445,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 6,
@@ -444,7 +471,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 7,
@@ -465,7 +493,8 @@
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 8,
@@ -486,280 +515,315 @@
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         }
       ],
       "bodyRect": [
-        0.25,
-        0.135,
-        0.5,
-        0.58
+        0.21328712871287125,
+        0.08499999999999996,
+        0.5611881188118812,
+        0.65
       ],
       "hip": [
         0.55,
         0.715
       ],
-      "shoulder": [
-        0.6,
-        0.545
-      ],
       "thighLength": 0.09,
       "shinLength": 0.11,
       "footSize": [
-        0.18,
-        0.075
+        0.2,
+        0.12
       ],
       "armLength": 0.16,
-      "cycleDistance": 0.34
+      "cycleDistance": 0.34,
+      "nearShoulderUv": [
+        0.86,
+        0.74
+      ],
+      "farShoulderUv": [
+        0.285,
+        0.73
+      ],
+      "nearHipOffset": [
+        0.05,
+        -0.04
+      ],
+      "farHipOffset": [
+        -0.05,
+        -0.044
+      ]
     },
     {
       "character": "Bimble",
       "outfit": "Stargazer",
-      "file": "bimble-walk-rig-stargazer.png",
+      "file": "bimble-walk-rig-stargazer-v2.png",
       "size": [
         1254,
         1254
       ],
       "format": "RGBA",
-      "sha256": "9a2f18c0002943b0ac9a27e669b28c3b17e30b4c8b5765b6beccd095faad4970",
+      "sha256": "4b3a2f0c6c107029ecf35e7be48d5697f4f9f5a6a34ea8606e790904499fa6d4",
       "alphaStatistics": {
         "minimum": 0,
         "maximum": 255,
-        "cropEdgeMaximum": 3
+        "cropEdgeMaximum": 4
       },
       "parts": [
         {
           "index": 0,
           "name": "body",
           "rect": [
-            34,
-            10,
-            460,
-            482
+            12,
+            4,
+            480,
+            551
           ],
           "coreBounds96": [
-            40,
-            15,
-            454,
-            476
+            18,
+            10,
+            474,
+            546
           ],
-          "edgeAlphaMaximum": 2
+          "edgeAlphaMaximum": 2,
+          "widthScale": 1.0
         },
         {
           "index": 1,
           "name": "near arm",
           "rect": [
-            582,
-            163,
-            779,
-            510
+            619,
+            188,
+            855,
+            548
           ],
           "coreBounds96": [
-            587,
-            168,
-            774,
-            505
+            625,
+            194,
+            849,
+            543
           ],
-          "edgeAlphaMaximum": 3,
+          "edgeAlphaMaximum": 1,
           "pivot": [
             0.5,
-            0.15
+            0.18
           ],
           "endPivot": [
-            0.5,
-            0.8
-          ]
+            0.55,
+            0.84
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 2,
           "name": "far arm",
           "rect": [
-            975,
-            162,
-            1177,
-            512
+            1009,
+            199,
+            1201,
+            554
           ],
           "coreBounds96": [
-            980,
-            168,
-            1171,
-            506
+            1015,
+            205,
+            1196,
+            548
           ],
-          "edgeAlphaMaximum": 1,
+          "edgeAlphaMaximum": 2,
           "pivot": [
             0.5,
-            0.15
+            0.18
           ],
           "endPivot": [
-            0.5,
-            0.8
-          ]
+            0.55,
+            0.84
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 3,
           "name": "near thigh",
           "rect": [
-            153,
-            549,
+            103,
+            581,
             373,
-            884
+            899
           ],
           "coreBounds96": [
-            159,
-            555,
+            109,
+            587,
             367,
-            879
+            894
           ],
-          "edgeAlphaMaximum": 1,
+          "edgeAlphaMaximum": 3,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 4,
           "name": "far thigh",
           "rect": [
-            526,
-            547,
-            769,
-            888
+            504,
+            582,
+            774,
+            900
           ],
           "coreBounds96": [
-            532,
-            553,
-            763,
-            882
+            511,
+            588,
+            768,
+            894
           ],
-          "edgeAlphaMaximum": 3,
+          "edgeAlphaMaximum": 4,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 5,
           "name": "near shin",
           "rect": [
-            981,
-            571,
-            1152,
-            882
+            958,
+            597,
+            1157,
+            901
           ],
           "coreBounds96": [
-            987,
-            577,
-            1146,
-            876
+            964,
+            603,
+            1151,
+            895
           ],
-          "edgeAlphaMaximum": 3,
+          "edgeAlphaMaximum": 2,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 6,
           "name": "far shin",
           "rect": [
-            180,
-            911,
-            343,
-            1235
-          ],
-          "coreBounds96": [
-            186,
-            916,
-            337,
+            114,
+            929,
+            314,
             1229
           ],
-          "edgeAlphaMaximum": 2,
+          "coreBounds96": [
+            119,
+            934,
+            308,
+            1224
+          ],
+          "edgeAlphaMaximum": 3,
           "pivot": [
             0.5,
-            0.15
+            0.2
           ],
           "endPivot": [
             0.5,
-            0.75
-          ]
+            0.8
+          ],
+          "widthScale": 1.12
         },
         {
           "index": 7,
           "name": "near foot",
           "rect": [
-            461,
-            996,
-            824,
-            1199
+            492,
+            950,
+            815,
+            1213
           ],
           "coreBounds96": [
-            466,
-            1001,
-            818,
-            1194
+            498,
+            956,
+            810,
+            1207
           ],
           "edgeAlphaMaximum": 2,
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 8,
           "name": "far foot",
           "rect": [
-            885,
-            995,
-            1239,
-            1202
+            929,
+            953,
+            1224,
+            1218
           ],
           "coreBounds96": [
-            891,
-            1001,
-            1233,
-            1196
+            935,
+            959,
+            1218,
+            1212
           ],
-          "edgeAlphaMaximum": 2,
+          "edgeAlphaMaximum": 1,
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         }
       ],
       "bodyRect": [
-        0.24,
-        0.17500000000000002,
-        0.52,
-        0.56
+        0.17183546617915907,
+        0.055,
+        0.5817915904936015,
+        0.68
       ],
       "hip": [
         0.55,
         0.715
       ],
-      "shoulder": [
-        0.6,
-        0.545
-      ],
       "thighLength": 0.09,
       "shinLength": 0.11,
       "footSize": [
-        0.18,
-        0.075
+        0.2,
+        0.12
       ],
-      "armLength": 0.16,
-      "cycleDistance": 0.34
+      "armLength": 0.14,
+      "cycleDistance": 0.34,
+      "nearShoulderUv": [
+        0.92,
+        0.75
+      ],
+      "farShoulderUv": [
+        0.36,
+        0.75
+      ],
+      "nearHipOffset": [
+        0.05,
+        -0.04
+      ],
+      "farHipOffset": [
+        -0.05,
+        -0.044
+      ],
+      "sharedIdle": true
     },
     {
       "character": "Moonbear",
@@ -817,7 +881,8 @@
           "endPivot": [
             0.5,
             0.8
-          ]
+          ],
+          "widthScale": 1.15
         },
         {
           "index": 2,
@@ -842,7 +907,8 @@
           "endPivot": [
             0.5,
             0.8
-          ]
+          ],
+          "widthScale": 1.15
         },
         {
           "index": 3,
@@ -867,7 +933,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 4,
@@ -892,7 +959,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 5,
@@ -917,7 +985,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 6,
@@ -942,7 +1011,8 @@
           "endPivot": [
             0.5,
             0.75
-          ]
+          ],
+          "widthScale": 1.35
         },
         {
           "index": 7,
@@ -963,7 +1033,8 @@
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         },
         {
           "index": 8,
@@ -984,31 +1055,44 @@
           "pivot": [
             0.28,
             0.1
-          ]
+          ],
+          "widthScale": 1.0
         }
       ],
       "bodyRect": [
-        0.25,
-        0.135,
-        0.5,
-        0.58
+        0.214507874015748,
+        0.08499999999999996,
+        0.5591535433070867,
+        0.65
       ],
       "hip": [
         0.55,
         0.715
       ],
-      "shoulder": [
-        0.6,
-        0.545
-      ],
       "thighLength": 0.09,
       "shinLength": 0.11,
       "footSize": [
-        0.18,
-        0.075
+        0.2,
+        0.12
       ],
       "armLength": 0.16,
-      "cycleDistance": 0.34
+      "cycleDistance": 0.34,
+      "nearShoulderUv": [
+        0.86,
+        0.74
+      ],
+      "farShoulderUv": [
+        0.285,
+        0.73
+      ],
+      "nearHipOffset": [
+        0.05,
+        -0.04
+      ],
+      "farHipOffset": [
+        -0.05,
+        -0.044
+      ]
     }
   ]
 }

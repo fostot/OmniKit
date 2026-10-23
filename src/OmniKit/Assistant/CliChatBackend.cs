@@ -16,6 +16,7 @@ public sealed class CliChatBackend : IDisposable
     private const int MaximumAnswerCharacters = 6000;
     public const string CodexContextNotice = "Codex CLI also adds its own global instructions. OmniKit disables action tools and connectors; CLI chat does not receive game state.";
     public const string ClaudeContextNotice = "Claude CLI uses its own login in restricted mode with tools and MCP connections disabled. Managed CLI policies may still apply.";
+    public const string SingleRequestLimitNotice = "CLI chat paused: the single-request limit cannot be verified. Use ChatGPT or API.";
 
     private static readonly string[] CodexDisabledFeatures =
     [
@@ -71,6 +72,17 @@ public sealed class CliChatBackend : IDisposable
     }, ct);
 
     public Task<string> AskAsync(AiConnectionKind kind, string instructions, string question, string model, CancellationToken ct)
+    {
+        // One CLI process can perform multiple model requests, retry internally or
+        // continue after a resource helper. The user's single-inference rule wins
+        // over CLI chat availability until a supported request limit is verified.
+        // Authentication and metadata probes remain available and never call this.
+        return Task.FromResult(SetStatus(SingleRequestLimitNotice));
+    }
+
+    // Suspended transport retained for focused synthetic process-isolation tests.
+    // No production entry point calls it. Re-enabling requires a new request-count proof.
+    private Task<string> AskCoreAsync(AiConnectionKind kind, string instructions, string question, string model, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(question) || question.Length > 4000)
             return Task.FromResult("Ask a question of 1–4,000 characters.");

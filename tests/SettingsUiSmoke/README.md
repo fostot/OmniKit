@@ -14,6 +14,12 @@ The harness bypasses the plugin UI constructor and injects in-memory preferences
 
 The default render set covers the native Launcher, Interact, HUD, Companion Appearance/Voice/AI, Data and About tabs plus companion conversation and first-run setup windows at their minimum logical size of 480×330, scaled to 1, 1.5 and 2. Conversation windows use Moonblob so the real header renders without loading a texture service. Long forms also render after scrolling to the bottom. The screenshot viewport is slightly larger than the window. Assertions check viewport gutters; inspect images for clipping, overlap, control alignment and footer separation. Expanded game-dependent selectors and plugin callbacks are outside this isolated test.
 
+Native click checks use the actual rendered control rectangles reported by the UI's optional, normally unset measurement callback. This keeps clicks tied to labels as spacing changes. Additional cases reveal each help/disclosure section and its scrolled bottom, the eleven-effect HUD menu at both ends, effect intensity/animation/speed controls, meaningful error status, and the centered import confirmation. The modal's viewport-wide dim backdrop is intentional; its two buttons are checked for visible gutters. Browser status is synthetic and neither browser button is pressed. Home/personality cases cover the expanded house/comment controls and Wink's blink controls, including disabled timing states. No roaming or animation service is started.
+
+Synthetic browser status transitions also verify that a completed request replaces its opening message, a delayed failure reveals the browser section without replacing unrelated status, and dismissing that failure does not repeatedly reopen settings. The failure section itself is rendered at each scale. No browser helper is launched.
+
+Browser link-capture cases expand the browser section with capture enabled, disabled, failed, and a deliberately long synthetic status. A test-only status callback is queried only while the preference is enabled. The bottom view checks that both browser buttons and the following setup button remain reachable; the long status is hovered to reveal its complete wrapped tooltip. These cases use no interception hook or real browser operation.
+
 Focused checks avoid repeating the full set:
 
 ```powershell
@@ -25,7 +31,12 @@ dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- 
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-off,ai-on,ai-chatgpt,ai-chatgpt-connected,ai-chatgpt-middle,ai-codex,ai-claude,ai-cli-busy,ai-cli-error --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-provider-menu,ai-account-menu,ai-model-menu,ai-account-tooltip,ai-model-tooltip,ai-endpoint,ai-cli-cancel,ai-provider-switch --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-model-discovery,ai-model-manual,ai-model-empty,ai-model-failure --scale=2
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-codex,ai-claude,conversation-ai,conversation-codex,conversation-claude,conversation-busy
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=companion-menu,outfit-menu,palette-menu,pose-menu --scale=2
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=hud-effects,hud-effects-static,hud-effect-menu,hud-effect-bottom-menu,data-confirm,data-browser
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=data-browser,data-browser-error,data-browser-capture,data-browser-capture-off,data-browser-capture-error,data-browser-capture-long
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=home,home-off,home-wink,home-wink-off
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=interact-quest-on,home-only
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --measure-hotkeys
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --companions
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --companion-poses
@@ -39,11 +50,15 @@ The four menu cases open the native Companion, Outfit, Aura / shape color and Pr
 
 Interaction cases cover the expanded world category list, all categories disabled, enemy selection awaiting a choice, and both selected enemy actions. These are in-memory configuration states rendered through the real UI; no game target is selected and no attack is started.
 
+The quest-item case enables only the preference in memory; it never uses an item. The home-only case disables frame interaction while revealing Home & personality, checking that the shared grab-hand option remains reachable for users who only enable the house.
+
 Frame interaction cases show the master setting and each sub-option, with animations both enabled and disabled. They validate the settings layout only; pickup, perching, window containment and falling require separate runtime validation.
 
 The companion navigation case uses real ImGui mouse events to click AI → Appearance → Voice → AI with AI enabled, checking the active tab after each transition. It also checks programmatic Appearance and AI selection. This catches a later tab reasserting its selection during the same draw loop; it does not invoke provider, microphone or game actions.
 
 AI cases cover API/local-server settings (including the expanded endpoint field), disconnected and connected ChatGPT states, deliberately long synthetic account and model labels, their native dropdowns and wrapped tooltips, both CLI providers, and pending/error status. The cancel case clicks the real Cancel connection button against an in-memory pending task and verifies cancellation and task cleanup. The provider-switch case clicks Codex → Claude → ChatGPT → API, asserting that each switch disables AI questions and preserves all four independent model preferences. It writes a screenshot after each transition. These checks do not establish successful real sign-in, billing eligibility, provider inference, CLI isolation or token storage; those have separate tests and live validation boundaries.
+
+The paused CLI and busy conversation cases attempt a native click on the disabled Ask button with a nonempty synthetic question. They verify that no answer task starts and Search wiki remains visible. The fixed CLI pause notice and send tooltip are rendered at all three scales; the separate `ChatCostGuardTests` harness verifies the service boundary rather than relying on UI gating alone.
 
 Model-refresh cases pass completed synthetic tasks through the real UI update
 method. They verify selection of a returned lightweight default, preservation of

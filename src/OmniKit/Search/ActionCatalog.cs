@@ -1,4 +1,3 @@
-using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Lumina.Excel.Sheets;
 using Action = System.Action;
@@ -8,6 +7,8 @@ namespace OmniKit.Search;
 internal sealed class ActionCatalog
 {
     private readonly Action openSettings;
+    private readonly Action<string> openWebsite;
+    private readonly Action openBrowser;
     private readonly List<SearchEntry> gameEntries = [];
 
     private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
@@ -36,9 +37,11 @@ internal sealed class ActionCatalog
         ["Friend List"] = "friends friend social community",
     };
 
-    public ActionCatalog(Action openSettings)
+    public ActionCatalog(Action openSettings, Action<string> openWebsite, Action openBrowser)
     {
         this.openSettings = openSettings;
+        this.openWebsite = openWebsite;
+        this.openBrowser = openBrowser;
         var english = Services.Data.GetExcelSheet<MainCommand>(Dalamud.Game.ClientLanguage.English)
             .ToDictionary(row => row.RowId, row => row.Name.ToString());
         foreach (var row in Services.Data.GetExcelSheet<MainCommand>())
@@ -58,10 +61,8 @@ internal sealed class ActionCatalog
 
     public IEnumerable<SearchEntry> GetEntries()
     {
-        yield return new("community:fc", "Find a Free Company", "Recruiting groups on Community Finder", "community guild clan free company fc recruitment social friends",
-            "The Lodestone", () => Util.OpenLink("https://na.finalfantasyxiv.com/lodestone/community_finder/?type=fc"));
-        yield return new("community:ls", "Find a Linkshell", "Linkshell and cross-world linkshell recruitment", "community guild linkshell cwls ls crossworld social friends chat groups recruitment",
-            "The Lodestone", () => Util.OpenLink("https://na.finalfantasyxiv.com/lodestone/community_finder/?type=ls"));
+        foreach (var entry in GetWebEntries(openWebsite)) yield return entry;
+        yield return new("omnikit:browser", "In-game browser", "Open the browser", "browser web website internet wiki", "OmniKit", openBrowser);
         yield return new("omnikit:settings", "OmniKit Settings", "Shortcuts, interaction, avatar and assistant", "settings options preferences controls bimble avatar voice ai interact interaction", "OmniKit", openSettings);
         foreach (var entry in gameEntries) yield return entry;
         foreach (var plugin in Services.PluginInterface.InstalledPlugins.Where(plugin => plugin.IsLoaded))
@@ -73,6 +74,14 @@ internal sealed class ActionCatalog
             if (plugin.HasConfigUi)
                 yield return new($"plugin-settings:{plugin.InternalName}", name + " Settings", "Configure plugin", $"plugin addon settings options {name}", "Dalamud", () => plugin.OpenConfigUi());
         }
+    }
+
+    internal static IEnumerable<SearchEntry> GetWebEntries(Action<string> openWebsite)
+    {
+        yield return new("community:fc", "Find a Free Company", "Community Finder", "community guild clan free company fc recruitment social friends",
+            "The Lodestone", () => openWebsite("https://na.finalfantasyxiv.com/lodestone/community_finder/?type=fc"));
+        yield return new("community:ls", "Find a Linkshell", "Community Finder", "community guild linkshell cwls ls crossworld social friends chat groups recruitment",
+            "The Lodestone", () => openWebsite("https://na.finalfantasyxiv.com/lodestone/community_finder/?type=ls"));
     }
 
     private static unsafe void ExecuteMainCommand(uint id)

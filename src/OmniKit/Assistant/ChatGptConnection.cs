@@ -34,11 +34,13 @@ public sealed class ChatGptConnection : IDisposable
     private volatile ChatGptAccountInfo[] accounts = [];
     private volatile string status = "Not connected to ChatGPT.";
     private bool disposed;
+    private int generating;
 
-    public ChatGptConnection(DirectoryInfo configDirectory) : this(configDirectory,
+    public ChatGptConnection(DirectoryInfo configDirectory, Func<IDisposable>? externalBrowserScope = null) : this(configDirectory,
         new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false, UseDefaultCredentials = false })
         { Timeout = TimeSpan.FromSeconds(120) }, (uri, _) =>
         {
+            using var bypass = externalBrowserScope?.Invoke();
             Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
             return Task.CompletedTask;
         }) { }
@@ -298,10 +300,12 @@ public sealed class ChatGptConnection : IDisposable
     {
         if (disposed || question.Length is 0 or > 4000 || instructions.Length > 16000 || !ValidModel(model))
             return "Choose a ChatGPT model and ask a question of at most 4,000 characters.";
+        if (Interlocked.CompareExchange(ref generating, 1, 0) != 0)
+            return "ChatGPT is still answering the previous question.";
         var expectedAccount = accounts.FirstOrDefault(account => account.IsActive)?.Id;
-        using var cancel = RequestCancellation(ct);
         try
         {
+            using var cancel = RequestCancellation(ct);
             var access = await AccessAsync(expectedAccount, cancel.Token).ConfigureAwait(false);
             using var request = new HttpRequestMessage(HttpMethod.Post, Resource + "/responses");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", access);
@@ -317,6 +321,7 @@ public sealed class ChatGptConnection : IDisposable
         catch (AccountChangedException) { return status = AccountChangedStatus; }
         catch (OperationCanceledException) { return "The ChatGPT request was cancelled or timed out."; }
         catch { return "ChatGPT could not complete the response. Check your account or try a shorter question."; }
+        finally { Interlocked.Exchange(ref generating, 0); }
     }
 
     private async Task<string> AccessAsync(string? expectedAccount, CancellationToken ct)

@@ -264,8 +264,12 @@ internal sealed unsafe class GatheringGearService(Configuration config) : IDispo
             || Services.Conditions[ConditionFlag.Mounted] || Services.Conditions[ConditionFlag.RidingPillion])
             return false;
         var ui = RaptureAtkModule.Instance();
-        return ui != null && !ui->IsTextInputActive() && ui->AtkUnitManager != null
-            && (ui->AtkUnitManager->FocusedAddon == null || !ui->AtkUnitManager->FocusedAddon->IsVisible);
+        if (ui == null || ui->AtkUnitManager == null) return false;
+        var focused = ui->AtkUnitManager->FocusedAddon;
+        // Update supplies the shared world-interaction guard through inputBlocked.
+        // Keep the same narrow player-bag exception as the eventual interaction.
+        return SoftInteractionUiPolicy.PauseReason(ui->IsTextInputActive(), inputBlocked,
+            focused != null && focused->IsVisible, focused == null ? null : focused->NameString) == null;
     }
 
     private static bool IsInterrupted()

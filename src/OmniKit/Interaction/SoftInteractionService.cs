@@ -18,8 +18,8 @@ using NativeUiState = FFXIVClientStructs.FFXIV.Client.Game.UI.UIState;
 namespace OmniKit.Interaction;
 
 /// <summary>
-/// Camera-directed, one-press interaction. World objects preserve the hard target.
-/// Explicit enemy modes may select a hard target and enable native auto-attack.
+/// Camera-directed, one-press interaction. A fresh press selects and confirms the
+/// hard target before acting. Explicit enemy modes may enable native auto-attack.
 /// Never advances dialogue, selects menu choices, or repeats while a key is held.
 /// Update must run on Dalamud's framework thread; DrawHud must run in UiBuilder.Draw.
 /// </summary>
@@ -58,6 +58,9 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     private Vector2 hudDragStartOffset;
     private Vector2 hudBoundsPosition;
     private Vector2 hudBoundsSize;
+    private Vector2 hudReadyBoundsPosition;
+    private Vector2 hudReadyBoundsSize;
+    private Candidate? hudReadyCandidate;
 
     private const string HudWindowId = "##OmniKitVisibleTargetControls";
     private const string HudPopupId = "##OmniKitVisibleTargetMenu";
@@ -85,6 +88,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     public bool HudPreviewEnabled { get; set; }
     public bool HudHiddenForInteraction { get; private set; }
     public GatheringGearService Gathering { get; } = new(config);
+    public QuestItemService QuestItems { get; } = new(config);
     public event Action? ConfigureHudRequested;
 
     public void Update(bool inputBlocked)
@@ -225,8 +229,17 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         }
 
         HudHiddenForInteraction = IsWorldInteractionActive();
-        if (HudHiddenForInteraction || (!HudPreviewEnabled && (!config.SoftInteractEnabled || !config.InteractionHudEnabled || faulted
-            || candidate == null)))
+        if (HudHiddenForInteraction || !config.SoftInteractEnabled || !config.InteractionHudEnabled
+            || faulted || candidate == null || candidate != hudReadyCandidate)
+            hudReadyCandidate = null;
+        // Shift can pause the game action before this draw. Allow its deliberate
+        // edit gesture over the last ready text bounds, without enabling an action
+        // or reviving stale targets. An unrelated Shift press creates no hitbox.
+        var enteringModification = hudReadyCandidate != null && ImGui.GetIO().KeyShift
+            && ImGui.IsMouseHoveringRect(hudReadyBoundsPosition, hudReadyBoundsPosition + hudReadyBoundsSize, false);
+        var modifying = HudPreviewEnabled || hudPopupOpen || hudDragging || enteringModification;
+        if (HudHiddenForInteraction || (!modifying && (!config.SoftInteractEnabled || !config.InteractionHudEnabled || faulted
+            || candidate == null || ActionPaused || uiCapturesInput)))
         {
             CloseHudMenu();
             hudDragging = false;
@@ -236,61 +249,59 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         // The normal locked HUD is draw-list text without an input window. Its
         // text-bounds editor is created only for deliberate HUD interaction.
         var draw = ImGui.GetForegroundDrawList();
+        var font = ImGui.GetFont();
         var hudScale = float.IsFinite(config.InteractionHudScale)
             ? Math.Clamp(config.InteractionHudScale, 0.5f, 2f) : 1f;
-        var paused = HudPreviewEnabled || ActionPaused || uiCapturesInput;
-        var prefix = paused ? string.Empty : $"[{HotkeyChord.Format(config.InteractKey, config.InteractModifier)}]  ";
+        // Only deliberate modification shows a sample while interaction is paused.
+        var prefix = modifying ? string.Empty : $"[{HotkeyChord.Format(config.InteractKey, config.InteractModifier)}]  ";
         var suffix = HudPreviewEnabled ? "  · Preview" : string.Empty;
-        var name = candidate?.Name ?? "Visible target";
-        var availableWidth = Math.Max(1f, viewportSize.X - 24f);
-        // Even at a very large font scale the chord/preview marker and ellipsis
-        // must fit inside the viewport. Keep the target name as the main text.
-        hudScale = Math.Min(hudScale, availableWidth / Math.Max(1, ImGui.CalcTextSize(prefix + "…" + suffix).X));
+        var originalName = candidate?.Name ?? "Visible target";
+        var name = originalName;
+        var available = Vector2.Max(Vector2.One, viewportSize - new Vector2(16));
         var fontSize = ImGui.GetFontSize() * hudScale;
-        var scale = Math.Clamp(fontSize / 17f, 0.5f, 3f);
-        var nameWidth = Math.Max(0, availableWidth - ImGui.CalcTextSize(prefix + suffix).X * hudScale);
-        while (name.Length > 1 && ImGui.CalcTextSize(name).X * hudScale > nameWidth)
-            name = name[..^2].TrimEnd('…') + "…";
-
-        var text = prefix + name + suffix;
-        var textSize = ImGui.CalcTextSize(text) * hudScale;
+        var inset = Vector2.Zero; var boundsSize = Vector2.Zero;
+        HudTextMetrics metrics = default;
+        // Fit actual glyph advances and ink overhang plus the worst effect extent.
+        // The same fixed bounds govern clamping, dragging and the Shift hitbox.
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            var padding = HudTextRenderer.Padding(config.InteractionHudEffect, fontSize,
+                config.InteractionHudEffectIntensity, config.InteractionHudOutline);
+            var nameWidth = Math.Max(0, available.X - padding.X * 2
+                - HudTextRenderer.Measure(font, fontSize, prefix + suffix).Size.X);
+            name = HudTextRenderer.Elide(font, fontSize, originalName, nameWidth);
+            metrics = HudTextRenderer.Measure(font, fontSize, prefix + name + suffix);
+            inset = padding - metrics.InkMinimum;
+            boundsSize = metrics.InkMaximum - metrics.InkMinimum + padding * 2;
+            var fit = Math.Min(available.X / Math.Max(1, boundsSize.X), available.Y / Math.Max(1, boundsSize.Y));
+            if (fit >= 1 || attempt == 3) break;
+            fontSize *= Math.Max(.01f, fit * .99f);
+        }
         var center = viewportPosition + viewportSize * 0.5f;
         var offset = new Vector2(
             float.IsFinite(config.InteractionHudOffsetX) ? config.InteractionHudOffsetX : 0f,
             float.IsFinite(config.InteractionHudOffsetY) ? config.InteractionHudOffsetY : 120f);
-        var topLeft = ClampHudPosition(center + offset - new Vector2(textSize.X * 0.5f, 0), textSize);
-        DrawHudControls(ref topLeft, textSize, center);
+        var anchor = inset + new Vector2(metrics.Size.X * .5f, 0);
+        var topLeft = ClampHudPosition(center + offset - anchor, boundsSize);
+        DrawHudControls(ref topLeft, boundsSize, center, anchor, enteringModification);
         if (!config.InteractionHudEnabled && !HudPreviewEnabled)
             return;
+        if (!modifying)
+        {
+            hudReadyBoundsPosition = topLeft;
+            hudReadyBoundsSize = boundsSize;
+            hudReadyCandidate = candidate;
+        }
 
-        var font = ImGui.GetFont();
-        if (config.InteractionHudEffect == HudTextEffect.Shadow)
-            draw.AddText(font, fontSize, topLeft + new Vector2(1.5f) * scale, 0xE6000000, text, 0);
-        if (config.InteractionHudEffect == HudTextEffect.SoftGlow)
-            DrawHudTextRing(draw, font, fontSize, topLeft, text, 2f * scale, 0x207CB7D7);
-        if (config.InteractionHudOutline)
-            DrawHudTextRing(draw, font, fontSize, topLeft, text, scale, 0xE6000000);
-        draw.AddText(font, fontSize, topLeft, 0xFF9BC9DD, prefix, 0);
-        var namePosition = topLeft + new Vector2(ImGui.CalcTextSize(prefix).X * hudScale, 0);
-        // A slow, shallow color drift keeps luminance readable and never flashes.
-        var nameColor = config.InteractionHudEffect == HudTextEffect.GentleShimmer
-            ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(new Vector4(.965f, .953f, .941f, 1),
-                new Vector4(.86f, .94f, 1f, 1), (MathF.Sin((float)(ImGui.GetTime() * .8)) + 1f) * .5f))
-            : 0xFFF0F3F6;
-        draw.AddText(font, fontSize, namePosition, nameColor, name, 0);
-        draw.AddText(font, fontSize, namePosition + new Vector2(ImGui.CalcTextSize(name).X * hudScale, 0),
-            0xFFBEC4CA, suffix, 0);
+        draw.PushClipRect(viewportPosition, viewportPosition + viewportSize, true);
+        try
+        {
+            HudTextRenderer.Draw(draw, font, fontSize, topLeft + inset, prefix, name, suffix,
+                config.InteractionHudEffect, config.InteractionHudOutline, config.InteractionHudEffectIntensity,
+                config.InteractionHudEffectSpeed, config.InteractionHudEffectAnimated, ImGui.GetTime());
+        }
+        finally { draw.PopClipRect(); }
     }
-
-    private static void DrawHudTextRing(ImDrawListPtr draw, ImFontPtr font, float fontSize,
-        Vector2 position, string text, float radius, uint color)
-    {
-        for (var x = -1; x <= 1; x++)
-        for (var y = -1; y <= 1; y++)
-            if (x != 0 || y != 0)
-                draw.AddText(font, fontSize, position + new Vector2(x, y) * radius, color, text, 0);
-    }
-
     private static bool IsWorldInteractionActive()
     {
         // World-interaction lifecycle flags cover the gaps between dialogue pages,
@@ -310,29 +321,39 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         return false;
     }
 
-    private void DrawHudControls(ref Vector2 topLeft, Vector2 textSize, Vector2 center)
+    private void DrawHudControls(ref Vector2 topLeft, Vector2 textSize, Vector2 center, Vector2 anchor, bool enteringModification)
     {
-        var shift = (HotkeyChord.CurrentModifiers & ModifierKeys.Shift) != 0;
-        var hovered = ImGui.IsMouseHoveringRect(topLeft, topLeft + textSize, false);
+        var shift = ImGui.GetIO().KeyShift;
+        // Removing the active key hint narrows the text. Retain the original
+        // gesture bounds while entering so that a click on that hint still opens.
+        var hitPosition = enteringModification ? Vector2.Min(topLeft, hudReadyBoundsPosition) : topLeft;
+        var hitSize = enteringModification
+            ? Vector2.Max(topLeft + textSize, hudReadyBoundsPosition + hudReadyBoundsSize) - hitPosition : textSize;
+        var hovered = ImGui.IsMouseHoveringRect(hitPosition, hitPosition + hitSize, false);
         if (config.InteractionHudLocked)
             hudDragging = false;
         if (config.InteractionHudLocked && !(shift && hovered) && !hudPopupOpen && !hudDragging)
             return;
 
-        hudBoundsPosition = topLeft;
-        hudBoundsSize = textSize;
-        var visible = BeginHudWindow(topLeft, textSize);
+        hudBoundsPosition = hitPosition;
+        hudBoundsSize = hitSize;
+        var visible = BeginHudWindow(hitPosition, hitSize);
         try
         {
             if (!visible) return;
             var buttons = ImGuiButtonFlags.MouseButtonRight;
             if (!config.InteractionHudLocked) buttons |= ImGuiButtonFlags.MouseButtonLeft;
-            ImGui.InvisibleButton("##visible-target-text", textSize, buttons);
+            ImGui.InvisibleButton("##visible-target-text", hitSize, buttons);
             if (shift && hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right) && !hudPopupOpen)
             {
                 ImGui.OpenPopup(HudPopupId, ImGuiPopupFlags.None);
-                // Keep the menu off the foreground HUD text when there is space.
-                ImGui.SetNextWindowPos(topLeft + new Vector2(0, textSize.Y + 6), ImGuiCond.Appearing);
+                // Choose a side before ImGui's viewport clamp can push the menu
+                // back over the foreground text near the bottom of the screen.
+                var popupHeight = 4 * ImGui.GetTextLineHeightWithSpacing() + ImGui.GetStyle().WindowPadding.Y * 2;
+                var popupY = topLeft.Y + textSize.Y + 6;
+                if (popupY + popupHeight > viewportPosition.Y + viewportSize.Y - 8)
+                    popupY = Math.Max(viewportPosition.Y + 8, topLeft.Y - popupHeight - 6);
+                ImGui.SetNextWindowPos(new Vector2(topLeft.X, popupY), ImGuiCond.Appearing);
             }
 
             if (!config.InteractionHudLocked && !hudPopupOpen && ImGui.IsItemActive()
@@ -341,13 +362,13 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                 hudDragging = true;
                 hudDragStartMouse = ImGui.GetMousePos();
                 // Start from the actual clamped position, not an off-screen setting.
-                hudDragStartOffset = topLeft - center + new Vector2(textSize.X * 0.5f, 0);
+                hudDragStartOffset = topLeft - center + anchor;
             }
             if (hudDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left))
             {
                 var moved = hudDragStartOffset + ImGui.GetMousePos() - hudDragStartMouse;
-                topLeft = ClampHudPosition(center + moved - new Vector2(textSize.X * 0.5f, 0), textSize);
-                var actualOffset = topLeft - center + new Vector2(textSize.X * 0.5f, 0);
+                topLeft = ClampHudPosition(center + moved - anchor, textSize);
+                var actualOffset = topLeft - center + anchor;
                 if (config.InteractionHudOffsetX != actualOffset.X || config.InteractionHudOffsetY != actualOffset.Y)
                 {
                     config.InteractionHudOffsetX = actualOffset.X;
@@ -454,25 +475,41 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         if (action == SoftTargetAction.None) return false;
         var target = Services.Objects.SearchById(actual.Id);
         var system = TargetSystem.Instance();
-        if (target == null || system == null || target.Address != expected.Address)
+        if (target == null || system == null || target.GameObjectId != actual.Id || target.Address != actual.Address
+            || !target.IsValid() || !target.IsTargetable)
             return false;
-        if (SoftTargetPolicy.IsEnemy(actual.Category))
+        var native = (NativeGameObject*)target.Address;
+        if (native == null || !native->GetIsTargetable() || Classify(target, native) != actual.Category)
+            return false;
+
+        // This callback runs on the fresh press, or only after gathering has
+        // finished preparing. Looking at a candidate never changes the hard target.
+        bool HasExpectedTarget()
         {
-            var native = (NativeGameObject*)target.Address;
-            if (Classify(target, native) != actual.Category || !system->SetHardTarget(native)) return false;
-            // An action must never enable auto-attack on a different target if
-            // another subsystem rejected or replaced the requested hard target.
             var hardTarget = Services.Targets.Target;
-            if (hardTarget == null || hardTarget.GameObjectId != actual.Id || hardTarget.Address != actual.Address) return false;
-            if (action == SoftTargetAction.TargetEnemy) return true;
-            var uiState = NativeUiState.Instance();
-            if (uiState == null) return false;
-            return uiState->WeaponState.AutoAttackState.Get() || uiState->WeaponState.AutoAttackState.Set(true);
+            return hardTarget != null && hardTarget.IsValid()
+                && hardTarget.GameObjectId == actual.Id && hardTarget.Address == actual.Address;
         }
-        // Preserve the native range/state/LOS checks. Its return value is not treated
-        // as proof that the game accepted or completed the requested interaction.
-        system->InteractWithObject((NativeGameObject*)target.Address, true);
-        return true;
+        return SoftTargetPolicy.AfterConfirmedTarget(
+            () => HasExpectedTarget() || system->SetHardTarget(native),
+            // Confirm again after selection; a replaced target must never act.
+            HasExpectedTarget,
+            () =>
+            {
+                if (action == SoftTargetAction.TargetEnemy) return true;
+                if (action == SoftTargetAction.AttackEnemy)
+                {
+                    var uiState = NativeUiState.Instance();
+                    return uiState != null
+                        && (uiState->WeaponState.AutoAttackState.Get() || uiState->WeaponState.AutoAttackState.Set(true));
+                }
+                var itemUse = QuestItems.TryUse(target);
+                if (itemUse != QuestItemUseResult.NotApplicable) return itemUse == QuestItemUseResult.Used;
+                // Preserve native range/state/LOS checks. The return value is not
+                // proof that the game accepted or completed the interaction.
+                system->InteractWithObject(native, true);
+                return true;
+            });
     }
 
     private string? GetObservationUnavailableReason()
@@ -548,12 +585,12 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             return "Interaction paused while the game is not focused.";
 
         var ui = RaptureAtkModule.Instance();
-        if (ui == null || ui->IsTextInputActive() || ui->AtkUnitManager == null)
+        if (ui == null || ui->AtkUnitManager == null)
             return "Interaction paused while game text input or UI initialization is active.";
 
         var focused = ui->AtkUnitManager->FocusedAddon;
-        return focused != null && focused->IsVisible
-            ? "Interaction paused while a game menu is focused; camera detection remains active." : null;
+        return SoftInteractionUiPolicy.PauseReason(ui->IsTextInputActive(), IsWorldInteractionActive(),
+            focused != null && focused->IsVisible, focused == null ? null : focused->NameString);
     }
 
     private Candidate? FindCandidate()
@@ -565,9 +602,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         if (player == null || targets == null || camera == null)
             return null;
 
-        var center = viewportPosition + viewportSize * 0.5f;
         var cone = float.IsFinite(config.InteractionCone) ? Math.Clamp(config.InteractionCone, 0.025f, 0.3f) : 0.1f;
-        var radius = Math.Min(viewportSize.X, viewportSize.Y) * cone;
         var maxDistance = float.IsFinite(config.InteractionDistance)
             ? Math.Clamp(config.InteractionDistance, Configuration.MinimumDetectionDistance, Configuration.MaximumDetectionDistance)
             : Configuration.DefaultDetectionDistance;
@@ -595,19 +630,15 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             var worldCenter = new NativeVector3();
             native->GetCenterPosition(&worldCenter);
             Vector3 position = worldCenter;
-            if (!Services.GameGui.WorldToScreen(position, out var screenPosition))
+            var projectedOnScreen = Services.GameGui.WorldToScreen(position, out var screenPosition);
+            if (!SoftTargetGeometry.TryScore(screenPosition, projectedOnScreen, viewportPosition, viewportSize,
+                    cone, distance, maxDistance, candidate?.Id == obj.GameObjectId, out var score))
                 continue;
 
-            var screenDistance = Vector2.Distance(center, screenPosition);
-            if (!float.IsFinite(screenDistance) || screenDistance > radius)
-                continue;
-
-            // Center alignment dominates, with distance as a tie breaker. The small
-            // incumbent bonus prevents two adjacent NPCs flickering back and forth.
-            var score = screenDistance / radius + (distance / maxDistance) * 0.1f;
-            if (candidate?.Id == obj.GameObjectId)
-                score -= 0.075f;
-            if (score >= bestScore || (!SoftTargetPolicy.IsEnemy(category) && !HasActiveInteraction(native, obj.ObjectKind))
+            // Geometry only ranks visible aim candidates; native eligibility,
+            // active handlers and the camera collision ray remain mandatory.
+            if (score >= bestScore || (!SoftTargetPolicy.IsEnemy(category) && !HasActiveInteraction(native, obj.ObjectKind)
+                    && !QuestItems.CanOfferTarget(obj))
                 || !HasCameraLineOfSight(cameraPosition, position, obj.HitboxRadius))
                 continue;
 

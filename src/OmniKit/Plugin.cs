@@ -18,6 +18,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ChatService chat;
     private readonly VoiceInput voice;
     private readonly PluginUi ui;
+    private readonly WebLinkInterceptor webLinks;
+    private bool requestedWebCapture;
     private readonly ShortcutInput shortcuts = new();
     private bool disposed;
 
@@ -30,11 +32,17 @@ public sealed class Plugin : IDalamudPlugin
         Configuration.Save();
         sources = new SourceRegistry();
         interaction = new SoftInteractionService(Configuration);
-        chat = new ChatService(Configuration);
+        chat = new ChatService(Configuration, WebLinkInterceptor.Bypass);
         voice = new VoiceInput();
         ui = new PluginUi(Configuration, interaction, chat, voice, store, sources);
+        webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);
+        ui.BrowserInterceptionStatus = () => webLinks.IsEnabled && !ui.BrowserReady
+            ? "Capture waiting for the in-game browser." : webLinks.Status;
+        requestedWebCapture = Configuration.BrowserInterceptLinks;
+        webLinks.SetEnabled(requestedWebCapture);
+        if (requestedWebCapture) ui.OpenBrowser();
         Services.Commands.AddHandler("/omnikit", new CommandInfo(OnCommand)
-        { HelpMessage = "Open OmniKit. Use /omnikit settings to configure it." });
+        { HelpMessage = "Open OmniKit. /omnikit settings, /omnikit wiki <search>, /omnikit browser [controls|hide|URL]." });
         pluginInterface.UiBuilder.Draw += Draw;
         pluginInterface.UiBuilder.OpenMainUi += OpenMain;
         pluginInterface.UiBuilder.OpenConfigUi += OpenSettings;
@@ -43,18 +51,37 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        if (args.Trim().Equals("settings", StringComparison.OrdinalIgnoreCase)) OpenSettings();
+        var request = args.Trim();
+        if (request.Equals("settings", StringComparison.OrdinalIgnoreCase)) OpenSettings();
+        else if (request.Equals("browser", StringComparison.OrdinalIgnoreCase)) ui.OpenBrowser();
+        else if (request.Equals("browser controls", StringComparison.OrdinalIgnoreCase)) ui.ToggleBrowserControls();
+        else if (request.Equals("browser hide", StringComparison.OrdinalIgnoreCase)) ui.HideBrowser();
+        else if (request.Equals("wiki", StringComparison.OrdinalIgnoreCase)) ui.OpenBrowser();
+        else if (request.StartsWith("wiki ", StringComparison.OrdinalIgnoreCase)) ui.OpenWikiCommand(request[5..]);
+        else if (request.StartsWith("browser ", StringComparison.OrdinalIgnoreCase)) ui.OpenWebsite(request[8..]);
         else OpenMain();
     }
     private void OpenMain() => ui.OpenMain();
     private void OpenSettings() => ui.OpenSettings();
+    private bool TryQueueWebLink(string url)
+    {
+        return !Volatile.Read(ref disposed) && Configuration.BrowserInterceptLinks
+            && ui.TryQueueCapturedWebsite(url);
+    }
     private void Update(IFramework framework)
     {
         if (disposed) return;
+        if (requestedWebCapture != Configuration.BrowserInterceptLinks)
+        {
+            requestedWebCapture = Configuration.BrowserInterceptLinks;
+            webLinks.SetEnabled(requestedWebCapture);
+            if (requestedWebCapture) ui.OpenBrowser();
+        }
         ui.SuppressBindingKeys();
-        shortcuts.Update(Configuration, ui.CapturesText, ui.SearchHasFocus, ui.ToggleMain, OpenSettings, ui.CapturingBinding);
+        var browserInput = ui.BrowserCapturesInput;
+        shortcuts.Update(Configuration, ui.CapturesText || browserInput, ui.SearchHasFocus && !browserInput, ui.ToggleMain, OpenSettings, ui.CapturingBinding);
         ui.Update();
-        interaction.Update(ui.IsOpen);
+        interaction.Update(ui.IsOpen || browserInput);
     }
     private void Draw()
     {
@@ -71,6 +98,7 @@ public sealed class Plugin : IDalamudPlugin
         builder.OpenMainUi -= OpenMain;
         builder.OpenConfigUi -= OpenSettings;
         Services.Commands.RemoveHandler("/omnikit");
+        webLinks.Dispose();
         ui.Dispose(); voice.Dispose(); chat.Dispose();
         interaction.Dispose(); sources.Dispose();
     }

@@ -5,6 +5,10 @@ internal enum SoftTargetAction { None, UseObject, TargetEnemy, AttackEnemy }
 /// <summary>Separates visible candidates from the actions the user has enabled.</summary>
 internal static class SoftTargetPolicy
 {
+    /// <summary>One synchronous selection, confirmation, then action; no retries.</summary>
+    public static bool AfterConfirmedTarget(Func<bool> select, Func<bool> confirm, Func<bool> action) =>
+        select() && confirm() && action();
+
     public static bool IsEnemy(InteractionTargets kind) =>
         kind is InteractionTargets.HostileEnemies or InteractionTargets.NeutralEnemies;
 

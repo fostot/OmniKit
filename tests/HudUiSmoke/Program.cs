@@ -30,7 +30,9 @@ var configType = assembly.GetType("OmniKit.Configuration", true)!;
 var drawSettings = uiType.GetMethod("DrawSettings", flags)!;
 var drawHud = serviceType.GetMethod("DrawHud", flags)!;
 var theme = uiType.GetMethod("PushTheme", BindingFlags.Static | BindingFlags.NonPublic)!;
+var bagsOnly = args.Contains("--bags-only");
 
+if (!bagsOnly)
 foreach (var globalScale in new[] { 1f, 1.5f, 2f })
 {
     foreach (var hidden in new[] { false, true }) RenderSettings(globalScale, hidden);
@@ -41,7 +43,9 @@ foreach (var globalScale in new[] { 1f, 1.5f, 2f })
     Console.WriteLine($"HUD scale {globalScale}: actual glyph heights at 50/100/200% = {string.Join("/", heights.Select(h => h.ToString("0.0")))}px.");
 }
 CheckDialogueAndEffects();
-Console.WriteLine("PASS: HUD font control is clickable at minimum settings size, including hidden HUD; marked sample previews render without a candidate; native glyph geometry scales at 50/100/200%; previews disappear when editing ends; world interactions hide editing/live HUD and return on idle, unrelated menus/player chat do not; effects and independent outlines render.");
+Console.WriteLine(bagsOnly
+    ? "PASS: ready HUD retains [E] with passive bags; ordinary pause/keyboard capture hides it; Modify, context menu and drag remain visible; world interaction overrides editing; installed inventory names verified. Synthetic native rendering only."
+    : "PASS: HUD font control is clickable at minimum settings size, including hidden HUD; marked sample previews render without a candidate; native glyph geometry scales at 50/100/200%; previews disappear when editing ends; normal HUD hides while paused and shows the key when ready; world interactions override editing; effects and independent outlines render.");
 
 void Set(object instance, string field, object? value) => instance.GetType().GetField(field, flags)!.SetValue(instance, value);
 object Config()
@@ -75,6 +79,7 @@ unsafe void RenderSettings(float scale, bool hidden, bool interacting=false)
     Set(ui,"config",config); Set(ui,"interaction",interaction); Set(ui,"settingsOpen",true);
     Set(ui,"section",2); Set(ui,"selectSettingsTab",true); Set(ui,"resetHudScroll",true);
     Set(ui,"hotkeys",Activator.CreateInstance(assembly.GetType("OmniKit.Ui.HotkeyCapture",true)!, nonPublic:true));
+    Set(ui,"voice",Activator.CreateInstance(assembly.GetType("OmniKit.Assistant.VoiceInput",true)!, nonPublic:true));
     var context = ImGui.CreateContext();
     try
     {
@@ -135,7 +140,9 @@ unsafe void CheckDialogueAndEffects()
     services.GetProperty("Conditions",BindingFlags.Static|BindingFlags.NonPublic)!.SetValue(null,conditions);
     services.GetProperty("GameGui",BindingFlags.Static|BindingFlags.NonPublic)!.SetValue(null,gui);
     var config=Config(); Set(config,"SoftInteractEnabled",true); Set(config,"InteractionHudEffect",Enum.Parse(assembly.GetType("OmniKit.Interaction.HudTextEffect",true)!,"None"));
+    Set(config,"InteractKey",Enum.Parse(configType.GetField("InteractKey")!.FieldType,"E"));
     var interaction=Activator.CreateInstance(serviceType,config)!;
+    serviceType.GetProperty("ActionPaused")!.SetValue(interaction,false);
     var candidateType=serviceType.GetNestedType("Candidate",BindingFlags.NonPublic)!;
     Set(interaction,"candidate",Activator.CreateInstance(candidateType,0UL,IntPtr.Zero,"Sample NPC",
         Enum.Parse(assembly.GetType("OmniKit.Interaction.InteractionTargets",true)!,"Npcs")));
@@ -156,6 +163,15 @@ unsafe void CheckDialogueAndEffects()
                 .SelectMany(argument=>argument.Value is IEnumerable<CustomAttributeTypedArgument> values ? values.Select(value=>value.Value) : new[]{argument.Value});
             if(!declaredNames.Contains(name)) throw new InvalidOperationException("Unverified installed native addon name: "+name);
         }
+        var declaredInventoryNames=new[]{"AddonInventory","AddonInventoryLarge","AddonInventoryExpansion","AddonInventoryGrid"}
+            .Select(name=>typeof(AtkUnitBase).Assembly.GetType("FFXIVClientStructs.FFXIV.Client.UI."+name,true)!)
+            .SelectMany(type=>type.CustomAttributes.Where(attribute=>attribute.AttributeType.Name=="AddonAttribute"))
+            .SelectMany(attribute=>attribute.ConstructorArguments)
+            .SelectMany(argument=>argument.Value is IEnumerable<CustomAttributeTypedArgument> values ? values.Select(value=>value.Value) : new[]{argument.Value})
+            .ToHashSet();
+        foreach(var name in new[]{"Inventory","InventoryLarge","InventoryExpansion","InventoryGrid","InventoryGrid0","InventoryGrid1",
+            "InventoryGrid0E","InventoryGrid1E","InventoryGrid2E","InventoryGrid3E"})
+            if(!declaredInventoryNames.Contains(name)) throw new InvalidOperationException("Unverified passive bag addon name: "+name);
         foreach(var editing in new[]{false,true})
         foreach(var signal in blockedAddons.Select(name=>(Name:name,Addon:true)).Concat(blockedFlags.Select(name=>(Name:name,Addon:false)))
             .Concat(new (string Name,bool Addon)[]{("ChatLog",true),("Inventory",true),("ConfigSystem",true),("Occupied",false),("Casting",false),("None",true)}))
@@ -177,20 +193,95 @@ unsafe void CheckDialogueAndEffects()
         activeFlags.Clear(); visibleAddon="Talk"; addon.IsVisible=false;
         ImGui.NewFrame(); drawHud.Invoke(interaction,null);
         if(ImGui.GetForegroundDrawList().VtxBuffer.Size==0) throw new InvalidOperationException("Invisible dialogue addon hid the HUD.");
-        ImGui.Render(); visibleAddon=null;
+        ImGui.Render(); visibleAddon="Inventory"; addon.IsVisible=true;
         preview.SetValue(interaction,false);
-        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
-        var actual=ImGui.GetForegroundDrawList(); var actualCount=actual.VtxBuffer.Size;
-        var comparison=ImGui.GetBackgroundDrawList(); comparison.AddText(ImGui.GetFont(),ImGui.GetFontSize(),Vector2.Zero,0xFFFFFFFF,"Sample NPC",0);
-        if(actualCount!=comparison.VtxBuffer.Size) throw new InvalidOperationException("Paused live HUD still contains a misleading Preview suffix.");
-        ImGui.Render();
-        serviceType.GetProperty("ActionPaused")!.SetValue(interaction,false);
-        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
-        actual=ImGui.GetForegroundDrawList(); comparison=ImGui.GetBackgroundDrawList();
-        comparison.AddText(ImGui.GetFont(),ImGui.GetFontSize(),Vector2.Zero,0xFFFFFFFF,"[F]  Sample NPC",0);
-        if(actual.VtxBuffer.Size!=comparison.VtxBuffer.Size) throw new InvalidOperationException("The active interaction key hint was changed.");
-        ImGui.Render();
+        foreach(var paused in new[]{false,true})
+        foreach(var capture in new[]{false,true})
+        {
+            serviceType.GetProperty("ActionPaused")!.SetValue(interaction,paused);
+            ImGui.NewFrame(); ImGui.GetIO().WantCaptureKeyboard=capture; drawHud.Invoke(interaction,null);
+            var actual=ImGui.GetForegroundDrawList(); var comparison=ImGui.GetBackgroundDrawList();
+            if(!paused&&!capture) comparison.AddText(ImGui.GetFont(),ImGui.GetFontSize(),Vector2.Zero,0xFFFFFFFF,"[E]  Sample NPC",0);
+            if(actual.VtxBuffer.Size!=comparison.VtxBuffer.Size)
+                throw new InvalidOperationException($"Normal bag HUD should show [E] only when ready, and hide during a real pause: paused={paused}, capture={capture}.");
+            ImGui.Render();
+            if(!paused&&!capture) renderer.Save(ImGui.GetDrawData(),Path.Combine(output,"hud-bags-keyhint.png"));
+        }
+        ImGui.GetIO().WantCaptureKeyboard=false;
         preview.SetValue(interaction,true);
+        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
+        var sample=ImGui.GetForegroundDrawList(); var expected=ImGui.GetBackgroundDrawList();
+        expected.AddText(ImGui.GetFont(),ImGui.GetFontSize(),Vector2.Zero,0xFFFFFFFF,"Sample NPC  · Preview",0);
+        if(sample.VtxBuffer.Size!=expected.VtxBuffer.Size) throw new InvalidOperationException("Only the actual HUD editor should show the marked keyless sample.");
+        ImGui.Render(); renderer.Save(ImGui.GetDrawData(),Path.Combine(output,"hud-editing-sample.png"));
+        preview.SetValue(interaction,false);
+        // Start from the actual ready HUD, then let Shift pause actions before
+        // the mouse gesture. Do not inject a popup or its backing state.
+        serviceType.GetProperty("ActionPaused")!.SetValue(interaction,false);
+        ImGui.NewFrame(); drawHud.Invoke(interaction,null); ImGui.Render();
+        var readyPosition=(Vector2)serviceType.GetField("hudReadyBoundsPosition",flags)!.GetValue(interaction)!;
+        var readySize=(Vector2)serviceType.GetField("hudReadyBoundsSize",flags)!.GetValue(interaction)!;
+        var io=ImGui.GetIO();
+        serviceType.GetProperty("ActionPaused")!.SetValue(interaction,true);
+        io.AddKeyEvent(ImGuiKey.ModShift,true); io.AddMousePosEvent(10,10);
+        ImGui.NewFrame(); io.WantCaptureKeyboard=true; drawHud.Invoke(interaction,null);
+        if(ImGui.GetForegroundDrawList().VtxBuffer.Size!=0 || (bool)serviceType.GetField("hudPopupOpen",flags)!.GetValue(interaction)!)
+            throw new InvalidOperationException("Shift outside the last ready HUD must not revive a paused HUD or create its popup.");
+        ImGui.Render(); io.WantCaptureKeyboard=false;
+        // Use the left edge formerly occupied by [E], which lies outside the
+        // narrower keyless editor text. The gesture must still own that click.
+        io.AddMousePosEvent(readyPosition.X+1,readyPosition.Y+readySize.Y*.5f);
+        for(var frame=0;frame<4;frame++)
+        {
+            if(frame==1) io.AddMouseButtonEvent(1,true);
+            if(frame==2) { io.AddMouseButtonEvent(1,false); io.AddKeyEvent(ImGuiKey.ModShift,false); }
+            ImGui.NewFrame();
+            drawHud.Invoke(interaction,null);
+            if((frame>0 && !(bool)serviceType.GetField("hudPopupOpen",flags)!.GetValue(interaction)!)
+                || ImGui.GetForegroundDrawList().VtxBuffer.Size==0
+                || !(bool)serviceType.GetProperty("ActionPaused")!.GetValue(interaction)!)
+                throw new InvalidOperationException("Shift/right-click must open and retain the HUD menu while game action stays paused.");
+            if(frame==3)
+            {
+                var text=ImGui.GetForegroundDrawList();
+                var min=new Vector2(float.MaxValue); var max=new Vector2(float.MinValue);
+                for(var i=0;i<text.VtxBuffer.Size;i++)
+                { min=Vector2.Min(min,text.VtxBuffer[i].Pos); max=Vector2.Max(max,text.VtxBuffer[i].Pos); }
+                var popups=0;
+                for(var i=0;i<context.Windows.Size;i++)
+                {
+                    var window=context.Windows[i];
+                    if(!window.Active || window.Hidden || (window.Flags&ImGuiWindowFlags.Popup)==0) continue;
+                    ++popups;
+                    var end=window.Pos+window.Size;
+                    if(window.Pos.X<0 || window.Pos.Y<0 || end.X>io.DisplaySize.X || end.Y>io.DisplaySize.Y
+                        || !(end.Y+4<=min.Y || window.Pos.Y>=max.Y+4))
+                        throw new InvalidOperationException("HUD menu must fit the viewport and leave a visible gutter from the HUD text.");
+                }
+                if(popups!=1) throw new InvalidOperationException("Expected exactly one visible HUD context menu.");
+            }
+            ImGui.Render();
+            if(frame==3) renderer.Save(ImGui.GetDrawData(),Path.Combine(output,"hud-shift-entry-menu.png"));
+        }
+        visibleAddon="Talk";
+        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
+        if(ImGui.GetForegroundDrawList().VtxBuffer.Size!=0 || (bool)serviceType.GetField("hudPopupOpen",flags)!.GetValue(interaction)!)
+            throw new InvalidOperationException("Active dialogue must hide the HUD and close even its modification popup.");
+        ImGui.Render(); visibleAddon="Inventory";
+        io.AddKeyEvent(ImGuiKey.ModShift,true);
+        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
+        if(ImGui.GetForegroundDrawList().VtxBuffer.Size!=0)
+            throw new InvalidOperationException("Dialogue must invalidate the previous ready HUD gesture bounds.");
+        ImGui.Render(); io.AddKeyEvent(ImGuiKey.ModShift,false);
+        Set(config,"InteractionHudLocked",false); Set(interaction,"hudDragging",true);
+        ImGui.GetIO().AddMouseButtonEvent(0,true);
+        ImGui.NewFrame(); drawHud.Invoke(interaction,null);
+        if(ImGui.GetForegroundDrawList().VtxBuffer.Size==0 || !(bool)serviceType.GetField("hudDragging",flags)!.GetValue(interaction)!)
+            throw new InvalidOperationException("Dragging the HUD must remain visible through its own input pause.");
+        ImGui.Render(); ImGui.GetIO().AddMouseButtonEvent(0,false);
+        Set(interaction,"hudDragging",false); Set(config,"InteractionHudLocked",true);
+        preview.SetValue(interaction,true);
+        if(bagsOnly) return;
         var baseline=0;
         foreach(var effect in new[]{"None","Shadow","SoftGlow","GentleShimmer"})
         foreach(var outline in new[]{false,true})

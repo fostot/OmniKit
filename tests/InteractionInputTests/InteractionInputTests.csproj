@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/OmniKit/Interaction/SoftInteractionPress.cs" Link="SoftInteractionPress.cs" />
+    <Compile Include="../../src/OmniKit/Interaction/SoftInteractionUiPolicy.cs" Link="SoftInteractionUiPolicy.cs" />
     <Compile Include="../../src/OmniKit/Interaction/SoftTargetPolicy.cs" Link="SoftTargetPolicy.cs" />
     <Compile Include="../../src/OmniKit/Interaction/InteractionTargets.cs" Link="InteractionTargets.cs" />
   </ItemGroup>

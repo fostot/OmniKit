@@ -11,6 +11,14 @@ internal sealed unsafe class SoftwareRenderer
     private readonly byte[] atlas;
     private readonly int atlasWidth;
     private readonly int atlasHeight;
+    private readonly Dictionary<ulong, (byte[] Pixels, int Width, int Height)> textures = new();
+
+    public void AddTexture(ulong id, byte[] pixels, int width, int height)
+    {
+        if (id <= 1 || width <= 0 || height <= 0 || pixels.Length != checked(width * height * 4))
+            throw new ArgumentException("Expected a unique image texture ID and complete RGBA pixels.");
+        textures.Add(id, (pixels, width, height));
+    }
 
     public SoftwareRenderer()
     {
@@ -42,8 +50,9 @@ internal sealed unsafe class SoftwareRenderer
                 var command = list.CmdBuffer[commandIndex];
                 if (command.UserCallback != null)
                     throw new NotSupportedException("Custom draw callbacks require the game renderer.");
-                if (command.TextureId.Handle != 1)
-                    throw new NotSupportedException("Only the actual ImGui font atlas is supported by this harness.");
+                var texture = command.TextureId.Handle == 1 ? (atlas, atlasWidth, atlasHeight)
+                    : textures.TryGetValue(command.TextureId.Handle, out var registered) ? registered
+                    : throw new NotSupportedException("The image texture was not registered with this harness.");
                 var clipMin = (new Vector2(command.ClipRect.X, command.ClipRect.Y) - data.DisplayPos) * data.FramebufferScale;
                 var clipMax = (new Vector2(command.ClipRect.Z, command.ClipRect.W) - data.DisplayPos) * data.FramebufferScale;
                 for (uint element = 0; element + 2 < command.ElemCount; element += 3)
@@ -55,7 +64,7 @@ internal sealed unsafe class SoftwareRenderer
                     a.Pos = (a.Pos - data.DisplayPos) * data.FramebufferScale;
                     b.Pos = (b.Pos - data.DisplayPos) * data.FramebufferScale;
                     c.Pos = (c.Pos - data.DisplayPos) * data.FramebufferScale;
-                    DrawTriangle(image, width, height, a, b, c, clipMin, clipMax);
+                    DrawTriangle(image, width, height, a, b, c, clipMin, clipMax, texture.Item1, texture.Item2, texture.Item3);
                 }
             }
         }
@@ -73,7 +82,8 @@ internal sealed unsafe class SoftwareRenderer
         return bounds;
     }
 
-    private void DrawTriangle(byte[] image, int width, int height, ImDrawVert a, ImDrawVert b, ImDrawVert c, Vector2 clipMin, Vector2 clipMax)
+    private void DrawTriangle(byte[] image, int width, int height, ImDrawVert a, ImDrawVert b, ImDrawVert c, Vector2 clipMin, Vector2 clipMax,
+        byte[] atlas, int atlasWidth, int atlasHeight)
     {
         var area = Cross(b.Pos - a.Pos, c.Pos - a.Pos);
         if (Math.Abs(area) < 0.00001f) return;

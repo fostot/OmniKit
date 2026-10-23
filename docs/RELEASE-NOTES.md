@@ -1,3 +1,69 @@
+# 0.1.0.0009: in-game browser, companion homes and expressive HUD
+
+OmniKit's wiki, Community Finder and website actions now open in its own
+parented WebView2 browser. The website stays visible while its address/navigation
+controls stay hidden behind a menu icon. Unpacked Chromium extensions can be
+managed in that menu. The installed WebView2 Evergreen Runtime and .NET Desktop
+Runtime are required. Browser errors never silently open the system browser;
+official account consent still uses the external provider sign-in flow.
+An optional, default-off link interceptor captures standard HTTP/HTTPS
+ShellExecute opens made by the same game process while the browser is ready and
+has queue space. Recognized auth/non-web links pass through;
+custom process launches and links opened by another process are not covered.
+
+Settings now emphasize choices and actionable status, with routine instructions
+in tooltips/disclosures, semantic colors and readable outlined labels. The HUD
+has eleven styles, including rainbow, neon pulse, chromatic glitch, hologram,
+flame, frost and light sweep, with intensity/speed/freeze controls and an
+independent outline. Active NPC/object interactions still suppress both target
+text and the editing preview.
+Other paused states now hide the normal HUD too; only deliberate HUD editing
+shows a paused sample. Passive player bags remain usable, with the normal key
+label, while text input and unknown focused menus still pause interaction.
+
+Camera-directed detection now uses horizontal aim with vertical screen tolerance,
+so a visible target is not lost merely because camera pitch moves it away from
+the exact screen center. Range and native visibility/collision checks remain.
+On a fresh Interact press, targetable objects are selected and confirmed before
+the one native interaction; observation alone never changes the hard target.
+Optional **Use verified quest items** starts with Tiller's Shovel on the three
+cumbersome rocks in Rocks in a Hard Place. It requires the current accepted
+quest/sequence, native tracker item, inventory ownership, unambiguous handler
+context and native usability. Debris remains ordinary interaction. Other quests
+still require manual item use; the current public Questionable/Tsukimichi IPC
+does not expose a complete generic required-item/target mapping.
+
+Companions can fall to the screen floor and walk continuously back to their
+saved area. An optional draggable moon house moves that area and faces inward.
+A four-pose hand signals hovering, pickup and release; the supported ImGui hand
+cursor is used over draggable objects. Optional occasional comments are local
+text only. Wink now closes its eye while floating. Bimble and Moonbear's body
+fit, separate sleeve/hip attachments and lower-limb fullness are corrected.
+Arms sit under the cape; paws retain the source artwork's aspect. Bimble was
+then rebuilt with fresh Navigator/Stargazer part artwork and a shared idle/walk
+renderer: a bounded 180ms transition settles both paws without changing his
+body or resetting walked-distance phase. Moonbear retains a silhouette
+difference between its separate idle/walk art. Gait timing and sole paths are unchanged. Other
+approved companion walking/rolling/floating motion is preserved.
+
+Each explicit Ask permits at most one inference request, with no queued duplicate,
+automatic retry, provider fallback or tool continuation. Overlapping requests are
+rejected. Codex/Claude CLI sign-in and connection checks remain available, but CLI
+generation is paused because their internal inference/retry count cannot be
+verified. Direct ChatGPT and Responses-compatible API chat remain available.
+This bounds request count, not exact provider token usage or charges.
+
+Schema v6 migrates v1–v5 settings atomically and adds effect, home, hand, comment
+and blink preferences. Browser preferences migrate to the built-in route.
+
+Validation includes an actual out-of-process WebView2 child on a synthetic
+host, navigation/protocol/lifecycle checks, and a real synthetic MV3 extension
+install/disable/enable/remove cycle. Native minimum-size UI/effect renders,
+motion/physics checks, storage migrations and synthetic counting HTTP tests
+passed. None establishes actual FFXIV focus, fullscreen, mixed-DPI or live frame
+compatibility; those remain on the game acceptance checklist. No paid inference
+or real account credential was needed for these tests. The base remains 0.1.0.
+
 # 0.1.0.0007: HUD editing, coherent movement and ChatGPT models
 
 The visible-target HUD hides during active NPC/object interactions, dialogue

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/OmniKit/Integration/WebLinkInterceptor.cs" Link="WebLinkInterceptor.cs" />
+    <Reference Include="goatcorp.Reloaded.Hooks" HintPath="$(DalamudLibPath)/goatcorp.Reloaded.Hooks.dll" />
+    <Reference Include="Reloaded.Hooks.Definitions" HintPath="$(DalamudLibPath)/Reloaded.Hooks.Definitions.dll" />
+    <Reference Include="Reloaded.Memory" HintPath="$(DalamudLibPath)/Reloaded.Memory.dll" />
+    <Reference Include="Reloaded.Memory.Buffers" HintPath="$(DalamudLibPath)/Reloaded.Memory.Buffers.dll" />
+    <Reference Include="goatcorp.Reloaded.Memory.Buffers" HintPath="$(DalamudLibPath)/goatcorp.Reloaded.Memory.Buffers.dll" />
+    <Reference Include="Iced" HintPath="$(DalamudLibPath)/Iced.dll" />
+  </ItemGroup>
+</Project>

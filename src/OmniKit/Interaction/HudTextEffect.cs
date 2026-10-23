@@ -6,4 +6,11 @@ public enum HudTextEffect
     Shadow,
     SoftGlow,
     GentleShimmer,
+    Rainbow,
+    NeonPulse,
+    ChromaticGlitch,
+    Hologram,
+    Flame,
+    Frost,
+    LightSweep,
 }

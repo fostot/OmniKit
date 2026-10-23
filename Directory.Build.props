@@ -1,5 +1,5 @@
 <Project>
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra' Or '$(MSBuildProjectName)' == 'OmniKit.Browser'">
     <OmniKitBaseVersion>0.1.0</OmniKitBaseVersion>
     <Version>$(OmniKitBaseVersion)</Version>
     <Author>Zero</Author>

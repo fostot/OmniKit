@@ -1,6 +1,6 @@
 <Project>
   <Target Name="ComputeOmniKitVersion" BeforeTargets="BeforeBuild;GetAssemblyVersion;GetAssemblyAttributes"
-          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra' Or '$(MSBuildProjectName)' == 'OmniKit.Browser'">
     <Error Condition="!Exists('$(MSBuildThisFileDirectory).git')" Text="OmniKit requires a Git checkout with full history to calculate its commit version." />
     <Exec Command="git -C &quot;$(MSBuildThisFileDirectory).&quot; rev-parse --is-shallow-repository" ConsoleToMSBuild="true" StandardOutputImportance="Low">
       <Output TaskParameter="ConsoleOutput" PropertyName="_OmniKitShallow" />
@@ -30,7 +30,7 @@
     <Message Text="OmniKit $(InformationalVersion)" Importance="High" />
   </Target>
   <Target Name="WriteOmniKitBuildMetadata" AfterTargets="Build" DependsOnTargets="ComputeOmniKitVersion"
-          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra'">
+          Condition="'$(MSBuildProjectName)' == 'OmniKit' Or '$(MSBuildProjectName)' == 'OmniKit.Umbra' Or '$(MSBuildProjectName)' == 'OmniKit.Browser'">
     <WriteLinesToFile File="$(TargetDir)$(AssemblyName).build.json" Overwrite="true" Encoding="UTF-8"
       Lines="{&quot;BaseVersion&quot;:&quot;$(OmniKitBaseVersion)&quot;,&quot;CommitCount&quot;:$(OmniKitCommitCount),&quot;CommitSha&quot;:&quot;$(OmniKitCommitSha)&quot;,&quot;ShortSha&quot;:&quot;$(OmniKitShortSha)&quot;,&quot;ArtifactVersion&quot;:&quot;$(OmniKitArtifactVersion)&quot;,&quot;AssemblyVersion&quot;:&quot;$(AssemblyVersion)&quot;,&quot;DisplayVersion&quot;:&quot;$(InformationalVersion)&quot;,&quot;Author&quot;:&quot;Zero&quot;}" />
   </Target>
