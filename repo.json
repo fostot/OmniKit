@@ -3,11 +3,11 @@
     "Author": "Zero",
     "Name": "OmniKit",
     "InternalName": "OmniKit",
-    "AssemblyVersion": "0.1.0.7",
+    "AssemblyVersion": "0.1.0.9",
     "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
     "Punchline": "Your everyday toolkit for XIV.",
-    "Description": "Preview 0.1.0.0007 (2fac1db) by Zero. Minimal search, configurable target types, styled target HUD, animated frame companions, optional AI connections, gathering gear, voice shortcuts and Umbra integration.",
+    "Description": "Preview 0.1.0.0009 (b2d0beb) by Zero. Minimal search, configurable interaction, styled target HUD, animated companions, in-game browser, optional AI chat, gathering gear, voice shortcuts and Umbra integration.",
     "RepoUrl": "https://github.com/fostot/OmniKit",
     "Tags": [
       "search",
@@ -15,11 +15,11 @@
       "accessibility",
       "umbra"
     ],
-    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0007/OmniKit-0.1.0.0007-2fac1db.zip",
-    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0007/OmniKit-0.1.0.0007-2fac1db.zip",
-    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0007/OmniKit-0.1.0.0007-2fac1db.zip",
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0009/OmniKit-0.1.0.0009-b2d0beb.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0009/OmniKit-0.1.0.0009-b2d0beb.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0009/OmniKit-0.1.0.0009-b2d0beb.zip",
     "IconUrl": "https://raw.githubusercontent.com/fostot/OmniKit/main/assets/bimble.png",
-    "LastUpdate": 1792716085,
+    "LastUpdate": 1792723448,
     "IsHide": false,
     "IsTestingExclusive": false
   }
