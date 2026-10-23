@@ -63,7 +63,7 @@ internal sealed class ActionCatalog
     {
         foreach (var entry in GetWebEntries(openWebsite)) yield return entry;
         yield return new("omnikit:browser", "In-game browser", "Open the browser", "browser web website internet wiki", "OmniKit", openBrowser);
-        yield return new("omnikit:settings", "OmniKit Settings", "Shortcuts, interaction, avatar and assistant", "settings options preferences controls bimble avatar voice ai interact interaction", "OmniKit", openSettings);
+        yield return new("omnikit:settings", "OmniKit Settings", "Shortcuts, interaction, avatar and assistant", "settings options preferences controls avatar voice ai interact interaction", "OmniKit", openSettings);
         foreach (var entry in gameEntries) yield return entry;
         foreach (var plugin in Services.PluginInterface.InstalledPlugins.Where(plugin => plugin.IsLoaded))
         {

@@ -7,9 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionAnimationLibrary.cs" Link="CompanionAnimationLibrary.cs" />
-    <Compile Include="../../src/OmniKit/Ui/LunarWalkRig.cs" Link="LunarWalkRig.cs" />
     <Content Include="../../assets/*.frames.json" Link="assets/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="../../assets/lunar-walk-rigs.json" Link="assets/lunar-walk-rigs.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../assets/lunar-walk-rigs.json')" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="FFXIVClientStructs" HintPath="$(DalamudLibPath)/FFXIVClientStructs.dll" />
+    <Reference Include="InteropGenerator.Runtime" HintPath="$(DalamudLibPath)/InteropGenerator.Runtime.dll" />
+    <Reference Include="Lumina" HintPath="$(DalamudLibPath)/Lumina.dll" />
+    <Reference Include="Lumina.Excel" HintPath="$(DalamudLibPath)/Lumina.Excel.dll" />
+  </ItemGroup>
+</Project>

@@ -17,6 +17,8 @@ internal sealed class BrowserForm : Form
     private readonly ToolStrip navigation = new() { Dock = DockStyle.Fill, GripStyle = ToolStripGripStyle.Hidden, AutoSize = false };
     private readonly ToolStripTextBox address = new() { AutoSize = false, Width = 300, MaxLength = 4096, ToolTipText = "Website address (HTTP or HTTPS)" };
     private readonly Button menu = new() { Text = "☰", Size = new Size(30, 28), TabStop = true, AccessibleName = "Browser controls" };
+    private readonly Button closeBrowser = new() { Text = "×", Size = new Size(30, 28), TabStop = true, AccessibleName = "Close browser and release memory" };
+    private readonly ToolStripButton protection = new("Protection on") { CheckOnClick = false, Checked = true, ToolTipText = "Block known ad/tracker hosts and scripted popups. Click to disable for this session and reload if a site breaks." };
     private readonly Label resize = new() { Text = "◢", Size = new Size(18, 18), Cursor = Cursors.SizeNWSE, TextAlign = ContentAlignment.MiddleRight };
     private readonly Label notice = new() { AutoSize = false, Height = 30, Visible = false, Padding = new Padding(8, 5, 8, 4) };
     private readonly Panel extensionPanel = new() { Visible = false, Padding = new Padding(12) };
@@ -32,8 +34,16 @@ internal sealed class BrowserForm : Form
     private Point dragMouse;
     private Rectangle dragBounds;
     private bool extensionBusy;
+    private bool protectionEnabled = true;
+    private string? popupScriptId;
+    private Process? browserProcess;
+    private bool allowClose;
+    private Rectangle[] clippedChrome = [];
+    private Size clippedSize;
+    private Task? initialization;
 
     internal Task Initialized => initialized.Task;
+    internal int ShutdownExitCode { get; private set; }
 
     internal BrowserForm(nint parentWindow, int parentPid, string profileDirectory)
     {
@@ -46,6 +56,7 @@ internal sealed class BrowserForm : Form
         ShowInTaskbar = false;
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(24, 29, 34);
+        DoubleBuffered = true;
         ForeColor = Color.Gainsboro;
         Font = new Font("Segoe UI", 9);
         StartPosition = FormStartPosition.Manual;
@@ -55,10 +66,20 @@ internal sealed class BrowserForm : Form
         Controls.Add(controls);
         Controls.Add(notice);
         Controls.Add(menu);
+        Controls.Add(closeBrowser);
         Controls.Add(resize);
         BuildControls();
         BuildExtensionPanel();
         menu.Click += (_, _) => ToggleControls();
+        closeBrowser.Click += (_, _) => Close();
+        foreach (var button in new[] { menu, closeBrowser })
+        {
+            button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderSize = 0;
+            button.BackColor = BackColor; button.ForeColor = ForeColor;
+            button.FlatAppearance.MouseOverBackColor = Color.FromArgb(45, 61, 64);
+            button.FlatAppearance.MouseDownBackColor = Color.FromArgb(34, 77, 79);
+            button.UseVisualStyleBackColor = false;
+        }
         resize.MouseDown += (_, e) => StartDrag(e, true);
         resize.MouseMove += (_, _) => ContinueDrag();
         resize.MouseUp += (_, _) => EndDrag();
@@ -71,8 +92,8 @@ internal sealed class BrowserForm : Form
             if (!NativeWindow.Matches(parentWindow, parentPid) || parentProcess.HasExited) Close();
             else ClampToParent();
         };
-        Shown += async (_, _) => await InitializeBrowserAsync();
-        FormClosing += (_, _) => { closing = true; parentTimer.Stop(); };
+        Shown += (_, _) => initialization ??= InitializeBrowserAsync();
+        FormClosing += CloseAndReleaseBrowser;
         CreateControl();
         NativeWindow.SetParent(Handle, parentWindow);
         if (NativeWindow.GetParent(Handle) != parentWindow) throw new InvalidOperationException();
@@ -88,9 +109,6 @@ internal sealed class BrowserForm : Form
         title.MouseMove += (_, _) => ContinueDrag();
         title.MouseUp += (_, _) => EndDrag();
         heading.Controls.Add(title);
-        var close = new Button { Text = "×", Dock = DockStyle.Right, Width = 30, AccessibleName = "Hide browser" };
-        close.Click += (_, _) => HideBrowser();
-        heading.Controls.Add(close);
         navigation.BackColor = BackColor;
         navigation.ForeColor = ForeColor;
         AddNavigation("←", "Back", () => { if (browser.CoreWebView2?.CanGoBack == true) browser.CoreWebView2.GoBack(); });
@@ -100,6 +118,23 @@ internal sealed class BrowserForm : Form
         navigation.Items.Add(address);
         AddNavigation("Go", "Navigate", () => NavigateAddress());
         AddNavigation("Extensions", "Manage unpacked browser extensions", () => _ = ShowExtensionsAsync());
+        navigation.Items.Add(protection);
+        protection.Click += async (_, _) =>
+        {
+            if (!initializedSuccessfully || closing) return;
+            protection.Enabled = false;
+            try
+            {
+                protectionEnabled = !protectionEnabled;
+                await ConfigurePopupProtectionAsync();
+                protection.Checked = protectionEnabled;
+                protection.Text = protectionEnabled ? "Protection on" : "Protection off";
+                LayoutChrome();
+                browser.CoreWebView2.Reload();
+            }
+            catch (Exception) { Error("Browser protection could not change. Close and reopen the browser."); }
+            finally { if (!closing) protection.Enabled = true; }
+        };
         address.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; NavigateAddress(); } };
         controls.Controls.Add(navigation);
         controls.Controls.Add(heading);
@@ -150,8 +185,10 @@ internal sealed class BrowserForm : Form
             var environment = await CoreWebView2Environment.CreateAsync(null, profileDirectory, options);
             if (closing) return;
             await browser.EnsureCoreWebView2Async(environment);
-            if (closing) return;
             var core = browser.CoreWebView2;
+            browserProcess = Process.GetProcessById((int)core.BrowserProcessId);
+            _ = browserProcess.Handle; // Keep the exact owned process identity through shutdown.
+            if (closing) return;
             core.Settings.AreHostObjectsAllowed = false;
             core.Settings.IsWebMessageEnabled = false;
             core.Settings.AreDefaultContextMenusEnabled = false;
@@ -171,7 +208,22 @@ internal sealed class BrowserForm : Form
                 if (e.IsSuccess) { address.Text = core.Source; BrowserProtocol.Emit("navigated", "The website finished loading."); }
                 else if (e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled) Error("The website could not load. Check the address or connection.");
             };
-            core.NewWindowRequested += (_, e) => { e.Handled = true; if (BrowserProtocol.TryUrl(e.Uri, out var url)) Navigate(url); else Error("That link could not open in this browser."); };
+            core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All, CoreWebView2WebResourceRequestSourceKinds.All);
+            core.WebResourceRequested += (_, e) =>
+            {
+                if (protectionEnabled && ContentProtection.ShouldBlock(e.Request.Uri))
+                    e.Response = core.Environment.CreateWebResourceResponse(Stream.Null, 204, "No Content", "Cache-Control: no-store\r\nAccess-Control-Allow-Origin: *");
+            };
+            core.NewWindowRequested += (_, e) =>
+            {
+                e.Handled = true;
+                if (protectionEnabled && (!e.IsUserInitiated || ContentProtection.ShouldBlock(e.Uri))) return;
+                // Finish cancelling the new window before changing this controller's page.
+                if (BrowserProtocol.TryUrl(e.Uri, out var url)) BeginInvoke(() => { if (!closing) Navigate(url); });
+                else Error("That link could not open in this browser.");
+            };
+            await ConfigurePopupProtectionAsync();
+            if (closing) return;
             core.LaunchingExternalUriScheme += (_, e) => { e.Cancel = true; Error("External applications cannot be opened from this browser."); };
             core.DownloadStarting += (_, e) => { e.Cancel = true; Error("Downloads are disabled in this browser."); };
             core.PermissionRequested += (_, e) => { e.State = CoreWebView2PermissionState.Deny; e.Handled = true; };
@@ -202,7 +254,7 @@ internal sealed class BrowserForm : Form
                 if (initializedSuccessfully && (string.IsNullOrEmpty(browser.CoreWebView2.Source) || browser.CoreWebView2.Source == "about:blank")) Navigate(HomeUrl);
                 else ShowBrowser();
                 break;
-            case "hide": HideBrowser(); break;
+            case "hide": Close(); break;
             case "shutdown": Close(); break;
         }
     }
@@ -231,7 +283,6 @@ internal sealed class BrowserForm : Form
     }
 
     private void ShowBrowser() { if (!Visible) Show(); ClampToParent(); BrowserProtocol.Emit("shown", "The browser is visible."); }
-    private void HideBrowser() { if (Visible) { Hide(); BrowserProtocol.Emit("hidden", "The browser is hidden."); } }
     private void Error(string message) { if (closing || IsDisposed) return; notice.Text = message; notice.Visible = true; LayoutChrome(); BrowserProtocol.Emit("error", message); }
 
     private void LayoutChrome()
@@ -243,11 +294,27 @@ internal sealed class BrowserForm : Form
         browser.Bounds = new Rectangle(0, top, ClientSize.Width, Math.Max(1, ClientSize.Height - top - bottom));
         extensionPanel.Bounds = browser.Bounds;
         notice.Bounds = new Rectangle(0, Math.Max(0, ClientSize.Height - bottom), ClientSize.Width, notice.Height);
-        menu.Location = new Point(Math.Max(0, ClientSize.Width - menu.Width - (controls.Visible ? 40 : 8)), 4);
+        closeBrowser.Location = new Point(Math.Max(0, ClientSize.Width - closeBrowser.Width - 4), 4);
+        menu.Location = new Point(Math.Max(0, closeBrowser.Left - menu.Width - 4), 4);
         resize.Location = new Point(Math.Max(0, ClientSize.Width - resize.Width - 2), Math.Max(0, ClientSize.Height - resize.Height - 2));
         resize.Visible = controls.Visible;
-        address.Width = Math.Max(80, ClientSize.Width - 360);
-        menu.BringToFront(); resize.BringToFront();
+        var buttonWidth = navigation.Items.Cast<ToolStripItem>().Where(item => item != address)
+            .Sum(item => item.GetPreferredSize(Size.Empty).Width + item.Margin.Horizontal);
+        address.Width = Math.Max(80, ClientSize.Width - buttonWidth - navigation.Padding.Horizontal - address.Margin.Horizontal - 12);
+        menu.BringToFront(); closeBrowser.BringToFront(); resize.BringToFront();
+        // WebView2 owns native child windows. Give floating chrome its own paint
+        // area rather than asking two native siblings to repaint the same pixels.
+        var cutouts = new[] { menu, closeBrowser, (Control)resize }.Where(c => c.Visible)
+            .Select(c => Rectangle.Intersect(c.Bounds, browser.Bounds)).Where(r => !r.IsEmpty)
+            .Select(r => new Rectangle(r.X - browser.Left, r.Y - browser.Top, r.Width, r.Height)).ToArray();
+        if (browser.ClientSize != clippedSize || !cutouts.SequenceEqual(clippedChrome))
+        {
+            var clip = new Region(browser.ClientRectangle);
+            foreach (var rectangle in cutouts) clip.Exclude(rectangle);
+            var old = browser.Region; browser.Region = clip; old?.Dispose();
+            clippedChrome = cutouts;
+            clippedSize = browser.ClientSize;
+        }
     }
 
     private void ClampToParent()
@@ -328,9 +395,50 @@ internal sealed class BrowserForm : Form
         await RefreshExtensionsAsync();
     }
 
+    private async Task ConfigurePopupProtectionAsync()
+    {
+        var core = browser.CoreWebView2;
+        if (popupScriptId != null) { core.RemoveScriptToExecuteOnDocumentCreated(popupScriptId); popupScriptId = null; }
+        if (protectionEnabled) popupScriptId = await core.AddScriptToExecuteOnDocumentCreatedAsync(ContentProtection.PopupScript);
+    }
+
+    private async void CloseAndReleaseBrowser(object? sender, FormClosingEventArgs args)
+    {
+        if (allowClose) return;
+        args.Cancel = true;
+        if (closing) return;
+        closing = true; parentTimer.Stop(); Hide();
+        BrowserProtocol.Emit("closing", "The browser is closing and releasing its resources.");
+        // Await an in-flight engine creation before disposal. The facade retains
+        // ownership and can terminate the whole helper tree if shutdown stalls.
+        if (initialization is { } pending)
+            try { await pending; } catch (Exception) { }
+        browser.Dispose();
+        try
+        {
+            if (browserProcess is { HasExited: false } process)
+            {
+                try { await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2)); }
+                catch (TimeoutException)
+                {
+                    if (!process.HasExited) process.Kill(entireProcessTree: true);
+                    await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2));
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // The facade must not mistake helper exit for successful profile
+            // release when the captured owned browser process could not exit.
+            ShutdownExitCode = 73;
+        }
+        allowClose = true;
+        if (!IsDisposed) Close();
+    }
+
     protected override void Dispose(bool disposing)
     {
-        if (disposing) { closing = true; parentTimer.Dispose(); parentProcess.Dispose(); browser.Dispose(); }
+        if (disposing) { closing = true; parentTimer.Dispose(); parentProcess.Dispose(); browser.Dispose(); browserProcess?.Dispose(); }
         base.Dispose(disposing);
     }
 

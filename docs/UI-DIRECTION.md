@@ -28,6 +28,14 @@ one main key, then release every key before the new chord is committed. Escape
 cancels. Capture feedback must remain visible, fit the available width, and stop
 when its control is hidden or the settings window closes.
 
+Interact exposes separate, initially disabled controls for verified quest items
+and quest emotes. Their status identifies the supported case; unsupported quests
+retain ordinary interaction behavior. A blocked matched rule must not fall back
+to a second action. The first emote mapping is `/soothe` in A Bridge Too Full;
+see [scope and sources](QUEST-EMOTES.md). The two item cases are Tiller's Shovel
+in Rocks in a Hard Place and Fetid Dodo Flesh in Forbidden Island; see
+[item scope](QUEST-ITEMS.md). These controls do not imply general quest automation.
+
 The interaction HUD is styled text without a window panel. It hides during NPC
 dialogue, active NPC/object interactions and cutscenes. Other paused actions hide
 normal target text; explicit HUD editing may display its labelled sample.
@@ -38,27 +46,35 @@ at the top, with font size, independent outline and readable text effects first.
 A clearly labelled sample appears only during editing, including with the
 gameplay HUD disabled or no candidate. Interaction suppression wins over editing.
 Eleven effects retain an opaque readable text core. Advanced intensity, speed
-and animation controls are collapsed initially; outline is independent.
+and animation controls are collapsed initially; outline is independent, with
+thickness from 0.5–4 (default 1) following the primary effect glyphs.
 
-Bimble and Moonbear use separate Navigator (navy/gold) and Stargazer
-(violet/silver) painted parts for continuous joint-driven walking. One foot
-stays planted while the other swings; the same body image keeps its proportions.
-Bimble's upper ear bands have restrained delayed motion. Moonblob has no limbs
-and rolls continuously from one stable image. Wink and Nova use stable floating
-images while moving. Cadence follows travelled distance, not a free-running frame
-counter. Bimble's rebuilt idle and walk share the same artwork and renderer,
-with a bounded 180ms grounded settle. Other idle and reaction poses retain
-their illustrated atlas artwork. Six palettes
-control the aura and softly tint these three companions: Moonlight, Aurora,
+The eight companions are Moonblob (default), Wink, Nova, Mochi, Puff, Orbit,
+Ember and Prism. All use one complete limbless body, without separate limb rigs
+or outfit controls. Moonblob rolls continuously from a stable image; the others
+use stable floating images. Other idle, mouth and reaction poses use their
+illustrated atlas artwork. Six palettes control the aura and softly tint the
+companions: Moonlight, Aurora,
 Nebula, Rose, Ember and Starlight. The saved screen rectangle remains the default
 roaming area. Optional Frame interaction lets the user pick up a companion and
 place it on a supported visible frame's top or inside it. Its physics follow
 the frame, handle edges and recover safely when the frame disappears. A click
 opens its conversation; a drag does not. Mouth movement is an explicit preview, without
 synthesized speech or audio-driven lip sync.
-An optional house anchors the saved area, faces inward, and moves the entire
-area when dragged. Falling reaches the screen floor before walking home.
-Optional open/closing/hold/release hand cues belong to pets and the house.
+The optional house has an independent normalized screen position, faces inward,
+and can be dragged outside the drawn roaming area without moving that area.
+Normal free roaming stays inside the drawn rectangle and routes around the house.
+Nap trips walk to the house at about twice normal speed, enter, settle, breathe
+asleep, wake and return continuously. All eight companions have matching nap art.
+The default is about 45 seconds awake and 20 asleep; awake interval accepts
+15–300 seconds and sleep duration 5–120. Naps and chimney sleep symbols have
+separate switches. Pausing animation freezes a trip; disabling naps or hiding or
+moving the house returns the companion continuously.
+Falling can land on supported frames below before reaching the screen floor.
+Read-only frame observation includes compatible NoMouseInputs windows, but does
+not treat every full-screen canvas as a support.
+Optional open/closing/hold/release hand cues belong to pets and the house, with
+scale 0.2–1 and a smaller 0.4 default.
 Comments are occasional local text, never a background AI request. Wink's
 independent eyelid closes while the approved floating body stays stable.
 
@@ -74,9 +90,13 @@ run asynchronously with visible progress and cancellation.
 Ask is disabled while an inference is active. CLI chat is visibly paused until
 its internal request count can be constrained; connection checks remain usable.
 
-The browser shows the website with one menu icon. Navigation, address, move,
+The browser shows the website with a menu icon and a persistent close X. Navigation, address, move,
 resize and extension controls appear only when requested. It has an owned
 profile and parented game window, with no silent external-browser fallback.
+Close/hide stops the helper and engine; there is no prewarm. Protection starts
+enabled per session and blocks script popups plus a limited original list of 60
+advertising/tracking hosts. Its session switch is in the revealed controls.
+Native game-UI hover cutouts reduce overlap; live flicker behavior remains unverified.
 Optional same-process link capture is a separate default-off Data setting;
 its status and tooltip explain supported opens and authentication exceptions.
 

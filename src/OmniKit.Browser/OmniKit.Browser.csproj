@@ -16,6 +16,7 @@
     <Description>OmniKit's isolated in-game browser helper.</Description>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="blocked-hosts.txt" LogicalName="OmniKit.Browser.blocked-hosts.txt" />
     <!-- Explicit references avoid importing the SDK's unrelated WPF targets. -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" ExcludeAssets="all" GeneratePathProperty="true" />
     <Reference Include="Microsoft.Web.WebView2.Core" HintPath="$(PkgMicrosoft_Web_WebView2)/lib/net462/Microsoft.Web.WebView2.Core.dll" Private="true" />

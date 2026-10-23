@@ -25,6 +25,8 @@ establish them. None is marked passed until observed.
   suppress world-object actions; explicitly enabled enemy actions remain usable.
 - Shift-right-click the HUD and choose Modify. Font size must appear at the top;
   compare 50%, 100% and 200% with outline on/off and all 11 text-effect choices.
+  Test outline thickness 0.5/1/4 and verify it follows the moving primary glyphs,
+  including chromatic glitch, hologram and light sweep, without clipping.
   Test intensity 0/1/2, animation off/on and speed 0.1/1/3, including revealed
   controls and long effect names at minimum size. Repeat
   without a candidate and with the gameplay HUD disabled. Only editing may show
@@ -54,38 +56,58 @@ establish them. None is marked passed until observed.
   ambiguous handlers, casting, out-of-use range, disabled feature and unknown
   targets. A blocked matched rule must not send a second ordinary interaction.
   Detection range must not collapse to the item's native use range.
-- Switch all five companions, both outfits and six aura/shape colors. Check
-  walking, ear movement, blinking and explicit mouth preview, including both facing directions.
+- For Forbidden Island, sequence 1, test Fetid Dodo Flesh on each of the three
+  suspicious mounds. One fresh press must confirm the target before one item
+  request. Test missing/untracked items, a same-named item from another quest,
+  wrong sequence/territory, combat, blocked usability and disabled feature.
+  A blocked mapped attempt must not talk or retry. The game owns the resulting
+  encounter; OmniKit must not fight creatures or advance later objectives.
+- Enable Use verified quest emotes for A Bridge Too Full, sequence 2. Check both
+  irate coachmen in the verified territory: a fresh press must select/confirm the
+  target before one `/soothe` request. Test wrong sequence/territory, paused input,
+  blocked action, disabled feature and unknown targets. Holding the key must not
+  repeat; a blocked matched rule must not open dialogue instead. See
+  [mapping and limits](QUEST-EMOTES.md).
+- Switch all eight companions: Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember and
+  Prism. Check Moonblob as the default, six aura colors, rolling/floating,
+  blinking and explicit mouth preview, including both facing directions.
   Draw a roaming area and confirm the complete companion and magic stay inside.
   Verify click-to-talk, resize, animation off, magic off and companion off.
-- Inspect a complete walk loop and its wrap: feet alternate, the support foot
-  stays planted, arms oppose the legs, and the head/body do not change size.
-  Compare Bimble's settled idle with walk phases 0/0.25/0.5/0.75 in both outfits
-  at the same 96/192 size and baseline. Its body and limbs must retain their size
-  and attachments through start/stop; both paws must settle within 180ms. Hover
-  and disable animation to check a grounded pose. Compare Moonbear's separate
-  idle artwork and walking rig too; the fitted height must not shrink.
+- Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
+  Bodies must retain their identity, source aspect and stable scale; no separate
+  body pieces should jiggle or detach. Compare idle with movement and reactions.
   Stop, turn, pause, resize and move a supporting frame; those movements must
-  not spin the gait. Check the limbless blob's continuous roll and stable
-  floating Wink/Nova bodies. Verify full silhouettes and picking bounds at
+  not introduce sudden rotation. Check Moonblob's continuous roll and the other
+  seven stable floating bodies. Verify full silhouettes and picking bounds at
   minimum and maximum companion sizes.
   Include diagonal and nearly vertical paths, sharp turns and high-refresh
   displays. Tiny horizontal drift must not repeatedly flip facing. Compare
   frame pacing at 60/144 Hz where available; no alternating frozen/moving frames.
-- Enable Frame interaction. Drag each avatar/outfit onto a native game window,
+- Enable Frame interaction. Drag each avatar onto a native game window,
   a compatible plugin window and an Umbra bar. Test top-edge perching, walking
-  off or closing the support, falling to the screen floor, landing and walking
-  continuously home. Test contained walking and edge
+  off or closing the support, landing on supported frames below or the screen
+  floor, then returning continuously to the roaming area. Include compatible
+  windows that ignore mouse input; do not assume every full-screen canvas is a
+  supported surface. Test contained walking and edge
   pushing. Check carry/fall/land/push previews. Move/resize/close the supporting
   window; the companion must follow or recover safely. Disable each frame option
   and the master switch. It must not move, resize or edit any foreign frame.
 - Expand Home & personality. Show/hide the house and drag it near each screen
-  edge; the roaming area must follow and the entrance must face inward. Pick up
-  the companion and house with the grab hand on/off; disable animations and verify
+  edge and outside the drawn area; the roaming area must remain unchanged and
+  the entrance must face inward. Normal free roaming must remain in the drawn
+  area and avoid the house footprint. Pick up
+  the companion and house with the grab hand on/off and at scale 0.2/0.4/1; disable animations and verify
   manual pickup still works without animated hand effects. Test local comments
   on/off and 30/120/600-second intervals with AI disabled. For Wink, test blinking
   on/off and 1/3/10-second intervals while idle and floating; animation off freezes
   the blink. Comments must not trigger AI requests, microphone capture or speech.
+- Test naps for all eight companions: about 45 seconds awake and 20 asleep by default,
+  plus awake interval 15/300 and sleep duration 5/120. A nap trip can leave the
+  drawn area at about twice normal speed, enter the house, curl up, breathe,
+  wake and return. Check sleep symbols on/off and all screen edges. Pause during
+  approach and sleep; position must freeze. Disable naps, hide or move the house
+  during approach/entry/sleep; the companion must exit and return without a
+  teleport. Approved walking/rolling/floating cadence must remain intact.
 - In Companion settings click AI → Appearance → Voice → AI repeatedly. Open
   settings directly into each subtab too. No AI option or status may trap the
   user on its tab. Inspect every connection's revealed controls at minimum size.
@@ -106,24 +128,33 @@ establish them. None is marked passed until observed.
   cancellation and unload. No login secret, raw CLI diagnostic or credential file may appear in
   the UI, logs, database, JSON exports or release artifacts.
 - Export/import JSON, reject malformed files, preserve settings after rejection,
-  reload the plugin, and check schema-6 preferences persist. Check legacy migration
+  reload the plugin, and check schema-7 preferences persist. Check v1–v6 migration
   preserves chords, appearance and existing consent while selecting in-game web
   navigation. Imports must not grant new AI consent. Exports must exclude secrets.
 - Open wiki and Community Finder actions in OmniKit's browser; no system-browser
   fallback should appear on failure. Check website-only mode, the controls icon,
-  back/forward/reload/address/home, hide/reopen, move/resize and same-view links.
+  back/forward/reload/address/home, the always-visible close X, hide/reopen,
+  move/resize and same-view links. Close/hide must stop the helper and engine;
+  leaving it closed must not restart them in the background.
   Test the 760 × 500 surface and 360 × 240 minimum, parent resizing, mixed DPI,
   minimize/restore and game focus in windowed/borderless mode. Treat exclusive
   fullscreen as unverified. Typing in the browser must suppress plugin shortcuts.
+  Hover native game UI overlapping the browser and test the cutout mitigation;
+  do not mark the reported flicker fixed until observed in FFXIV.
+- Browser protection must start on in a new session. Test a script popup and
+  requests to known blocked ad/tracking hosts, then the session protection switch
+  for compatibility. The embedded 60-host list does not promise to block all ads.
 - In browser Extensions, explicitly select a trusted unpacked fixture and test
   listing, enable/disable and removal. Verify the dedicated profile persists
   without importing another browser's cookies or logins. Unsupported schemes,
   downloads and external-window requests must not launch outside applications.
   Closing/unloading the plugin or game must close its helper process.
 - Confirm optional link capture starts off for new and migrated configurations.
-  Enable it and test a standard HTTP(S) ShellExecute link from the same game
+  Enable it while the browser is closed and confirm no prewarm. Test a standard
+  HTTP(S) ShellExecute link from the same game
   process. Recognized authentication links, non-web schemes, custom process launches and
   links opened by other processes must retain their normal behavior. Disable
   capture and verify ordinary game-process links are no longer intercepted.
+  A captured ordinary web link must start the closed browser on demand.
 - Confirm Umbra Plugins entry and optional native widget, including opening the
   launcher/settings without a Browsingway dependency.

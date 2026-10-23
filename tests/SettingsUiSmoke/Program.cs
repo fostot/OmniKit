@@ -51,13 +51,13 @@ var cases = new[]
     (Name: "interact-enemy-attack", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-none", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud", Section: 2, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "hud-outline", Section: 2, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud-long", Section: 2, Tab: 0, Enabled: true, Scroll: false),
     (Name: "appearance", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "companion-navigation", Section: 3, Tab: 0, Enabled: false, Scroll: false),
     (Name: "frame-on", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "frame-static", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "companion-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
-    (Name: "outfit-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "palette-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "pose-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "voice-off", Section: 3, Tab: 1, Enabled: false, Scroll: false),
@@ -145,6 +145,7 @@ Console.WriteLine($"PASS: {renders} actual compiled settings renders completed w
 unsafe void Render(string name, int section, int tab, bool enabled, float scale, bool scroll)
 {
     var config = Activator.CreateInstance(Type("OmniKit.Configuration"))!;
+    Set(config, "Avatar", "Moonblob");
     var persistField = config.GetType().GetField("Persist", flags)!;
     persistField.SetValue(config, System.Linq.Expressions.Expression.Lambda(persistField.FieldType,
         System.Linq.Expressions.Expression.Empty(), System.Linq.Expressions.Expression.Parameter(config.GetType())).Compile());
@@ -197,6 +198,11 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     if(name=="status-error") Set(ui,"status","Could not save settings. Synthetic failure details remain available here instead of being erased by a routine Saved message.");
     if(name=="data-confirm") Set(ui,"confirmImport",true);
     if(name=="hud-none") Set(config,"InteractionHudEffect",Enum.Parse(Type("OmniKit.Interaction.HudTextEffect"),"None"));
+    if(name=="hud-outline")
+    {
+        Set(config,"InteractionHudOutline",true);
+        Set(config,"InteractionHudOutlineThickness",4f);
+    }
     if(name.StartsWith("hud-effects",StringComparison.Ordinal))
     {
         Set(config,"InteractionHudEffect",Enum.Parse(Type("OmniKit.Interaction.HudTextEffect"),"Flame"));
@@ -347,7 +353,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         observer.SetValue(null, (Action<string, Vector2, Vector2, bool>)((label, min, max, visible) => measured[label] = (min,max,visible)));
         var targetControl = name switch
         {
-            "companion-menu" => "Companion", "outfit-menu" => "Outfit", "palette-menu" => "Aura / shape color",
+            "companion-menu" => "Companion", "palette-menu" => "Aura / shape color",
             "pose-menu" => "Preview animation", "ai-provider-menu" => "##ai-connection",
             "ai-account-menu" or "ai-account-tooltip" => "##chatgpt-account", "ai-model-menu" or "ai-model-tooltip" => "##chatgpt-model",
             "ai-endpoint" => "Other provider or local AI server", "ai-cli-cancel" => "Cancel connection",
@@ -495,7 +501,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         {
             if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
                 throw new InvalidOperationException(id + " did not open a native dropdown.");
-            foreach (var (field, value) in new[] { ("Avatar", "Bimble"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
+            foreach (var (field, value) in new[] { ("Avatar", "Moonblob"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
                 if (!Equals(config.GetType().GetField(field)!.GetValue(config), value))
                     throw new InvalidOperationException(id + " unexpectedly selected a different setting.");
             if (name.StartsWith("hud-effect-",StringComparison.Ordinal))

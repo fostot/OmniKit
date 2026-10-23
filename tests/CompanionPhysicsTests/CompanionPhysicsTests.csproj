@@ -3,5 +3,6 @@
   <ItemGroup>
     <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionPhysics.cs" Link="CompanionPhysics.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
   </ItemGroup>
 </Project>

@@ -114,19 +114,16 @@ internal sealed class CompanionAnimationLibrary
 
     public CompanionAnimationLibrary(string assetDirectory)
     {
-        foreach (var name in new[] { "abstract-companions.frames.json", "lunar-companions.frames.json" })
+        var path = Path.Combine(assetDirectory, "abstract-companions.frames.json");
+        try
         {
-            var path = Path.Combine(assetDirectory, name);
-            try
-            {
-                if (!System.IO.File.Exists(path) || new FileInfo(path).Length > 1024 * 1024) continue;
-                Load(System.IO.File.ReadAllText(path));
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException
-                or ArgumentException or KeyNotFoundException or IndexOutOfRangeException or FormatException or OverflowException)
-            {
-                // Missing or invalid optional art falls back to the existing sprite/vector renderer.
-            }
+            if (!System.IO.File.Exists(path) || new FileInfo(path).Length > 1024 * 1024) return;
+            Load(System.IO.File.ReadAllText(path));
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException
+            or ArgumentException or KeyNotFoundException or IndexOutOfRangeException or FormatException or OverflowException)
+        {
+            // Missing or invalid optional art falls back to the existing sprite/vector renderer.
         }
     }
 
@@ -143,7 +140,8 @@ internal sealed class CompanionAnimationLibrary
             var character = item.GetProperty("character").GetString();
             var outfit = item.TryGetProperty("outfit", out var outfitNode) ? outfitNode.GetString() : "*";
             var file = item.GetProperty("file").GetString();
-            if (string.IsNullOrEmpty(character) || string.IsNullOrEmpty(file) || file != Path.GetFileName(file)
+            if (character?.ToLowerInvariant() is not ("moonblob" or "wink" or "nova" or "mochi" or "puff" or "orbit" or "ember" or "prism")
+                || string.IsNullOrEmpty(file) || file != Path.GetFileName(file)
                 || file.Any(c => !(char.IsAsciiLetterOrDigit(c) || c is '-' or '_' or '.')) || !file.EndsWith(".png", StringComparison.Ordinal)) continue;
             var dimensions = item.GetProperty("size");
             var sheetSize = new Vector2(dimensions[0].GetSingle(), dimensions[1].GetSingle());

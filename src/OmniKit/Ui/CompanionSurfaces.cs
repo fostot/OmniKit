@@ -17,12 +17,13 @@ internal sealed unsafe class CompanionSurfaces
             && !Services.Conditions[ConditionFlag.BetweenAreas51]) ReadNative(viewportPosition, viewportSize);
         var context = ImGui.GetCurrentContext();
         if (context.Handle == null) return surfaces;
+        var inkBudget = 65536;
         for (var i = 0; i < Math.Min(context.Windows.Size, 2048); i++)
         {
             var window = context.Windows[i];
             if (window.Handle == null || window.Hidden || window.IsFallbackWindow || window.Collapsed
                 || (!window.Active && !window.WasActive) || window.LastFrameActive < context.FrameCount - 1
-                || (window.Flags & (ImGuiWindowFlags.ChildWindow | ImGuiWindowFlags.Popup | ImGuiWindowFlags.Tooltip | ImGuiWindowFlags.NoMouseInputs)) != 0) continue;
+                || (window.Flags & (ImGuiWindowFlags.ChildWindow | ImGuiWindowFlags.Popup | ImGuiWindowFlags.Tooltip)) != 0) continue;
             var nameLength = 0;
             while (window.Name != null && nameLength < 160 && window.Name[nameLength] != 0) nameLength++;
             var name = window.Name == null ? string.Empty : Encoding.UTF8.GetString(new ReadOnlySpan<byte>(window.Name, nameLength));
@@ -32,12 +33,55 @@ internal sealed unsafe class CompanionSurfaces
                 || name.Contains("##OmniKitCompanionHouse", StringComparison.Ordinal)
                 || name.Contains("##OmniKitVisibleTarget", StringComparison.Ordinal)
                 || name.Contains("##OmniKitInteract", StringComparison.Ordinal)) continue;
-            var header = (window.Flags & ImGuiWindowFlags.NoTitleBar) != 0 ? Math.Min(12, window.Size.Y)
+            var minimum = window.Pos;
+            var maximum = window.Pos + window.Size;
+            if ((window.Flags & ImGuiWindowFlags.NoMouseInputs) != 0)
+            {
+                // DelvUI-style frames intentionally pass mouse input through.
+                // Require actual visible geometry, not an empty input overlay,
+                // and do not reinterpret a fullscreen HUD canvas as a platform.
+                if (window.Size.X > viewportSize.X * .95f && window.Size.Y > viewportSize.Y * .9f
+                    || !TryInkBounds(window.DrawList, ref inkBudget, out var inkMinimum, out var inkMaximum)) continue;
+                minimum = Vector2.Max(minimum, inkMinimum);
+                maximum = Vector2.Min(maximum, inkMaximum);
+            }
+            var header = (window.Flags & ImGuiWindowFlags.NoTitleBar) != 0 ? Math.Min(12, maximum.Y - minimum.Y)
                 : Math.Clamp(window.InnerRect.Min.Y - window.Pos.Y, 12, 45);
-            Add(new CompanionSurface(0x8000000000000000ul | window.ID, window.Pos, window.Pos + window.Size,
+            Add(new CompanionSurface(0x8000000000000000ul | window.ID, minimum, maximum,
                 header, 10000 + i), viewportPosition, viewportSize);
         }
         return surfaces;
+    }
+
+    private static bool TryInkBounds(ImDrawListPtr draw, ref int budget, out Vector2 minimum, out Vector2 maximum)
+    {
+        minimum = new Vector2(float.MaxValue);
+        maximum = new Vector2(float.MinValue);
+        if (draw.Handle == null || draw.VtxBuffer.Size is < 3 or > 16384 || draw.CmdBuffer.Size > 512
+            || draw.IdxBuffer.Size > budget) return false;
+        budget -= draw.IdxBuffer.Size;
+        for (var c = 0; c < draw.CmdBuffer.Size; c++)
+        {
+            var command = draw.CmdBuffer[c];
+            if (command.ElemCount == 0) continue;
+            if ((ulong)command.IdxOffset + command.ElemCount > (ulong)draw.IdxBuffer.Size) return false;
+            var first = new Vector2(float.MaxValue); var last = new Vector2(float.MinValue);
+            for (uint i = 0; i < command.ElemCount; i++)
+            {
+                var index = (ulong)draw.IdxBuffer[(int)(command.IdxOffset + i)] + command.VtxOffset;
+                if (index >= (ulong)draw.VtxBuffer.Size) return false;
+                var vertex = draw.VtxBuffer[(int)index];
+                if ((vertex.Col >> 24) < 16 || !float.IsFinite(vertex.Pos.X) || !float.IsFinite(vertex.Pos.Y)) continue;
+                first = Vector2.Min(first, vertex.Pos);
+                last = Vector2.Max(last, vertex.Pos);
+            }
+            first = Vector2.Max(first, new Vector2(command.ClipRect.X, command.ClipRect.Y));
+            last = Vector2.Min(last, new Vector2(command.ClipRect.Z, command.ClipRect.W));
+            if (first.X >= last.X || first.Y >= last.Y) continue;
+            minimum = Vector2.Min(minimum, first);
+            maximum = Vector2.Max(maximum, last);
+        }
+        return minimum.X < maximum.X && minimum.Y < maximum.Y;
     }
 
     private void ReadNative(Vector2 viewportPosition, Vector2 viewportSize)

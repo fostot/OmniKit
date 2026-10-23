@@ -12,8 +12,8 @@ public sealed class Configuration
     public string ChatGptModel = "synthetic-chatgpt-model";
     public string CodexModel = "";
     public string ClaudeModel = "";
-    public string Avatar = "Bimble";
-    public static readonly string[] AvatarNames = ["Bimble"];
+    public string Avatar = "Moonblob";
+    public static readonly string[] AvatarNames = ["Moonblob"];
 }
 
 internal static class Services

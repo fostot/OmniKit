@@ -31,6 +31,21 @@ internal static unsafe class HudTextRenderer
         return new HudTextMetrics(measured, inkMinimum, measured + overhang);
     }
 
+    public static HudTextMetrics Measure(ImFontPtr font, float size, string prefix, string name, string suffix)
+    {
+        // The three colored runs are drawn separately. Measure those same runs
+        // so kerning across their boundaries cannot offset outlines or hit bounds.
+        var first = Measure(font, size, prefix);
+        var middle = Measure(font, size, name);
+        var last = Measure(font, size, suffix);
+        var middleOffset = new Vector2(first.Size.X, 0);
+        var lastOffset = middleOffset + new Vector2(middle.Size.X, 0);
+        return new HudTextMetrics(new Vector2(lastOffset.X + last.Size.X,
+                Math.Max(first.Size.Y, Math.Max(middle.Size.Y, last.Size.Y))),
+            Vector2.Min(first.InkMinimum, Vector2.Min(middleOffset + middle.InkMinimum, lastOffset + last.InkMinimum)),
+            Vector2.Max(first.InkMaximum, Vector2.Max(middleOffset + middle.InkMaximum, lastOffset + last.InkMaximum)));
+    }
+
     public static string Elide(ImFontPtr font, float size, string text, float width)
     {
         if (Measure(font, size, text).Size.X <= width) return text;
@@ -52,7 +67,7 @@ internal static unsafe class HudTextRenderer
     }
 
     /// <summary>Maximum decoration reach, independent of phase, so clamping/hit bounds never pulse.</summary>
-    public static Vector2 Padding(HudTextEffect effect, float size, float intensity, bool outline)
+    public static Vector2 Padding(HudTextEffect effect, float size, float intensity, bool outline, float outlineThickness = 1f)
     {
         var scale = Scale(size); var amount = Amount(intensity);
         var extent = effect switch
@@ -66,22 +81,28 @@ internal static unsafe class HudTextRenderer
             HudTextEffect.Frost => new Vector2(2.5f, 4),
             _ => Vector2.Zero,
         } * (scale * amount);
-        if (outline) extent = Vector2.Max(extent, new Vector2(scale));
+        if (outline) extent = Vector2.Max(extent, new Vector2(scale * Thickness(outlineThickness)));
         return new Vector2(MathF.Ceiling(extent.X + 1), MathF.Ceiling(extent.Y + 1));
     }
 
     public static void Draw(ImDrawListPtr draw, ImFontPtr font, float size, Vector2 position,
         string prefix, string name, string suffix, HudTextEffect effect, bool outline,
-        float intensity, float speed, bool animated, double seconds)
+        float intensity, float speed, bool animated, double seconds, float outlineThickness = 1f)
     {
         var amount = Amount(intensity); var scale = Scale(size);
         if (!Enum.IsDefined(effect) || amount == 0) effect = HudTextEffect.None;
         var time = animated && double.IsFinite(seconds)
             ? (float)((seconds % 10000) * Math.Clamp(float.IsFinite(speed) ? speed : 1, .1f, 3)) : 0;
-        var text = prefix + name + suffix;
-        var metrics = Measure(font, size, text);
+        var namePosition = position + new Vector2(Measure(font, size, prefix).Size.X, 0);
+        var suffixPosition = namePosition + new Vector2(Measure(font, size, name).Size.X, 0);
+        var metrics = Measure(font, size, prefix, name, suffix);
         var width = Math.Max(1, metrics.Size.X);
-        void Layer(Vector2 offset, uint color) => draw.AddText(font, size, position + offset, color, text, 0);
+        void Layer(Vector2 offset, uint color)
+        {
+            draw.AddText(font, size, position + offset, color, prefix, 0);
+            draw.AddText(font, size, namePosition + offset, color, name, 0);
+            draw.AddText(font, size, suffixPosition + offset, color, suffix, 0);
+        }
         void Ring(float radius, uint color)
         {
             for (var y = -1; y <= 1; y++)
@@ -152,9 +173,15 @@ internal static unsafe class HudTextRenderer
                 break;
         }
 
-        if (outline) Ring(scale, 0xE6000000);
+        if (outline)
+        {
+            var thickness = Thickness(outlineThickness);
+            var rings = (int)MathF.Ceiling(thickness);
+            // At most four nested rings (32 passes). Filling the interior keeps
+            // thick outlines solid instead of making detached black echoes.
+            for (var ring = 1; ring <= rings; ring++) Ring(scale * thickness * ring / rings, 0xE6000000);
+        }
         draw.AddText(font, size, position, 0xFF9BC9DD, prefix, 0);
-        var namePosition = position + new Vector2(Measure(font, size, prefix).Size.X, 0);
         var coreStart = draw.VtxBuffer.Size;
         draw.AddText(font, size, namePosition, Core, name, 0);
         var coreEnd = draw.VtxBuffer.Size;
@@ -175,7 +202,7 @@ internal static unsafe class HudTextRenderer
             };
             vertex.Col = Pack(color, 1);
         }
-        draw.AddText(font, size, namePosition + new Vector2(Measure(font, size, name).Size.X, 0), 0xFFBEC4CA, suffix, 0);
+        draw.AddText(font, size, suffixPosition, 0xFFBEC4CA, suffix, 0);
 
         if (effect == HudTextEffect.Hologram)
         {
@@ -229,6 +256,7 @@ internal static unsafe class HudTextRenderer
     }
     private static float Scale(float size) => Math.Clamp(size / 17, .1f, 8);
     private static float Amount(float value) => Math.Clamp(float.IsFinite(value) ? value : 1, 0, 2);
+    private static float Thickness(float value) => Math.Clamp(float.IsFinite(value) ? value : 1, .5f, 4f);
     private static Vector3 Rainbow(float hue)
     {
         hue -= MathF.Floor(hue);

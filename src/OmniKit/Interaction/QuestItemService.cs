@@ -10,7 +10,7 @@ using NativeGameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 namespace OmniKit.Interaction;
 
 /// <summary>
-/// The first verified item/target rule only. Framework-thread callers retain
+/// Verified item/target rules only. Framework-thread callers retain
 /// fresh-press, combat/busy, range, visibility and confirmed-target guards.
 /// Looking may query eligibility; only TryUse can issue an item action.
 /// </summary>
@@ -29,15 +29,18 @@ internal sealed unsafe class QuestItemService(Configuration config)
         var context = Capture(target);
         var id = target.GameObjectId;
         var address = target.Address;
-        var result = QuestItemPolicy.TryUse(config.QuestItemUseEnabled, context, () =>
+        var result = QuestItemPolicy.TryUse(config.QuestItemUseEnabled, context, rule =>
         {
             var current = Services.Objects.SearchById(id);
             var hardTarget = Services.Targets.Target;
             var manager = ActionManager.Instance();
             if (current == null || !current.IsValid() || !current.IsTargetable || current.Address != address
-                || hardTarget == null || hardTarget.GameObjectId != id || hardTarget.Address != address
+                || current.BaseId != context.TargetDataId || hardTarget == null || !hardTarget.IsValid()
+                || hardTarget.GameObjectId != id || hardTarget.Address != address
                 || manager == null) return false;
-            return manager->UseAction(ActionType.EventItem, QuestItemPolicy.ItemId, id, 0xFFFF);
+            var native = (NativeGameObject*)address;
+            if (!native->GetIsTargetable()) return false;
+            return manager->UseAction(ActionType.EventItem, rule.ItemId, id, 0xFFFF);
         });
         if (result == QuestItemUseResult.Blocked)
         {
@@ -54,7 +57,7 @@ internal sealed unsafe class QuestItemService(Configuration config)
             Sequence: 0, ActiveQuestHandlers: 0, OtherActiveQuestHandlers: 0,
             TrackedQuestMatches: 0, TrackedItemMatches: 0, OwnedKeyItems: 0,
             MetadataMatches: false, GroundTargeted: true, ActionStatus: uint.MaxValue);
-        if (!QuestItemPolicy.MatchesTarget(target.BaseId) || value.TerritoryId != QuestItemPolicy.TerritoryId
+        if (QuestItemPolicy.RuleForTarget(target.BaseId) is not { } rule || value.TerritoryId != rule.TerritoryId
             || target.ObjectKind != ObjectKind.EventObj || !target.IsValid() || !target.IsTargetable
             || target.Address == 0) return value;
         var native = (NativeGameObject*)target.Address;
@@ -66,11 +69,11 @@ internal sealed unsafe class QuestItemService(Configuration config)
         var inventory = InventoryManager.Instance();
         var manager = ActionManager.Instance();
         if (quests == null || state == null || inventory == null || manager == null
-            || !quests->IsQuestAccepted(QuestItemPolicy.QuestId)) return value;
-        var quest = quests->GetQuestById(QuestItemPolicy.QuestId);
+            || !quests->IsQuestAccepted(rule.QuestId)) return value;
+        var quest = quests->GetQuestById(rule.QuestId);
         if (quest == null) return value;
         value = value with { QuestAccepted = true, Sequence = quest->Sequence };
-        if (value.Sequence != QuestItemPolicy.Sequence) return value;
+        if (value.Sequence != rule.Sequence) return value;
 
         var handlers = stackalloc NativeEventHandler*[32];
         var count = native->GetEventHandlersImpl(handlers);
@@ -82,8 +85,8 @@ internal sealed unsafe class QuestItemService(Configuration config)
             var handler = handlers[i];
             if (handler == null || handler->Info.EventId.ContentId != EventHandlerContent.Quest
                 || !handler->IsActive(native)) continue;
-            if (handler->Info.EventId.Id == QuestItemPolicy.QuestRowId
-                && ((QuestEventHandler*)handler)->QuestId == QuestItemPolicy.QuestId) ++matching;
+            if (handler->Info.EventId.Id == rule.QuestRowId
+                && ((QuestEventHandler*)handler)->QuestId == rule.QuestId) ++matching;
             else ++others;
         }
         value = value with { ActiveQuestHandlers = matching, OtherActiveQuestHandlers = others };
@@ -96,21 +99,21 @@ internal sealed unsafe class QuestItemService(Configuration config)
         for (var i = 0; i < tracked.Count; ++i)
         {
             ref var entry = ref tracked[i];
-            if (entry.QuestId != QuestItemPolicy.QuestId || entry.Sequence != QuestItemPolicy.Sequence) continue;
+            if (entry.QuestId != rule.QuestId || entry.Sequence != rule.Sequence) continue;
             ++trackedQuests;
             if (entry.ItemCount is < 0 or > 8) return value;
             foreach (var item in entry.ItemIds[..entry.ItemCount])
-                if (item == QuestItemPolicy.ItemId) ++trackedItems;
+                if (item == rule.ItemId) ++trackedItems;
         }
         value = value with { TrackedQuestMatches = trackedQuests, TrackedItemMatches = trackedItems,
-            OwnedKeyItems = inventory->GetItemCountInContainer(QuestItemPolicy.ItemId, InventoryType.KeyItems) };
+            OwnedKeyItems = inventory->GetItemCountInContainer(rule.ItemId, InventoryType.KeyItems) };
         if (trackedQuests != 1 || trackedItems != 1 || value.OwnedKeyItems <= 0) return value;
 
-        var itemRow = Services.Data.GetExcelSheet<EventItem>().GetRowOrDefault(QuestItemPolicy.ItemId);
-        if (itemRow is not { } itemData || itemData.Quest.RowId != QuestItemPolicy.QuestRowId
-            || itemData.Action.RowId != QuestItemPolicy.ActionId || itemData.Action.ValueNullable is not { } action)
+        var itemRow = Services.Data.GetExcelSheet<EventItem>().GetRowOrDefault(rule.ItemId);
+        if (itemRow is not { } itemData || itemData.Quest.RowId != rule.QuestRowId
+            || itemData.Action.RowId != rule.ActionId || itemData.Action.ValueNullable is not { } action)
             return value;
         return value with { MetadataMatches = true, GroundTargeted = action.TargetArea,
-            ActionStatus = checkActionStatus ? manager->GetActionStatus(ActionType.EventItem, QuestItemPolicy.ItemId, target.GameObjectId) : uint.MaxValue };
+            ActionStatus = checkActionStatus ? manager->GetActionStatus(ActionType.EventItem, rule.ItemId, target.GameObjectId) : uint.MaxValue };
     }
 }

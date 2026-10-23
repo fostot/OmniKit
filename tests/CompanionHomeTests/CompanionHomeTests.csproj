@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/OmniKit/Configuration.cs" Link="Configuration.cs" />
+    <Compile Include="../../src/OmniKit/Input/HotkeyChord.cs" Link="HotkeyChord.cs" />
+    <Compile Include="../../src/OmniKit/Interaction/InteractionTargets.cs" Link="InteractionTargets.cs" />
+    <Compile Include="../../src/OmniKit/Interaction/HudTextEffect.cs" Link="HudTextEffect.cs" />
+    <Compile Include="../../src/OmniKit/Assistant/AiConnectionKind.cs" Link="AiConnectionKind.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHomeRoutine.cs" Link="CompanionHomeRoutine.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionNapArtwork.cs" Link="CompanionNapArtwork.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHomeRenderer.cs" Link="CompanionHomeRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/ProceduralCompanion.cs" Link="ProceduralCompanion.cs" />
+    <Compile Include="../LauncherUiSmoke/SoftwareRenderer.cs" Link="SoftwareRenderer.cs" />
+    <Reference Include="Dalamud" HintPath="$(DalamudLibPath)/Dalamud.dll" />
+    <Reference Include="Dalamud.Bindings.ImGui" HintPath="$(DalamudLibPath)/Dalamud.Bindings.ImGui.dll" />
+    <Reference Include="HexaGen.Runtime" HintPath="$(DalamudLibPath)/HexaGen.Runtime.dll" />
+    <Content Include="$(DalamudLibPath)/cimgui.dll" Link="cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

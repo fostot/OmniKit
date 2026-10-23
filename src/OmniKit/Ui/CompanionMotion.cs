@@ -117,29 +117,9 @@ internal sealed class CompanionGait
     }
 }
 
-/// <summary>Inspected atlas regions, rendered at a common scale and foot baseline.</summary>
+/// <summary>Shared frame selection for the approved companion states.</summary>
 internal static class CompanionAtlas
 {
-    // Generated rows are not exactly quarter-height. These padded regions contain
-    // each complete pose without a neighbor, shared by both outfits of a species.
-    private static readonly Vector4[] Bimble =
-    [
-        new(54, 20, 284, 323), new(355, 29, 586, 328), new(656, 18, 897, 319), new(975, 18, 1206, 327),
-        new(48, 337, 280, 646), new(365, 340, 596, 645), new(660, 339, 899, 642), new(973, 338, 1207, 645),
-        new(76, 655, 283, 941), new(379, 655, 587, 942), new(685, 655, 893, 941), new(1000, 655, 1203, 942),
-        new(74, 946, 283, 1235), new(384, 945, 592, 1235), new(687, 946, 898, 1235), new(994, 945, 1206, 1235),
-    ];
-    private static readonly Vector4[] Moonbear =
-    [
-        new(72, 64, 279, 325), new(382, 70, 583, 327), new(684, 64, 886, 328), new(996, 64, 1200, 328),
-        new(72, 373, 279, 636), new(384, 375, 585, 636), new(687, 373, 889, 632), new(997, 373, 1202, 634),
-        new(77, 666, 277, 929), new(384, 665, 584, 929), new(684, 666, 887, 929), new(997, 666, 1198, 929),
-        new(74, 949, 279, 1216), new(383, 949, 586, 1216), new(684, 948, 889, 1216), new(996, 948, 1202, 1216),
-    ];
-
-    public static string FileName(string avatar, string outfit)
-        => $"{(avatar == "Moonbear" ? "moonbear" : "bimble")}-{(outfit == "Stargazer" ? "stargazer" : "motion")}.png";
-
     public static int SelectFrame(CompanionPose pose, float seconds, bool animated)
     {
         if (!animated) return 8;
@@ -155,17 +135,6 @@ internal static class CompanionAtlas
         return (seconds % 4) switch { < 3.6f => 8, < 3.72f => 9, < 3.84f => 10, _ => 11 };
     }
 
-    public static CompanionFrame GetFrame(string avatar, int frame, bool facingLeft, Vector2 position, Vector2 cellSize)
-    {
-        var bear = avatar == "Moonbear";
-        var rect = (bear ? Moonbear : Bimble)[Math.Clamp(frame, 0, 15)];
-        var start = new Vector2(rect.X, rect.Y) / 1254f;
-        var end = new Vector2(rect.Z, rect.W) / 1254f;
-        if (facingLeft) (start.X, end.X) = (end.X, start.X);
-        var size = new Vector2(rect.Z - rect.X, rect.W - rect.Y) / (bear ? 330f : 380f) * cellSize;
-        return new CompanionFrame(start, end,
-            position + new Vector2((cellSize.X - size.X) * .5f, cellSize.Y * .9f - size.Y), size);
-    }
 }
 
 /// <summary>Frame-rate independent roaming with no game or renderer dependencies.</summary>
@@ -184,13 +153,19 @@ internal sealed class CompanionMotion(int seed = 0)
 
     public void Reset() { initialized = false; Walking = false; gait.Reset(); }
 
-    public void Update(CompanionLayout layout, float elapsed, bool animate)
+    public void ResumeAt(Vector2 position, CompanionLayout layout)
     {
-        UpdateMovement(layout, elapsed, animate);
+        initialized = true; Position = layout.Clamp(position); destination = Position; pause = 0;
+        Walking = false; gait.Rebase();
+    }
+
+    public void Update(CompanionLayout layout, float elapsed, bool animate, CompanionSurface? obstacle = null)
+    {
+        UpdateMovement(layout, elapsed, animate, obstacle);
         gait.Update(Position - layout.Minimum, layout.SpriteSize.X, elapsed, Walking, FacingLeft, 0);
     }
 
-    private void UpdateMovement(CompanionLayout layout, float elapsed, bool animate)
+    private void UpdateMovement(CompanionLayout layout, float elapsed, bool animate, CompanionSurface? obstacle)
     {
         if (!layout.IsVisible) { Walking = false; return; }
         if (!initialized)
@@ -201,8 +176,8 @@ internal sealed class CompanionMotion(int seed = 0)
             FacingLeft = false;
             pause = 0;
         }
-        Position = layout.Clamp(Position);
-        destination = layout.Clamp(destination);
+        Position = CompanionObstacle.Destination(Position, layout.SpriteSize, layout.Minimum, layout.Maximum, obstacle);
+        destination = CompanionObstacle.Destination(destination, layout.SpriteSize, layout.Minimum, layout.Maximum, obstacle);
         Walking = false;
         if (!animate) return;
         elapsed = float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
@@ -224,9 +199,10 @@ internal sealed class CompanionMotion(int seed = 0)
             pause = .8f + random.NextSingle() * 1.7f;
             return;
         }
-        Walking = true;
-        FacingLeft = CompanionGait.FacingFor(delta, FacingLeft);
         var step = Math.Min(distance, Math.Max(8f, layout.SpriteSize.Y * .36f) * elapsed);
-        Position = layout.Clamp(Position + delta / distance * step);
+        var next = CompanionObstacle.Step(Position, destination, layout.SpriteSize, step, layout.Minimum, layout.Maximum, obstacle);
+        Walking = Vector2.DistanceSquared(Position, next) > .00001f;
+        FacingLeft = CompanionGait.FacingFor(next - Position, FacingLeft);
+        Position = next;
     }
 }

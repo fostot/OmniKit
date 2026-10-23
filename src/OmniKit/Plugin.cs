@@ -37,10 +37,9 @@ public sealed class Plugin : IDalamudPlugin
         ui = new PluginUi(Configuration, interaction, chat, voice, store, sources);
         webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);
         ui.BrowserInterceptionStatus = () => webLinks.IsEnabled && !ui.BrowserReady
-            ? "Capture waiting for the in-game browser." : webLinks.Status;
+            ? "Web link capture is ready; a link opens the browser on demand." : webLinks.Status;
         requestedWebCapture = Configuration.BrowserInterceptLinks;
         webLinks.SetEnabled(requestedWebCapture);
-        if (requestedWebCapture) ui.OpenBrowser();
         Services.Commands.AddHandler("/omnikit", new CommandInfo(OnCommand)
         { HelpMessage = "Open OmniKit. /omnikit settings, /omnikit wiki <search>, /omnikit browser [controls|hide|URL]." });
         pluginInterface.UiBuilder.Draw += Draw;
@@ -75,7 +74,6 @@ public sealed class Plugin : IDalamudPlugin
         {
             requestedWebCapture = Configuration.BrowserInterceptLinks;
             webLinks.SetEnabled(requestedWebCapture);
-            if (requestedWebCapture) ui.OpenBrowser();
         }
         ui.SuppressBindingKeys();
         var browserInput = ui.BrowserCapturesInput;

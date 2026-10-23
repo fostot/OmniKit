@@ -30,7 +30,7 @@ internal static class Program
             form.FormClosed += (_, _) => cancellation.Cancel();
             Application.Run(form);
             BrowserProtocol.Emit("closed", "The browser closed.");
-            return 0;
+            return form.ShutdownExitCode;
         }
         catch (Exception)
         {

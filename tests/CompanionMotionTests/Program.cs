@@ -65,33 +65,6 @@ Check(inverted.Minimum.X < inverted.Maximum.X && inverted.Minimum.Y < inverted.M
 Check(!CompanionLayout.Create(Vector2.Zero, Vector2.Zero, Vector4.One, 96, 1, 1).IsVisible,
     "An unavailable viewport renders nothing.");
 
-foreach (var avatar in new[] { "Bimble", "Moonbear" })
-for (var frame = 0; frame < 16; frame++)
-{
-    var origin = new Vector2(200, 140);
-    var right = CompanionAtlas.GetFrame(avatar, frame, false, origin, new Vector2(144));
-    var left = CompanionAtlas.GetFrame(avatar, frame, true, origin, new Vector2(144));
-    Check(right.UvStart.X >= 0 && right.UvStart.Y >= 0 && right.UvEnd.X <= 1 && right.UvEnd.Y <= 1
-        && right.UvStart.X < right.UvEnd.X && right.UvStart.Y < right.UvEnd.Y, "Every pose uses a nonempty bounded UV rectangle.");
-    Check(left.UvStart.X == right.UvEnd.X && left.UvEnd.X == right.UvStart.X
-        && left.UvStart.Y == right.UvStart.Y && left.UvEnd.Y == right.UvEnd.Y
-        && left.Position == right.Position && left.Size == right.Size, "Mirroring changes UVs without changing size or anchor.");
-    Check(right.Position.X >= origin.X && right.Position.Y >= origin.Y
-        && right.Position.X + right.Size.X <= origin.X + 144 && right.Position.Y + right.Size.Y <= origin.Y + 144,
-        "Every inspected full-body pose remains inside the logical sprite cell.");
-    Check(Close(right.Position.Y + right.Size.Y, origin.Y + 144 * .9f), "Every pose shares a stable foot baseline.");
-    var uvSize = right.UvEnd - right.UvStart;
-    Check(Close(right.Size.X / right.Size.Y, uvSize.X / uvSize.Y), "Sampling preserves the original pose's aspect ratio.");
-    var pixelsPerUnit = right.Size.X / (uvSize.X * 1254);
-    Check(Close(pixelsPerUnit, 144 / (avatar == "Moonbear" ? 330f : 380f)), "Pose changes preserve source-pixel scale.");
-    for (var other = frame + 1; other < 16; other++)
-    {
-        var adjacent = CompanionAtlas.GetFrame(avatar, other, false, origin, new Vector2(144));
-        Check(right.UvEnd.X <= adjacent.UvStart.X || adjacent.UvEnd.X <= right.UvStart.X
-            || right.UvEnd.Y <= adjacent.UvStart.Y || adjacent.UvEnd.Y <= right.UvStart.Y,
-            "Frame regions never overlap or sample an adjacent pose.");
-    }
-}
 foreach (var pose in new[] { CompanionPose.Walk, CompanionPose.Idle, CompanionPose.Talk })
 {
     var seen = new HashSet<int>();
@@ -108,10 +81,6 @@ foreach (var pose in new[] { CompanionPose.Walk, CompanionPose.Idle, CompanionPo
 Check(CompanionAtlas.SelectFrame(CompanionPose.Walk, CompanionGait.DefaultCycleDistance / CompanionGait.PreviewSpeed / 8 + .001f, true) == 1,
     "Time-only previews use the nominal movement speed and stride distance.");
 Check(CompanionAtlas.SelectFrame(CompanionPose.Walk, float.NaN, true) == 0, "Nonfinite animation time fails safely.");
-Check(CompanionAtlas.FileName("Bimble", "Navigator") == "bimble-motion.png"
-    && CompanionAtlas.FileName("Bimble", "Stargazer") == "bimble-stargazer.png"
-    && CompanionAtlas.FileName("Moonbear", "Navigator") == "moonbear-motion.png"
-    && CompanionAtlas.FileName("Moonbear", "Stargazer") == "moonbear-stargazer.png", "Character and outfit select all four expected atlases.");
 Check(CompanionLayout.TryNormalizeArea(new Vector2(500, 400), new Vector2(100, 100), Vector2.Zero,
     new Vector2(620, 500), new Vector2(96), out var area) && area.X < area.Z && area.Y < area.W,
     "A drag in either direction produces ordered normalized bounds.");
@@ -122,9 +91,9 @@ Check(CompanionLayout.TryNormalizeArea(new Vector2(-100), new Vector2(900), Vect
     "Selections are clamped to the viewport before saving.");
 
 var library = new CompanionAnimationLibrary(Path.Combine(AppContext.BaseDirectory, "assets"));
-Check(library.Count == 7, "All seven reviewed physical/reaction atlases are available.");
-foreach (var avatar in new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" })
-foreach (var outfit in new[] { "Navigator", "Stargazer" })
+Check(library.Count == 8, "All eight active companion atlases are available.");
+foreach (var avatar in new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" })
+foreach (var outfit in new[] { "Default" })
 {
     Check(library.TryGet(avatar, outfit, out var atlas) && atlas != null, "Avatar and outfit resolve an accepted atlas.");
     Check(atlas!.Frames.Length == 24, "Every new atlas contains exactly 24 poses.");
@@ -222,8 +191,8 @@ Check(Close(gait.Phase, heldPhase), "Disabling animation also freezes an explici
 var temporary = Directory.CreateTempSubdirectory("omnikit-atlas-tests-");
 try
 {
-    var goodText = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "assets", "lunar-companions.frames.json"));
-    foreach (var invalid in new[] { "path", "order", "overflow", "truncated" })
+    var goodText = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "assets", "abstract-companions.frames.json"));
+    foreach (var invalid in new[] { "path", "order", "overflow", "truncated", "avatar" })
     {
         var document = JsonNode.Parse(goodText)!;
         var atlases = document["atlases"]!.AsArray();
@@ -232,14 +201,14 @@ try
         if (invalid == "path") atlas["file"] = "../outside.png";
         if (invalid == "order") atlas["frames"]![0]!["index"] = 9;
         if (invalid == "overflow") atlas["commonSourceScalePx"] = 64;
-        File.WriteAllText(Path.Combine(temporary.FullName, "lunar-companions.frames.json"),
+        if (invalid == "avatar") atlas["character"] = "UnknownCompanion";
+        File.WriteAllText(Path.Combine(temporary.FullName, "abstract-companions.frames.json"),
             invalid == "truncated" ? "{\"atlases\":" : document.ToJsonString());
         Check(new CompanionAnimationLibrary(temporary.FullName).Count == 0,
             "Unsafe or malformed optional atlas metadata fails closed to the existing art fallback.");
     }
 }
 finally { temporary.Delete(true); }
-checks += RigChecks.Run();
 checks += RollChecks.Run();
 checks += FloatChecks.Run();
 checks += HeadingChecks.Run();

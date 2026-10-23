@@ -45,17 +45,12 @@ $runtimeFiles = @(
     'Microsoft.Data.Sqlite.dll', 'SQLitePCLRaw.batteries_v2.dll',
     'SQLitePCLRaw.core.dll', 'SQLitePCLRaw.provider.e_sqlite3.dll', 'e_sqlite3.dll',
     'System.Security.Cryptography.ProtectedData.dll', 'System.Speech.dll',
-    'assets/bimble.png', 'assets/moonbear.png', 'assets/companions-walk.png',
-    'assets/bimble-motion.png', 'assets/moonbear-motion.png', 'assets/bimble-stargazer.png', 'assets/moonbear-stargazer.png',
-    'assets/bimble-physical.png', 'assets/moonbear-physical.png',
-    'assets/bimble-physical-stargazer.png', 'assets/moonbear-physical-stargazer.png',
     'assets/moonblob-motion.png', 'assets/wink-motion.png', 'assets/nova-motion.png',
-    'assets/abstract-companions.frames.json', 'assets/lunar-companions.frames.json',
-    'assets/bimble-walk-rig.png', 'assets/bimble-walk-rig-stargazer.png',
-    'assets/bimble-walk-rig-v2.png', 'assets/bimble-walk-rig-stargazer-v2.png',
-    'assets/moonbear-walk-rig.png', 'assets/moonbear-walk-rig-stargazer.png',
-    'assets/moonblob-limbless.png', 'assets/lunar-walk-rigs.json',
+    'assets/moonblob-limbless.png', 'assets/abstract-companions.frames.json',
+    'assets/mochi-poses.png', 'assets/puff-poses.png', 'assets/orbit-poses.png',
+    'assets/ember-poses.png', 'assets/prism-poses.png', 'assets/wink-icon.png',
     'assets/companion-house.png', 'assets/companion-grab-hand.png',
+    'assets/companion-naps-abstract.png', 'assets/companion-naps.frames.json',
     'browser/OmniKit.Browser.exe', 'browser/OmniKit.Browser.dll', 'browser/OmniKit.Browser.deps.json',
     'browser/OmniKit.Browser.runtimeconfig.json', 'browser/OmniKit.Browser.build.json',
     'browser/Microsoft.Web.WebView2.Core.dll', 'browser/Microsoft.Web.WebView2.WinForms.dll', 'browser/WebView2Loader.dll',
@@ -104,7 +99,7 @@ $feed = [ordered]@{
     RepoUrl = 'https://github.com/fostot/OmniKit'
     Tags = @('search', 'utility', 'accessibility', 'umbra')
     DownloadLinkInstall = $download; DownloadLinkUpdate = $download; DownloadLinkTesting = $download
-    IconUrl = 'https://raw.githubusercontent.com/fostot/OmniKit/main/assets/bimble.png'
+    IconUrl = 'https://raw.githubusercontent.com/fostot/OmniKit/main/assets/wink-icon.png'
     LastUpdate = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     IsHide = $false; IsTestingExclusive = $false
 }

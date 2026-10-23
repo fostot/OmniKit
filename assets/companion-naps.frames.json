@@ -1,0 +1,469 @@
+{
+  "Version": 1,
+  "Atlases": [
+    {
+      "Avatar": "Moonblob",
+      "Outfit": "Default",
+      "File": "companion-naps-abstract.png",
+      "Width": 1448,
+      "Height": 1086,
+      "ScaleReference": 317,
+      "Frames": [
+        {
+          "Bounds": [
+            52,
+            88,
+            342,
+            352
+          ],
+          "Anchor": [
+            197.5,
+            347
+          ]
+        },
+        {
+          "Bounds": [
+            414,
+            100,
+            703,
+            353
+          ],
+          "Anchor": [
+            559.0,
+            347
+          ]
+        },
+        {
+          "Bounds": [
+            751,
+            128,
+            1059,
+            358
+          ],
+          "Anchor": [
+            904.5,
+            352
+          ]
+        },
+        {
+          "Bounds": [
+            1109,
+            137,
+            1418,
+            358
+          ],
+          "Anchor": [
+            1263.5,
+            352
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "Outfit": "Default",
+      "File": "companion-naps-abstract.png",
+      "Width": 1448,
+      "Height": 1086,
+      "ScaleReference": 353,
+      "Frames": [
+        {
+          "Bounds": [
+            48,
+            390,
+            392,
+            670
+          ],
+          "Anchor": [
+            220.5,
+            664
+          ]
+        },
+        {
+          "Bounds": [
+            403,
+            408,
+            724,
+            685
+          ],
+          "Anchor": [
+            563.5,
+            679
+          ]
+        },
+        {
+          "Bounds": [
+            747,
+            433,
+            1081,
+            684
+          ],
+          "Anchor": [
+            913.5,
+            678
+          ]
+        },
+        {
+          "Bounds": [
+            1108,
+            446,
+            1438,
+            686
+          ],
+          "Anchor": [
+            1273.0,
+            680
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "Outfit": "Default",
+      "File": "companion-naps-abstract.png",
+      "Width": 1448,
+      "Height": 1086,
+      "ScaleReference": 345,
+      "Frames": [
+        {
+          "Bounds": [
+            53,
+            727,
+            389,
+            1031
+          ],
+          "Anchor": [
+            220.5,
+            1025
+          ]
+        },
+        {
+          "Bounds": [
+            411,
+            774,
+            737,
+            1027
+          ],
+          "Anchor": [
+            574.0,
+            1022
+          ]
+        },
+        {
+          "Bounds": [
+            758,
+            785,
+            1091,
+            1028
+          ],
+          "Anchor": [
+            924.5,
+            1022
+          ]
+        },
+        {
+          "Bounds": [
+            1116,
+            791,
+            1444,
+            1029
+          ],
+          "Anchor": [
+            1280.0,
+            1023
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "Outfit": "Default",
+      "File": "mochi-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "ScaleReference": 335,
+      "Frames": [
+        {
+          "Bounds": [
+            23,
+            1000,
+            317,
+            1211
+          ],
+          "Anchor": [
+            170.0,
+            1205
+          ]
+        },
+        {
+          "Bounds": [
+            331,
+            1004,
+            621,
+            1211
+          ],
+          "Anchor": [
+            475.5,
+            1205
+          ]
+        },
+        {
+          "Bounds": [
+            636,
+            999,
+            925,
+            1213
+          ],
+          "Anchor": [
+            780.5,
+            1207
+          ]
+        },
+        {
+          "Bounds": [
+            947,
+            1009,
+            1226,
+            1212
+          ],
+          "Anchor": [
+            1087.0,
+            1206
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "Outfit": "Default",
+      "File": "puff-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "ScaleReference": 336,
+      "Frames": [
+        {
+          "Bounds": [
+            12,
+            1003,
+            310,
+            1221
+          ],
+          "Anchor": [
+            161.5,
+            1215
+          ]
+        },
+        {
+          "Bounds": [
+            338,
+            1014,
+            606,
+            1221
+          ],
+          "Anchor": [
+            472.5,
+            1215
+          ]
+        },
+        {
+          "Bounds": [
+            641,
+            1009,
+            931,
+            1221
+          ],
+          "Anchor": [
+            786.0,
+            1216
+          ]
+        },
+        {
+          "Bounds": [
+            964,
+            1021,
+            1230,
+            1219
+          ],
+          "Anchor": [
+            1097.0,
+            1214
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "Outfit": "Default",
+      "File": "orbit-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "ScaleReference": 325,
+      "Frames": [
+        {
+          "Bounds": [
+            11,
+            1011,
+            319,
+            1224
+          ],
+          "Anchor": [
+            164.5,
+            1219
+          ]
+        },
+        {
+          "Bounds": [
+            323,
+            1027,
+            629,
+            1227
+          ],
+          "Anchor": [
+            477.0,
+            1221
+          ]
+        },
+        {
+          "Bounds": [
+            636,
+            1011,
+            945,
+            1225
+          ],
+          "Anchor": [
+            790.5,
+            1219
+          ]
+        },
+        {
+          "Bounds": [
+            947,
+            1016,
+            1254,
+            1225
+          ],
+          "Anchor": [
+            1100.5,
+            1219
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "Outfit": "Default",
+      "File": "ember-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "ScaleReference": 353,
+      "Frames": [
+        {
+          "Bounds": [
+            40,
+            959,
+            313,
+            1206
+          ],
+          "Anchor": [
+            176.5,
+            1201
+          ]
+        },
+        {
+          "Bounds": [
+            362,
+            985,
+            620,
+            1206
+          ],
+          "Anchor": [
+            491.5,
+            1201
+          ]
+        },
+        {
+          "Bounds": [
+            656,
+            954,
+            925,
+            1211
+          ],
+          "Anchor": [
+            790.0,
+            1206
+          ]
+        },
+        {
+          "Bounds": [
+            972,
+            988,
+            1225,
+            1210
+          ],
+          "Anchor": [
+            1098.5,
+            1204
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "Outfit": "Default",
+      "File": "prism-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "ScaleReference": 338,
+      "Frames": [
+        {
+          "Bounds": [
+            43,
+            993,
+            296,
+            1200
+          ],
+          "Anchor": [
+            169.0,
+            1194
+          ]
+        },
+        {
+          "Bounds": [
+            349,
+            1002,
+            601,
+            1202
+          ],
+          "Anchor": [
+            475.0,
+            1197
+          ]
+        },
+        {
+          "Bounds": [
+            654,
+            993,
+            910,
+            1200
+          ],
+          "Anchor": [
+            782.0,
+            1194
+          ]
+        },
+        {
+          "Bounds": [
+            961,
+            1006,
+            1217,
+            1200
+          ],
+          "Anchor": [
+            1089.0,
+            1195
+          ]
+        }
+      ]
+    }
+  ]
+}

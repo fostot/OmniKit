@@ -13,8 +13,8 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 6;
-    public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" });
+    public int Version { get; set; } = 7;
+    public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
     public bool SetupCompleted = false;
@@ -25,6 +25,7 @@ public sealed class Configuration : IPluginConfiguration
     public ModifierKeys SettingsModifier = ModifierKeys.Control;
     public bool SoftInteractEnabled = false;
     public bool QuestItemUseEnabled = false;
+    public bool QuestEmoteUseEnabled = false;
     public InteractionTargets InteractionTargets = InteractionTargets.DefaultWorld;
     public EnemyInteractMode EnemyInteractMode = EnemyInteractMode.Choose;
     public bool InteractionHudEnabled = true;
@@ -37,6 +38,7 @@ public sealed class Configuration : IPluginConfiguration
     public float InteractionHudOffsetX = 0f;
     public float InteractionHudScale = 1f;
     public bool InteractionHudOutline = false;
+    public float InteractionHudOutlineThickness = 1f;
     public HudTextEffect InteractionHudEffect = HudTextEffect.Shadow;
     public float InteractionHudEffectIntensity = 1f;
     public float InteractionHudEffectSpeed = 1f;
@@ -47,7 +49,7 @@ public sealed class Configuration : IPluginConfiguration
     public int BotanistGearset = -1;
     public bool AvatarEnabled = true;
     public bool AnimationsEnabled = true;
-    public string Avatar = "Bimble";
+    public string Avatar = "Moonblob";
     public string CompanionOutfit = "Navigator";
     public string CompanionPalette = "Moonlight";
     public bool CompanionMagicEnabled = true;
@@ -57,7 +59,14 @@ public sealed class Configuration : IPluginConfiguration
     public bool CompanionContainmentEnabled = true;
     public bool CompanionFallingEnabled = true;
     public bool CompanionHomeEnabled = true;
+    public float CompanionHomeX = .835f;
+    public float CompanionHomeY = .92f;
     public bool CompanionGrabHandEnabled = true;
+    public float CompanionGrabHandScale = .40f;
+    public bool CompanionNapsEnabled = true;
+    public float CompanionNapInterval = 45f;
+    public float CompanionNapDuration = 20f;
+    public bool CompanionNapZsEnabled = true;
     public bool CompanionCommentsEnabled = true;
     public float CompanionCommentInterval = 120f;
     public bool CompanionBlinkEnabled = true;

@@ -9,7 +9,7 @@ namespace OmniKit.Umbra;
     "OmniKit.Launcher",
     "OmniKit",
     "Open OmniKit's launcher and settings from your Umbra toolbar.",
-    ["omnikit", "search", "launcher", "interact", "bimble", "moon"])]
+    ["omnikit", "search", "launcher", "interact", "moonblob", "companion", "moon"])]
 public sealed class OmniKitWidget(
     WidgetInfo info,
     string? guid = null,

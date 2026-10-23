@@ -71,7 +71,69 @@ Check(physics.Position == before && physics.Pose == CompanionPose.Idle, "Animati
 physics.Update(surfaces, viewportMin, viewportMax, size, .05f, true, true, options);
 Check(physics.Position.Y > before.Y, "Hovering cannot suspend a falling companion in midair.");
 for (var i = 0; i < 200 && physics.Placement == CompanionPlacement.Falling; i++) Tick();
-Check(physics.Placement == CompanionPlacement.Floor, "A fall passes lower frames and reaches the actual viewport floor.");
+Check(physics.Placement == CompanionPlacement.Perched && physics.AttachedSurfaceId == surface.Id,
+    "A falling companion catches a lower frame instead of passing through it.");
+
+// Build a fast downward segment before introducing thin observed platforms.
+// Each contact must use the swept foot plane, not endpoint containment.
+CompanionPhysics FastFall(float x = 330)
+{
+    var falling = new CompanionPhysics(); var start = new Vector2(x, 60);
+    falling.PickUp(start, start + size * .5f, false);
+    falling.Drop(start + size * .5f, [], viewportMin, viewportMax, size, options);
+    for(var i=0;i<10;i++) falling.Update([], viewportMin, viewportMax, size, .05f, true, false, options);
+    return falling;
+}
+var falling = FastFall();
+var plane = falling.Position.Y + size.Y * .9f + 3;
+var thin = new CompanionSurface(20, new Vector2(300, plane), new Vector2(500, plane+8), 8, 1);
+var lower = thin with { Id=21, Minimum=thin.Minimum+new Vector2(0,12), Maximum=thin.Maximum+new Vector2(0,12), Order=99 };
+falling.Update([lower,thin], viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Perched && falling.AttachedSurfaceId==thin.Id
+    && Math.Abs(falling.Position.Y+size.Y*.9f-plane)<.001f,
+    "A fast fall lands on the first crossed thin bar, before a higher-z lower bar.");
+falling=FastFall();
+var front=thin with {Id=22,Order=100};
+falling.Update([thin,front],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.AttachedSurfaceId==front.Id,"Coincident crossed tops choose the frontmost observed frame.");
+falling=FastFall(220);
+falling.Update([thin],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.AttachedSurfaceId==thin.Id,"A partially overlapping sprite can land on a bar edge.");
+falling=FastFall(200);
+falling.Update([thin],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Falling,"A fall with no horizontal overlap does not attach.");
+falling=FastFall();
+falling.Update([thin],viewportMin,viewportMax,size,.05f,true,false,options with {Perch=false});
+Check(falling.Placement==CompanionPlacement.Falling,"Turning perching off disables fall-path landing.");
+falling=FastFall();
+falling.Update([thin],viewportMin,viewportMax,size,.05f,true,false,options with {Fall=false});
+Check(falling.Placement==CompanionPlacement.Returning,"Turning falling off exits the fall without attaching.");
+falling=FastFall();
+before=falling.Position;
+falling.Update([thin],viewportMin,viewportMax,size,.05f,false,false,options);
+Check(falling.Position==before && falling.Placement==CompanionPlacement.Falling,"Frozen animation does not collide or move ahead.");
+falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Falling,"A closed/absent surface cannot catch a fall.");
+falling=FastFall();
+falling.Update([thin],viewportMin,viewportMax,size,.05f,true,false,options);
+falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Falling && falling.AttachedSurfaceId==0,
+    "Closing a just-landed frame detaches safely and resumes the fall.");
+falling=FastFall();
+var passed=thin with {Minimum=thin.Minimum-new Vector2(0,5),Maximum=thin.Maximum-new Vector2(0,5)};
+falling.Update([passed],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Falling,"A top already above the feet cannot pull a falling companion upward.");
+falling=new CompanionPhysics();
+falling.PickUp(new Vector2(200,60),new Vector2(248,108),false);
+falling.Carry(new Vector2(348,108),viewportMin,viewportMax,size,.05f);
+falling.Drop(new Vector2(348,108),[],viewportMin,viewportMax,size,options);
+for(var i=0;i<10;i++) falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options);
+var movingStart=falling.Position;
+var sideBar=new CompanionSurface(23,movingStart+new Vector2(size.X+4,size.Y*.9f+3),
+    movingStart+new Vector2(size.X+100,size.Y*.9f+11),8,1);
+falling.Update([sideBar],viewportMin,viewportMax,size,.05f,true,false,options);
+Check(falling.Placement==CompanionPlacement.Falling && falling.Position.X+size.X>sideBar.Minimum.X,
+    "Horizontal overlap is sampled at the crossing time, not at a later endpoint.");
 
 var home = new Vector2(720, 180);
 var sawReturn = false;
@@ -135,4 +197,49 @@ Check(!CompanionPhysics.HomeFacesLeft(200, 100, 800, true), "A left-side house f
 foreach (var x in new[] { 490f, 500f, 510f })
     Check(CompanionPhysics.HomeFacesLeft(x, 100, 800, true) && !CompanionPhysics.HomeFacesLeft(x, 100, 800, false),
         "A center dead band preserves house orientation without flip jitter.");
+
+var house = new CompanionSurface(0,new Vector2(400,350),new Vector2(540,550),0,0);
+bool OverHouse(Vector2 point) => point.X+size.X>house.Minimum.X+.001f && point.X<house.Maximum.X-.001f
+    && point.Y+size.Y>house.Minimum.Y+.001f && point.Y<house.Maximum.Y-.001f;
+foreach(var endpoints in new[]{(new Vector2(160,400),new Vector2(700,400)),
+    (new Vector2(700,400),new Vector2(160,400)),(new Vector2(420,150),new Vector2(420,554))})
+{
+    var walker=new CompanionPhysics();
+    walker.PickUp(endpoints.Item1,endpoints.Item1+size*.5f,false);
+    walker.Drop(endpoints.Item1+size*.5f,[],viewportMin,viewportMax,size,options with{Fall=false});
+    for(var i=0;i<2200 && walker.Active;i++)
+    {
+        var prior=walker.Position;
+        walker.Update([],viewportMin,viewportMax,size,.05f,true,false,options,endpoints.Item2,house);
+        Check(!OverHouse(walker.Position),"A returning companion never walks through the house footprint.");
+        Check(Vector2.Distance(prior,walker.Position)<=size.Y*.34f*.05f+.001f,"House detours retain continuous approved movement speed.");
+    }
+    Check(!walker.Active && Vector2.Distance(walker.Position,endpoints.Item2)<.001f,"A house detour reaches the actual destination, not its first corner.");
+}
+falling=new CompanionPhysics();
+falling.PickUp(new Vector2(420,60),new Vector2(468,108),false);
+falling.Drop(new Vector2(468,108),[],viewportMin,viewportMax,size,options);
+for(var i=0;i<300 && falling.Placement==CompanionPlacement.Falling;i++)
+{
+    falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options,null,house);
+    Check(!OverHouse(falling.Position),"Falling drifts around the house without entering or landing on it.");
+}
+Check(falling.Placement==CompanionPlacement.Floor && falling.AttachedSurfaceId==0,"The house is never treated as a landing frame.");
+falling.PickUp(new Vector2(420,380),new Vector2(468,428),false);
+falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options,null,house);
+Check(OverHouse(falling.Position) && falling.IsCarried,"Carrying remains free over the house.");
+falling.Drop(new Vector2(468,428),[],viewportMin,viewportMax,size,options);
+falling.Update([],viewportMin,viewportMax,size,.05f,true,false,options,null,house);
+Check(!OverHouse(falling.Position),"Dropping inside the house resolves to a free edge after carry ends.");
+var stepStart=new Vector2(160,400); var stepGoal=new Vector2(700,400);
+var singleStep=CompanionObstacle.Step(stepStart,stepGoal,size,2000,viewportMin,viewportMax,house);
+Check(!OverHouse(singleStep) && singleStep!=stepGoal,
+    "A very long shared routing step stops at its first clear corner instead of tunnelling through the house.");
+Check(CompanionObstacle.Step(stepStart,stepGoal,size,0,viewportMin,viewportMax,house)==stepStart
+    && CompanionObstacle.Step(stepStart,stepGoal,size,float.NaN,viewportMin,viewportMax,house)==stepStart,
+    "Shared routing preserves a frozen position for zero or invalid step lengths.");
+Check(!OverHouse(CompanionObstacle.Destination(new Vector2(420,380),size,viewportMin,viewportMax,house)),
+    "The shared endpoint is moved out of an occupied house footprint.");
+var unobstructed=CompanionObstacle.Step(stepStart,stepGoal,size,10,viewportMin,viewportMax,null);
+Check(unobstructed==stepStart+new Vector2(10,0),"A missing obstacle preserves direct movement and speed.");
 Console.WriteLine($"Companion frame physics: {checks} checks passed.");

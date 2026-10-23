@@ -1,6 +1,6 @@
 # OmniKit
 
-Your everyday toolkit for XIV by Zero, with Bimble the moon bunny (or a moon bear).
+Your everyday toolkit for XIV by Zero, with Moonblob and seven other moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
@@ -51,10 +51,11 @@ small corner rounding and a footer showing the built version and **by Zero**.
   **Interact → Detection distance** adjusts detection from 1–30 yalms. The default
   for new settings is 6; existing saved distances stay unchanged. This does not
   extend the game's allowed interaction reach.
-- **HUD** puts font size first, with an independent outline toggle and eleven
+- **HUD** puts font size first, with an independent outline toggle, adjustable
+  thickness (0.5–4, default 1) and eleven
   text effects, including rainbow, neon pulse, chromatic glitch, hologram,
   flame, frost and light sweep. Intensity, speed and animation are adjustable. Modify opens this tab at the
-  top. An editing sample lets you see changes even without a target or with the
+  top. The outline follows the primary effect glyphs. An editing sample lets you see changes even without a target or with the
   gameplay HUD disabled; active interactions still hide that sample.
 - **Interact → Target types** controls NPCs, quest objects, loot, aetherytes,
   gathering nodes, retainers, housing and other usable objects. Hostile and
@@ -65,11 +66,18 @@ small corner rounding and a footer showing the built version and **by Zero**.
 - Optional gathering gear changes and restoration after an observed gathering
   session, with cancellation when you change gear yourself. Save your gearsets in
   FFXIV first. This does not reveal hidden nodes or choose gathering items.
-- **Interact → Use verified quest items** adds the first checked item rule:
-  Tiller's Shovel on the cumbersome rocks in **Rocks in a Hard Place**. It starts
-  off, selects/confirms the target, and attempts one native item action only when
-  quest, tracker, inventory and usability checks agree. Debris uses ordinary
-  interaction. Other quest items still require manual use. See [scope and sources](docs/QUEST-ITEMS.md).
+- **Interact → Use verified quest items** starts off and supports two cases:
+  Tiller's Shovel on cumbersome rocks in **Rocks in a Hard Place**, and Fetid Dodo
+  Flesh on suspicious mounds in **Forbidden Island**. A fresh press selects/confirms
+  the target and attempts one native item action only when quest, tracker,
+  inventory and usability checks agree. Debris retains ordinary interaction;
+  other quest items require manual use. Native execution remains unverified. See
+  [scope and sources](docs/QUEST-ITEMS.md).
+- **Interact → Use verified quest emotes** starts off. Its first mapped case is
+  `/soothe` on the irate coachmen during **A Bridge Too Full**. One fresh press
+  selects/confirms the target and requests one emote; a blocked matched rule does
+  not fall back to talking. Native game execution remains unverified. See
+  [scope and sources](docs/QUEST-EMOTES.md).
 - Local Windows speech input, typed commands, saved phrase-to-action bindings and
   a practice button. Speech starts only when requested, for one utterance.
 - Optional text chat through **Continue with ChatGPT** or a Responses-compatible
@@ -77,39 +85,43 @@ small corner rounding and a footer showing the built version and **by Zero**.
   but CLI generation is paused because a single inference cannot be enforced. Connections
   are selected explicitly. Replies cannot execute game commands. The local
   matcher does not need AI. See [AI connections](docs/AI-CONNECTIONS.md).
-- Bimble and Moonbear with **Navigator** (navy/gold) and **Stargazer**
-  (violet/silver) outfit atlases, plus illustrated **Moonblob**, **Wink**
-  and **Nova**. Six aura palettes are available: Moonlight, Aurora,
-  Nebula, Rose, Ember and Starlight. In **Companion → Appearance**, draw a
-  roaming area, preview an animation, or turn off magic accents, animation or
-  the companion. Clicking the companion opens its conversation. Bimble and
-  Moonbear walk with articulated painted parts: alternating planted feet,
-  swinging legs and opposing arms keep the body consistent. Bimble has bounded
-  ear follow-through. Moonblob is completely limbless and rolls continuously
-  around its body circle; Wink and Nova float without changing shape each frame.
-  Movement cadence follows distance travelled, including on moving frames.
-  Diagonal travel has directional steps and stable facing near vertical paths;
-  movement uses a high-resolution timer for high-refresh displays.
-  Bimble's rebuilt idle and walk share one body and limb renderer, with a short
-  settle transition that grounds both paws. Reaction and mouth previews retain
-  atlas poses; Moonbear also retains its separate idle artwork. Mouth movement
-  is an explicit preview; synthesized speech and lip sync are not implemented.
-  Moonbear retains approximately the same idle/walk height, with a remaining
-  silhouette difference between its separate artwork.
+- Eight illustrated whole-body companions: **Moonblob** (the default), **Wink**,
+  **Nova**, **Mochi**, **Puff**, **Orbit**, **Ember** and **Prism**. Each uses one
+  complete body, with no separate limb rig. Moonblob rolls continuously; the
+  others float using stable body images. Six aura palettes remain available:
+  Moonlight, Aurora, Nebula, Rose, Ember and Starlight. In **Companion → Appearance**,
+  draw a roaming area, preview an animation, or turn off magic accents, animation
+  or the companion. Clicking it opens its conversation. Mouth movement is an
+  explicit preview; synthesized speech and lip sync are not implemented.
 - Optional **Companion → Appearance → Frame interaction** lets you pick up the
   companion and drop it onto a supported visible frame. It can perch on a top
-  edge, turn and walk off, fall to the screen floor, then walk home; or stay
+  edge, turn and walk off, land on supported frames below or the screen floor,
+  then return to the roaming area; or stay
   inside a frame and push against its edges.
   Supported surfaces include rectangular FFXIV addons and compatible plugin
-  windows and Umbra bars in Dalamud's ImGui context. Closed or unsupported
-  frames make it fall and return home. Nothing edits those windows. An optional
-  draggable moon house moves its saved area and faces inward. Optional hand cues
-  show pickup/release. Wink blinks while floating. Occasional comments are local
+  windows and Umbra bars in Dalamud's ImGui context, including compatible
+  windows marked to ignore mouse input. Full-screen canvases are not universally
+  supported. Closed or unsupported frames make it fall and return. Nothing edits
+  those windows. An optional draggable moon house has its own saved position;
+  moving it leaves the drawn roaming area unchanged. Optional hand cues
+  show pickup/release at a smaller default scale of 0.4, adjustable from 0.2–1.
+  Wink blinks while floating. Occasional comments are local
   text only, with no model request or microphone use.
+- All eight companions have entrance, settling and sleeping art. Normal
+  roaming stays inside the drawn area; nap trips can reach a house outside it at
+  about twice the usual walking speed, then return continuously. Naps default to
+  about 45 seconds awake and 20 seconds asleep; awake interval (15–300 seconds),
+  sleep duration (5–120 seconds), naps and chimney sleep symbols are adjustable.
+  Pausing animation freezes the trip. Disabling naps, hiding or moving the house
+  returns the companion without a teleport.
 - SQLite preferences and JSON export/import, including saved chords, HUD position
   and the companion area. Older settings migrate to the new format.
 - Native Umbra menu integration, an optional Umbra toolbar widget, and an owned
   in-game Chromium browser for OmniKit website and wiki actions.
+
+The earlier rabbit and bear art and rigs were retired locally. Current source
+files and packages exclude them; older published releases and history remain
+unchanged. Wink is the plugin icon.
 
 ## Umbra
 
@@ -127,9 +139,11 @@ See the [companion instructions](src/OmniKit.Umbra/README.md).
 
 Wiki searches, Community Finder links and OmniKit website actions open in its
 own in-game WebView2 window. The page stays visible; the menu icon reveals the
-address bar, navigation, movement and extension controls. `/omnikit browser`
+address bar, navigation, movement and extension controls. A close X remains
+visible while those controls are hidden. `/omnikit browser`
 opens it, `/omnikit browser controls` toggles controls, and `/omnikit browser hide`
-hides it. `/omnikit wiki <search>` searches the community-run wiki. Browser
+hides it and stops the helper and browser engine. There is no background prewarm;
+the next explicit open or captured link starts it again. `/omnikit wiki <search>` searches the community-run wiki. Browser
 startup failures are reported without silently opening your desktop browser.
 
 The helper uses the installed Microsoft Edge WebView2 Evergreen Runtime and its
@@ -139,13 +153,20 @@ compatibility are not promised. Ordinary page downloads and external application
 schemes are blocked. Supported account sign-in still uses the provider's external
 consent flow. See the [browser implementation](src/OmniKit.Browser/README.md).
 
+Browser protection starts on each session: script popups and requests to 60
+embedded known advertising/tracking hosts are blocked. This is a small original
+host list, not comprehensive ad blocking. The browser controls offer a session
+protection switch for compatibility. Native-UI hover cutouts mitigate overlap;
+actual hover flicker inside FFXIV still requires live validation.
+
 **Data → In-game browser → Capture game & plugin web links** optionally routes
 standard HTTP/HTTPS ShellExecute opens from the game process into OmniKit.
-It starts off and opens the browser when enabled. Capture requires a ready
-browser with queue space. Recognized authentication and non-web links pass through. Custom launchers,
+It starts off. Enabling capture does not start the browser until a link arrives;
+captured links can start a closed browser. Recognized authentication and non-web links pass through. Custom launchers,
 direct process starts and opens from another process are outside this hook's
-coverage. Capture failure leaves the original open method in charge; OmniKit's
-own web commands still report browser errors without a desktop fallback.
+coverage. Calls rejected before capture retain their original open method;
+an accepted browser request reports startup errors without silently retrying in
+the desktop browser.
 
 ## Local brain and optional AI
 
@@ -172,9 +193,10 @@ ChatGPT registrations and tokens also stay outside the database and exports.
 Exports never include credentials, recordings or conversations. Exports can contain
 your custom provider address and voice phrases, so review them before sharing.
 Import always disables AI in the interface until you explicitly enable it again.
-Schema v6 adds effect controls and companion home, hand, comment and blink
-preferences, plus default-off link capture and verified quest-item use. It migrates v1–v5 settings while preserving target types, the explicit enemy action choice,
-frame interaction, AI connection preferences and saved chords. Legacy
+Schema v7 adds independent house coordinates, nap preferences, hand size and HUD
+outline thickness. It migrates v1–v6 while preserving existing preferences, saved
+chords and local AI consent. Existing houses start at their former roaming-box
+midpoint/bottom; moving a house no longer changes that box. Legacy
 v1 Ctrl/Alt/Shift virtual-key values are converted to chord masks. Failed
 database migrations keep the previous snapshot.
 
@@ -201,6 +223,7 @@ dotnet run --project tests/HotkeyTests/HotkeyTests.csproj -c Release
 dotnet run --project tests/InteractionInputTests/InteractionInputTests.csproj -c Release
 dotnet run --project tests/CompanionPhysicsTests/CompanionPhysicsTests.csproj -c Release
 dotnet run --project tests/CompanionMotionTests/CompanionMotionTests.csproj -c Release
+dotnet run --project tests/CompanionHomeTests/CompanionHomeTests.csproj -c Release
 dotnet run --project tests/CliChatTests/CliChatTests.csproj -c Release
 dotnet run --project tests/ChatGptTests/ChatGptTests.csproj -c Release
 dotnet run --project tests/ChatCostGuardTests/ChatCostGuardTests.csproj -c Release
@@ -230,8 +253,9 @@ The soft-interaction concept was informed by the [awesome_wotlk fork](https://gi
 OmniKit's implementation is original and uses XIV's current object, camera and
 interaction APIs; it includes no WoW client patch code, addresses or loaders.
 The [ChokoLoader reference](https://github.com/POKOch/ChokoLoader-Awesome-for-Warmane)
-was inspected as background only. [Artwork prompts](assets/PROMPTS.md) document
-the generated moon companions; the [house](assets/HOUSE-PROMPT.md) and
-[grab hand](assets/GRAB-HAND-PROMPT.md) and
-[rebuilt Bimble](assets/BIMBLE-V2-PROMPTS.md) have their own prompt records. Dependency notices are in
+was inspected as background only. The [whole-body companions and Wink icon](assets/WHOLE-BODY-COMPANION-PROMPTS.md),
+[original abstract companions](assets/ABSTRACT-COMPANION-PROMPTS.md),
+[limbless Moonblob](assets/MOONBLOB-ROLL-PROMPTS.md),
+[house](assets/HOUSE-PROMPT.md), [grab hand](assets/GRAB-HAND-PROMPT.md) and
+[entrance/sleep artwork](assets/COMPANION-NAPS-PROMPTS.md) have prompt records. Dependency notices are in
 [THIRD-PARTY-NOTICES](docs/THIRD-PARTY-NOTICES.md).

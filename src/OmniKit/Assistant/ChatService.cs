@@ -12,7 +12,7 @@ public sealed class ChatService : IDisposable
     private const int MaximumResponseBytes = 262144;
     private const int MaximumAnswerLength = 6000;
     private const string Instructions = """
-        You are Bimble, OmniKit's helpful moon-bunny companion for Final Fantasy XIV.
+        You are Moonblob, OmniKit's helpful moon companion for Final Fantasy XIV.
         Be warm, concise, and practical. Your scope is Final Fantasy XIV, its game
         systems, and using OmniKit or related plugins. Politely redirect unrelated
         requests to those topics. A real-world recipe is out of scope; an in-game
@@ -178,8 +178,8 @@ public sealed class ChatService : IDisposable
 
     private static string InstructionsFor(string avatar)
     {
-        var name = Configuration.AvatarNames.Contains(avatar) ? avatar : "Bimble";
-        return Instructions.Replace("You are Bimble, OmniKit's helpful moon-bunny companion", $"You are {name}, OmniKit's helpful moon companion", StringComparison.Ordinal);
+        var name = Configuration.AvatarNames.Contains(avatar) ? avatar : "Moonblob";
+        return Instructions.Replace("You are Moonblob, OmniKit's helpful moon companion", $"You are {name}, OmniKit's helpful moon companion", StringComparison.Ordinal);
     }
 
     private static string ReadAnswer(JsonElement root)

@@ -1,3 +1,53 @@
+# 0.1.0.0011: independent homes, naps and browser controls
+
+The active companions are Moonblob (default), Wink, Nova, Mochi, Puff, Orbit,
+Ember and Prism. All eight use complete limbless bodies; Moonblob rolls and the
+others float. Wink replaces the plugin icon. The earlier rabbit/bear art and rigs
+were retired locally and are excluded from current source files and packages;
+older published releases and history remain unchanged.
+
+The companion house now has its own saved position. Dragging it leaves the drawn
+roaming area unchanged; normal free roaming stays inside that area. All eight
+companions have entrance and sleep artwork. Nap trips walk to the house
+at about twice normal speed, settle, sleep, wake and return continuously. Defaults
+are about 45 seconds awake and 20 asleep, adjustable to 15–300 and 5–120 seconds.
+Naps and chimney sleep symbols can be disabled separately. Animation pause freezes
+the trip; disabling naps, hiding or moving the house returns without teleporting.
+The pickup hand is smaller by default (0.4), with scale adjustable from 0.2–1.
+Falls can land on supported frames below. Read-only surface observation includes
+compatible NoMouseInputs windows, not every full-screen canvas.
+
+The browser has an always-visible close X. Close/hide stops its helper and engine;
+there is no background prewarm. Explicit opens and captured ordinary web links
+start it on demand. Session protection starts on, blocking script popups and
+requests to an original embedded list of 60 known advertising/tracking hosts.
+The session switch allows compatibility exceptions; this is not comprehensive ad
+blocking. Native game-UI hover cutouts mitigate overlap, but the reported flicker
+still needs verification inside FFXIV.
+
+HUD outline thickness is adjustable from 0.5–4 (default 1) and follows the primary
+effect glyphs. Schema 7 atomically migrates versions 1–6 while preserving existing
+preferences, chords and local AI consent. Existing house coordinates derive from
+the former roaming box. Imports still cannot grant new AI consent.
+
+Use verified quest items now supports Fetid Dodo Flesh on suspicious mounds in
+Forbidden Island, alongside Tiller's Shovel in Rocks in a Hard Place. Both are
+limited verified mappings with one guarded item request per fresh press; they
+do not fight encounters or solve later objectives. See [item scope](QUEST-ITEMS.md).
+
+The new Use verified quest emotes setting starts off. Its first mapped case is
+`/soothe` on the irate coachmen in A Bridge Too Full. A fresh press confirms the
+target before one emote request, with no talking fallback when the matched rule
+is blocked. The mapping is verified; native game execution remains unverified.
+See [scope and sources](QUEST-EMOTES.md). This release includes only these two item
+cases and one emote case, not a general quest solver.
+
+Focused state/storage checks and native offscreen nap rendering cover the new
+behavior. Browser lifecycle/protection checks use a synthetic host. These are
+separate from pending FFXIV focus, flicker, surface, fullscreen and visual-motion
+acceptance. The base remains 0.1.0; this artifact uses source commit count 11.
+Earlier releases remain unchanged.
+
 # 0.1.0.0009: in-game browser, companion homes and expressive HUD
 
 OmniKit's wiki, Community Finder and website actions now open in its own

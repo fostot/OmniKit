@@ -31,6 +31,11 @@ var drawSettings = uiType.GetMethod("DrawSettings", flags)!;
 var drawHud = serviceType.GetMethod("DrawHud", flags)!;
 var theme = uiType.GetMethod("PushTheme", BindingFlags.Static | BindingFlags.NonPublic)!;
 var bagsOnly = args.Contains("--bags-only");
+if (args.Contains("--outline-only"))
+{
+    CheckOutlineBounds();
+    return;
+}
 
 if (!bagsOnly)
 foreach (var globalScale in new[] { 1f, 1.5f, 2f })
@@ -337,6 +342,71 @@ unsafe float RenderHud(float globalScale,float fontScale)
         return maxY-minY;
     }
     finally { ImGui.DestroyContext(context); }
+}
+
+unsafe void CheckOutlineBounds()
+{
+    var count = 0;
+    var candidateType = serviceType.GetNestedType("Candidate", BindingFlags.NonPublic)!;
+    var category = Enum.Parse(assembly.GetType("OmniKit.Interaction.InteractionTargets", true)!, "Npcs");
+    var effectType = assembly.GetType("OmniKit.Interaction.HudTextEffect", true)!;
+    foreach (var scale in new[] { 1f, 1.5f })
+    {
+        var context = ImGui.CreateContext();
+        try
+        {
+            var renderer = Start(scale, new Vector2(480, 330));
+            var config = Config(); Set(config, "SoftInteractEnabled", true);
+            Set(config, "InteractionHudOutline", true); Set(config, "InteractionHudEffectIntensity", 2f);
+            Set(config, "InteractionHudScale", 2f);
+            var interaction = Activator.CreateInstance(serviceType, config)!;
+            var io = ImGui.GetIO();
+            foreach (var effect in new[] { "None", "ChromaticGlitch", "Flame", "Frost" })
+            foreach (var thickness in new[] { .5f, 4f })
+            foreach (var longName in new[] { false, true })
+            foreach (var corner in new[] { new Vector2(-1, -1), new Vector2(1, -1), new Vector2(-1, 1), new Vector2(1, 1) })
+            {
+                Set(config, "InteractionHudOutlineThickness", thickness);
+                Set(config, "InteractionHudEffect", Enum.Parse(effectType, effect));
+                Set(config, "InteractionHudOffsetX", corner.X * 10000); Set(config, "InteractionHudOffsetY", corner.Y * 10000);
+                var name = longName ? string.Concat(Enumerable.Repeat("Étoile Moonlit Guild Vendor ", 12)) : "Étoile AV";
+                Set(interaction, "candidate", Activator.CreateInstance(candidateType, 0UL, IntPtr.Zero, name, category));
+                serviceType.GetProperty("ActionPaused")!.SetValue(interaction, false);
+                io.AddKeyEvent(ImGuiKey.ModShift, false); io.AddMousePosEvent(-1000, -1000);
+                ImGui.NewFrame(); io.WantCaptureKeyboard = false; drawHud.Invoke(interaction, null);
+                var position = (Vector2)serviceType.GetField("hudReadyBoundsPosition", flags)!.GetValue(interaction)!;
+                var size = (Vector2)serviceType.GetField("hudReadyBoundsSize", flags)!.GetValue(interaction)!;
+                var list = ImGui.GetForegroundDrawList();
+                if (list.VtxBuffer.Size == 0 || position.X < 7.9f || position.Y < 7.9f
+                    || position.X + size.X > io.DisplaySize.X - 7.9f || position.Y + size.Y > io.DisplaySize.Y - 7.9f)
+                    throw new InvalidOperationException("Thick outline HUD bounds must fit the viewport with the same eight-pixel gutter.");
+                for (var i = 0; i < list.VtxBuffer.Size; i++)
+                {
+                    var p = list.VtxBuffer[i].Pos;
+                    if (!float.IsFinite(p.X) || !float.IsFinite(p.Y) || p.X < position.X - .01f || p.Y < position.Y - .01f
+                        || p.X > position.X + size.X + .01f || p.Y > position.Y + size.Y + .01f)
+                        throw new InvalidOperationException("Actual outlined/effected glyphs must fit the cached Shift hit bounds, including elided names.");
+                }
+                ImGui.Render();
+                if (effect == "ChromaticGlitch" && thickness == 4 && !longName && corner == Vector2.One)
+                    renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"outline-edge-{scale:0.0}.png"));
+                serviceType.GetProperty("ActionPaused")!.SetValue(interaction, true);
+                io.AddKeyEvent(ImGuiKey.ModShift, true); io.AddMousePosEvent(position.X + size.X * .5f, position.Y + size.Y * .5f);
+                // Native ImGui trickles key/mouse transitions across frames.
+                ImGui.NewFrame(); io.WantCaptureKeyboard = false; drawHud.Invoke(interaction, null); ImGui.Render();
+                ImGui.NewFrame(); io.WantCaptureKeyboard = false; drawHud.Invoke(interaction, null);
+                var hitWindow = Enumerable.Range(0, context.Windows.Size).Select(i => context.Windows[i])
+                    .SingleOrDefault(w => w.Active && (System.Runtime.InteropServices.Marshal.PtrToStringUTF8((nint)w.Name) ?? "")
+                        .StartsWith("##OmniKitVisibleTargetControls", StringComparison.Ordinal));
+                if (hitWindow.Handle == null || hitWindow.Pos.X < 0 || hitWindow.Pos.Y < 0
+                    || hitWindow.Pos.X + hitWindow.Size.X > io.DisplaySize.X || hitWindow.Pos.Y + hitWindow.Size.Y > io.DisplaySize.Y)
+                    throw new InvalidOperationException($"Actual Shift editor hitbox must remain available and on-screen: scale={scale}, effect={effect}, thickness={thickness}, long={longName}, corner={corner}, shift={io.KeyShift}, found={hitWindow.Handle != null}, ready={position}/{size}.");
+                ImGui.Render(); count++;
+            }
+        }
+        finally { ImGui.DestroyContext(context); }
+    }
+    Console.WriteLine($"PASS: {count} native HUD outline edge/elision/Shift-hitbox cases at 1x/1.5x; no game invoked.");
 }
 
 public class TestProxy : DispatchProxy

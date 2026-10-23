@@ -8,16 +8,20 @@ namespace OmniKit.Integration;
 internal sealed class WikiBrowser : IDisposable
 {
     private const string SearchUrl = "https://ffxiv.consolegameswiki.com/mediawiki/index.php?search=";
+    private const string ShutdownBlockedStatus = "Browser shutdown could not be confirmed. Restart OmniKit before reopening.";
     private readonly object lifecycle = new();
-    private readonly Queue<string> commands = new();
+    private readonly Queue<(string Command, long Generation)> commands = new();
     private readonly CancellationTokenSource lifetime = new();
     private readonly Func<HelperProcess> startProcess;
     private readonly Func<nint, int, bool> validWindow;
     private readonly TimeSpan startTimeout, pipeTimeout, shutdownTimeout;
     private Session? helper;
     private Task<HelperProcess>? starting;
+    private Task cleanup = Task.CompletedTask;
+    private CancellationTokenSource? opening;
+    private long generation;
     private int pendingCount;
-    private bool workerRunning, disposed;
+    private bool workerRunning, disposed, shutdownUnconfirmed;
     private string status = "In-game browser";
     private bool hasError;
     private long statusRevision;
@@ -73,8 +77,16 @@ internal sealed class WikiBrowser : IDisposable
     public void ToggleControls() => TryQueue("{\"kind\":\"toggle-controls\"}");
     public void Hide()
     {
-        lock (lifecycle) if (disposed || helper == null && starting == null) return;
-        TryQueue("{\"kind\":\"hide\"}");
+        lock (lifecycle)
+        {
+            if (disposed) return;
+            generation++;
+            pendingCount -= commands.Count; commands.Clear();
+            opening?.Cancel();
+            var session = helper; helper = null;
+            if (session != null) cleanup = StopAsync(session, true);
+            SetStatus(shutdownUnconfirmed ? ShutdownBlockedStatus : "Browser closed.", shutdownUnconfirmed);
+        }
     }
 
     internal static bool TryWebUrl(string? text, out string destination)
@@ -91,12 +103,17 @@ internal sealed class WikiBrowser : IDisposable
         lock (lifecycle)
         {
             if (disposed || (requireReady && helper is not { VerifiedReady: true })) return false;
+            if (shutdownUnconfirmed)
+            {
+                if (!requireReady) SetStatus(ShutdownBlockedStatus, true);
+                return false;
+            }
             if (command.Length > 8192 || pendingCount >= 8)
             {
                 if (!requireReady) SetStatus("The browser is busy. Try again after the current request finishes.", true);
                 return false;
             }
-            commands.Enqueue(command); pendingCount++;
+            commands.Enqueue((command, generation)); pendingCount++;
             SetStatus("Opening in-game browser…");
             if (!workerRunning) { workerRunning = true; _ = Task.Run(DrainAsync); }
             return true;
@@ -107,15 +124,16 @@ internal sealed class WikiBrowser : IDisposable
         while (true)
         {
             string command;
+            long requestedGeneration;
             lock (lifecycle)
             {
                 if (disposed || commands.Count == 0) { workerRunning = false; return; }
-                command = commands.Dequeue();
+                (command, requestedGeneration) = commands.Dequeue();
             }
             Session? session = null;
             try
             {
-                session = await GetSessionAsync().ConfigureAwait(false);
+                session = await GetSessionAsync(requestedGeneration).ConfigureAwait(false);
                 if (session != null)
                 {
                     using var write = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token, session.Stop.Token);
@@ -133,24 +151,32 @@ internal sealed class WikiBrowser : IDisposable
             }
             catch (OperationCanceledException)
             {
-                if (!lifetime.IsCancellationRequested) SetStatus("Browser request timed out. Open the browser again to retry.", true);
+                lock (lifecycle) if (!disposed && generation == requestedGeneration)
+                    SetStatus("Browser request timed out. Open the browser again to retry.", true);
                 if (session != null) await RetireAsync(session).ConfigureAwait(false);
             }
-            catch (BrowserStartException error) { SetStatus(error.SafeStatus, true); }
+            catch (BrowserStartException error) { lock (lifecycle) if (!disposed && generation == requestedGeneration) SetStatus(error.SafeStatus, true); }
             catch (Exception)
             {
-                SetStatus("Browser could not start. Check the WebView2 / .NET Desktop runtimes and update OmniKit.", true);
+                lock (lifecycle) if (!disposed && generation == requestedGeneration)
+                    SetStatus("Browser could not start. Check the WebView2 / .NET Desktop runtimes and update OmniKit.", true);
                 if (session != null) await RetireAsync(session).ConfigureAwait(false);
             }
             finally { lock (lifecycle) pendingCount--; }
         }
     }
-    private async Task<Session?> GetSessionAsync()
+    private async Task<Session?> GetSessionAsync(long requestedGeneration)
     {
+        Task previousCleanup;
+        lock (lifecycle) previousCleanup = cleanup;
+        // A newly requested view reuses the same profile only after the prior
+        // owned helper has finished its bounded shutdown and released its lock.
+        await previousCleanup.WaitAsync(lifetime.Token).ConfigureAwait(false);
         Session? old;
         lock (lifecycle)
         {
-            if (disposed) return null;
+            if (disposed || generation != requestedGeneration) return null;
+            if (shutdownUnconfirmed) throw new BrowserStartException(ShutdownBlockedStatus);
             old = helper;
             if (old != null && !old.Process.HasExited && old.Window != 0) return old;
             helper = null;
@@ -159,23 +185,30 @@ internal sealed class WikiBrowser : IDisposable
         Task<HelperProcess> launch;
         lock (lifecycle)
         {
-            if (disposed) return null;
+            if (disposed || generation != requestedGeneration) return null;
+            if (shutdownUnconfirmed) throw new BrowserStartException(ShutdownBlockedStatus);
             // Native Process.Start cannot be cancelled. Keep one owner until it returns;
             // never accumulate additional starts or publish an abandoned result.
             if (starting != null) throw new BrowserStartException("Browser startup is still finishing. Try again shortly.");
             launch = starting = Task.Run(startProcess);
         }
         using var startup = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
+        lock (lifecycle)
+        {
+            if (disposed || generation != requestedGeneration) startup.Cancel();
+            else opening = startup;
+        }
         startup.CancelAfter(startTimeout);
         HelperProcess process;
         try { process = await launch.WaitAsync(startup.Token).ConfigureAwait(false); }
         catch { _ = CleanLateStartAsync(launch); throw; }
+        finally { lock (lifecycle) if (ReferenceEquals(opening, startup)) opening = null; }
         var session = new Session(process, lifetime.Token);
         bool publish;
         lock (lifecycle)
         {
             if (ReferenceEquals(starting, launch)) starting = null;
-            publish = !disposed && !startup.IsCancellationRequested;
+            publish = !disposed && generation == requestedGeneration && !startup.IsCancellationRequested;
             if (publish) helper = session;
         }
         if (!publish) { await StopAsync(session, false).ConfigureAwait(false); return null; }
@@ -257,7 +290,13 @@ internal sealed class WikiBrowser : IDisposable
                             SetStatus("Browser request failed. Check its controls and the WebView2 / .NET Desktop runtimes.", true); break;
                         case "closed":
                             session.Window = 0; session.VerifiedReady = false; session.Ready.TrySetResult(false);
-                            if (!HasError) SetStatus("Browser closed."); break;
+                            generation++; pendingCount -= commands.Count; commands.Clear(); helper = null;
+                            if (!HasError) SetStatus("Browser closed.");
+                            cleanup = StopAsync(session, false); break;
+                        case "closing":
+                            generation++; pendingCount -= commands.Count; commands.Clear(); helper = null;
+                            SetStatus("Browser closed.");
+                            cleanup = StopAsync(session, true); break;
                     }
                 }
             }
@@ -286,8 +325,11 @@ internal sealed class WikiBrowser : IDisposable
     }
     private Task RetireAsync(Session session)
     {
-        lock (lifecycle) if (ReferenceEquals(helper, session)) helper = null;
-        return StopAsync(session, true);
+        lock (lifecycle)
+        {
+            if (ReferenceEquals(helper, session)) helper = null;
+            return cleanup = StopAsync(session, true);
+        }
     }
     private Task StopAsync(Session session, bool graceful)
     {
@@ -299,6 +341,7 @@ internal sealed class WikiBrowser : IDisposable
             return session.Stopping ??= Task.Run(async () =>
             {
                 session.Stop.Cancel();
+                var exitConfirmed = false;
                 try
                 {
                     using var timeout = new CancellationTokenSource(shutdownTimeout);
@@ -315,11 +358,36 @@ internal sealed class WikiBrowser : IDisposable
                         try { await session.Process.WaitForExitAsync(timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false); }
                         catch (Exception) { }
                     }
-                    if (!session.Process.HasExited) session.Process.Kill();
+                    if (!session.Process.HasExited)
+                    {
+                        session.Process.Kill();
+                        // Kill requests termination; it does not establish that the
+                        // process has exited and released the owned profile yet.
+                        using var forcedExit = new CancellationTokenSource(shutdownTimeout);
+                        await session.Process.WaitForExitAsync(forcedExit.Token).WaitAsync(forcedExit.Token).ConfigureAwait(false);
+                    }
+                    exitConfirmed = session.Process.HasExited && session.Process.ExitCode == 0;
                 }
                 catch (Exception) { }
                 finally
                 {
+                    // Exit code 73 means the helper could not confirm WebView2
+                    // teardown. Any nonzero/unknown exit is equally conservative:
+                    // the facade cannot establish that all descendants released it.
+                    if (!exitConfirmed)
+                    {
+                        try { exitConfirmed = session.Process.HasExited && session.Process.ExitCode == 0; }
+                        catch (Exception) { }
+                    }
+                    if (!exitConfirmed)
+                    {
+                        lock (lifecycle)
+                        {
+                            shutdownUnconfirmed = true;
+                            pendingCount -= commands.Count; commands.Clear();
+                            if (!disposed) SetStatus(ShutdownBlockedStatus, true);
+                        }
+                    }
                     try { session.Process.Dispose(); } catch (Exception) { }
                     session.Stop.Dispose();
                 }
@@ -360,6 +428,7 @@ internal sealed class WikiBrowser : IDisposable
     {
         public abstract int Id { get; }
         public abstract bool HasExited { get; }
+        public virtual int ExitCode => 0;
         public abstract Task SendAsync(string command, CancellationToken ct);
         public abstract ValueTask<string?> ReadEventAsync(CancellationToken ct);
         public abstract ValueTask<string?> ReadErrorAsync(CancellationToken ct);
@@ -371,6 +440,7 @@ internal sealed class WikiBrowser : IDisposable
     {
         public override int Id => process.Id;
         public override bool HasExited => process.HasExited;
+        public override int ExitCode => process.ExitCode;
         public override async Task SendAsync(string command, CancellationToken ct)
         {
             await process.StandardInput.WriteLineAsync(command.AsMemory(), ct).ConfigureAwait(false);
@@ -379,7 +449,7 @@ internal sealed class WikiBrowser : IDisposable
         public override ValueTask<string?> ReadEventAsync(CancellationToken ct) => process.StandardOutput.ReadLineAsync(ct);
         public override ValueTask<string?> ReadErrorAsync(CancellationToken ct) => process.StandardError.ReadLineAsync(ct);
         public override Task WaitForExitAsync(CancellationToken ct) => process.WaitForExitAsync(ct);
-        public override void Kill() => process.Kill();
+        public override void Kill() => process.Kill(entireProcessTree: true);
         public override void Dispose() => process.Dispose();
     }
     private static bool ValidateWindow(nint window, int process)

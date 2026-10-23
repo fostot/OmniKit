@@ -89,6 +89,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     public bool HudHiddenForInteraction { get; private set; }
     public GatheringGearService Gathering { get; } = new(config);
     public QuestItemService QuestItems { get; } = new(config);
+    public QuestEmoteService QuestEmotes { get; } = new(config);
     public event Action? ConfigureHudRequested;
 
     public void Update(bool inputBlocked)
@@ -266,11 +267,11 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         for (var attempt = 0; attempt < 4; attempt++)
         {
             var padding = HudTextRenderer.Padding(config.InteractionHudEffect, fontSize,
-                config.InteractionHudEffectIntensity, config.InteractionHudOutline);
+                config.InteractionHudEffectIntensity, config.InteractionHudOutline, config.InteractionHudOutlineThickness);
             var nameWidth = Math.Max(0, available.X - padding.X * 2
-                - HudTextRenderer.Measure(font, fontSize, prefix + suffix).Size.X);
+                - HudTextRenderer.Measure(font, fontSize, prefix, string.Empty, suffix).Size.X);
             name = HudTextRenderer.Elide(font, fontSize, originalName, nameWidth);
-            metrics = HudTextRenderer.Measure(font, fontSize, prefix + name + suffix);
+            metrics = HudTextRenderer.Measure(font, fontSize, prefix, name, suffix);
             inset = padding - metrics.InkMinimum;
             boundsSize = metrics.InkMaximum - metrics.InkMinimum + padding * 2;
             var fit = Math.Min(available.X / Math.Max(1, boundsSize.X), available.Y / Math.Max(1, boundsSize.Y));
@@ -298,7 +299,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         {
             HudTextRenderer.Draw(draw, font, fontSize, topLeft + inset, prefix, name, suffix,
                 config.InteractionHudEffect, config.InteractionHudOutline, config.InteractionHudEffectIntensity,
-                config.InteractionHudEffectSpeed, config.InteractionHudEffectAnimated, ImGui.GetTime());
+                config.InteractionHudEffectSpeed, config.InteractionHudEffectAnimated, ImGui.GetTime(), config.InteractionHudOutlineThickness);
         }
         finally { draw.PopClipRect(); }
     }
@@ -505,6 +506,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                 }
                 var itemUse = QuestItems.TryUse(target);
                 if (itemUse != QuestItemUseResult.NotApplicable) return itemUse == QuestItemUseResult.Used;
+                var emoteUse = QuestEmotes.TryUse(target);
+                if (emoteUse != QuestEmoteUseResult.NotApplicable) return emoteUse == QuestEmoteUseResult.Used;
                 // Preserve native range/state/LOS checks. The return value is not
                 // proof that the game accepted or completed the interaction.
                 system->InteractWithObject(native, true);
@@ -638,7 +641,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             // Geometry only ranks visible aim candidates; native eligibility,
             // active handlers and the camera collision ray remain mandatory.
             if (score >= bestScore || (!SoftTargetPolicy.IsEnemy(category) && !HasActiveInteraction(native, obj.ObjectKind)
-                    && !QuestItems.CanOfferTarget(obj))
+                    && !QuestItems.CanOfferTarget(obj) && !QuestEmotes.CanOfferTarget(obj))
                 || !HasCameraLineOfSight(cameraPosition, position, obj.HitboxRadius))
                 continue;
 

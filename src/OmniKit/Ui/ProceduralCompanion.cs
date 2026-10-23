@@ -6,7 +6,7 @@ namespace OmniKit.Ui;
 /// <summary>Original vector companions and restrained, optional accents. No textures or shaders.</summary>
 internal static class ProceduralCompanion
 {
-    public static bool IsProcedural(string avatar) => avatar is "Moonblob" or "Wink" or "Nova";
+    public static bool IsProcedural(string avatar) => avatar is "Moonblob" or "Wink" or "Nova" or "Mochi" or "Puff" or "Orbit" or "Ember" or "Prism";
 
     public static Vector4 Palette(string name) => name switch
     {
@@ -48,8 +48,15 @@ internal static class ProceduralCompanion
         switch (config.Avatar)
         {
             case "Moonblob":
+            case "Mochi":
+            case "Puff":
+            case "Orbit":
+            case "Ember":
+            case "Prism":
             {
-                var roll = pose switch
+                // Missing optional art still gets one complete, contained body.
+                // Only the rolling companion rotates its face in this fallback.
+                var roll = config.Avatar != "Moonblob" ? 0 : pose switch
                 {
                     CompanionPose.Walk => t * 1.7f,
                     CompanionPose.Carry => MathF.Sin(t * 2.8f) * .14f,

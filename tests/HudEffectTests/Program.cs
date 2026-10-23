@@ -18,6 +18,12 @@ try
         io.Fonts.Build();
     }
     var renderer = new SoftwareRenderer();
+    if (args.Contains("--outline-only"))
+    {
+        checks += OutlineChecks.Run(renderer, output);
+        Console.WriteLine($"HUD outlines: {checks} focused native checks passed; outline/effect contact sheets saved.");
+        return;
+    }
     ImGui.NewFrame();
     foreach (var text in new[] { "Sample NPC", "[Ctrl+E]  Guild vendor", "Étoile · Ω", "旅人 商店", "A😀 B", "e\u0301  a", "One\tTwo" })
     {
@@ -34,7 +40,7 @@ try
         ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList(); var position = new Vector2(50, 50);
         HudTextRenderer.Draw(draw, ImGui.GetFont(), size, position, "[E]  ", "Étoile 旅人 😀", " · Preview", effect, outline, intensity, speed, animate, time);
         var positions = new Vector2[draw.VtxBuffer.Size]; var colors = new uint[positions.Length];
-        var metrics = HudTextRenderer.Measure(ImGui.GetFont(), size, "[E]  Étoile 旅人 😀 · Preview");
+        var metrics = HudTextRenderer.Measure(ImGui.GetFont(), size, "[E]  ", "Étoile 旅人 😀", " · Preview");
         var padding = HudTextRenderer.Padding(effect, size, intensity, outline);
         for (var i = 0; i < positions.Length; i++)
         {

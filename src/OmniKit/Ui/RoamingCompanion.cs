@@ -12,6 +12,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private readonly CompanionMotion motion = new();
     private readonly CompanionGait gait = new();
     private readonly CompanionPhysics physics = new();
+    private readonly CompanionHomeRoutine homeRoutine = new();
     private readonly CompanionSurfaces surfaceReader = new();
     private readonly string assetDirectory = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets");
     private long lastTick;
@@ -21,9 +22,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private CompanionPose lastPreviewPose;
     private CompanionLayout lastLayout;
     private CompanionAnimationLibrary? artwork;
-    private LunarWalkRigLibrary? walkRigs;
-    private float bimbleWalkBlend;
-    private string? bimbleRigFile;
+    private CompanionNapArtwork? napArtwork;
     private bool hoveredLastFrame;
     private bool hoverPausedLastFrame;
     private string lastAvatar = string.Empty;
@@ -41,7 +40,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private bool houseMirrored;
     private bool homeVisible;
     private Vector2 housePressPosition;
-    private Vector4 houseOriginalBox;
+    private Vector2 houseOriginalAnchor;
     private bool handWasDragging;
     private float handTime = 1;
     private Vector2 handPoint;
@@ -60,6 +59,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         FinishHouseDrag(false);
         IsChoosingArea = true;
         physics.Reset();
+        homeRoutine.Reset(config.CompanionNapInterval);
         gait.Rebase();
         pointerPressed = false;
         areaDragging = false;
@@ -84,9 +84,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             hoverPausedLastFrame = false;
             motion.Reset();
             gait.Reset();
-            bimbleRigFile = null;
-            bimbleWalkBlend = 0;
             physics.Reset();
+            homeRoutine.Reset(config.CompanionNapInterval);
             pointerPressed = false;
             nextCommentAt = commentUntil = 0;
             comment = string.Empty;
@@ -103,11 +102,10 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         if (lastAvatar != config.Avatar)
         {
             lastAvatar = config.Avatar;
-            bimbleRigFile = null;
-            bimbleWalkBlend = 0;
             motion.Reset();
             gait.Reset();
             physics.Reset();
+            homeRoutine.Reset(config.CompanionNapInterval);
             animationTime = 0;
         }
 
@@ -122,10 +120,15 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var elapsed = lastTick == 0 ? 0 : (float)Stopwatch.GetElapsedTime(lastTick, now).TotalSeconds;
         lastTick = now;
         if (!config.CompanionHomeEnabled) FinishHouseDrag(false);
-        var roamLayout = CompanionPhysics.HomeArea(layout, config.CompanionHomeEnabled);
+        var roamLayout = layout;
+        var home = HomeBounds(layout);
+        houseMirrored = CompanionPhysics.HomeFacesLeft((home.Minimum.X + home.Maximum.X) * .5f,
+            viewport.Pos.X, viewport.Size.X, houseMirrored);
+        CompanionSurface? homeObstacle = config.CompanionHomeEnabled
+            ? new CompanionSurface(0, home.Minimum, home.Maximum, 0, 0) : null;
         // Initialize/clamp the dormant roaming position before physics uses it as
         // its return destination. Its approved movement and gait are unchanged.
-        motion.Update(roamLayout, 0, false);
+        motion.Update(roamLayout, 0, false, homeObstacle);
         var frameFeature = config.CompanionFrameInteractionEnabled;
         if (!frameFeature || !config.CompanionPickupEnabled && physics.IsCarried)
         {
@@ -149,47 +152,37 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             animationTime = (animationTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
         var wasAttached = physics.Active;
         physics.Update(surfaces, viewport.Pos, viewport.Pos + viewport.Size, layout.SpriteSize, elapsed,
-            config.AnimationsEnabled && PreviewPose == CompanionPose.Automatic, hoverPausedLastFrame && !physics.IsCarried, options, motion.Position);
+            config.AnimationsEnabled && PreviewPose == CompanionPose.Automatic, hoverPausedLastFrame && !physics.IsCarried, options, motion.Position, homeObstacle);
+        napArtwork ??= new CompanionNapArtwork(assetDirectory);
+        var wasHomeActive = homeRoutine.Active;
+        if (physics.Active) homeRoutine.Reset(config.CompanionNapInterval);
+        homeRoutine.Update(elapsed, config.CompanionHomeEnabled && config.CompanionNapsEnabled && !physics.Active
+            && napArtwork.TryGet(config.Avatar, config.CompanionOutfit, out _),
+            !config.AnimationsEnabled || PreviewPose != CompanionPose.Automatic || hoverPausedLastFrame || pointerPressed || housePressed || houseDragging,
+            motion.Position, motion.FacingLeft, layout, home, houseMirrored, config.CompanionNapInterval,
+            config.CompanionNapDuration, viewport.Pos, viewport.Pos + viewport.Size, config.CompanionHomeEnabled);
+        if (wasHomeActive && !homeRoutine.Active && !physics.Active) { motion.ResumeAt(homeRoutine.Position, roamLayout); gait.Rebase(); }
         motion.Update(roamLayout, elapsed, config.AnimationsEnabled && !hoverPausedLastFrame && !pointerPressed
-            && !houseDragging && !wasAttached && !physics.Active && PreviewPose == CompanionPose.Automatic);
+            && !houseDragging && !wasAttached && !physics.Active && !homeRoutine.Active && PreviewPose == CompanionPose.Automatic, homeObstacle);
         if (!layout.IsVisible) return;
-        var position = physics.Active ? physics.Position : motion.Position;
-        var facingLeft = physics.Active ? physics.FacingLeft : motion.FacingLeft;
+        var position = physics.Active ? physics.Position : homeRoutine.Active ? homeRoutine.Position : motion.Position;
+        var facingLeft = physics.Active ? physics.FacingLeft : homeRoutine.Active ? homeRoutine.FacingLeft : motion.FacingLeft;
         var pose = !config.AnimationsEnabled ? CompanionPose.Idle : PreviewPose == CompanionPose.Automatic
-            ? physics.Active ? physics.Pose : motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
+            ? physics.Active ? physics.Pose : homeRoutine.Active ? homeRoutine.UsesNapArt ? CompanionPose.Idle : CompanionPose.Walk
+                : motion.Walking ? CompanionPose.Walk : CompanionPose.Idle : PreviewPose;
         poseTime = pose != lastPose || !config.AnimationsEnabled ? 0 : (poseTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
         lastPose = pose;
         artwork ??= new CompanionAnimationLibrary(assetDirectory);
-        walkRigs ??= new LunarWalkRigLibrary(assetDirectory);
         var hasAtlas = artwork.TryGet(config.Avatar, config.CompanionOutfit, out var atlas);
         var artTexture = hasAtlas ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, atlas!.File)).GetWrapOrDefault() : null;
-        LunarWalkRig? rig = null;
-        if (pose == CompanionPose.Walk || config.Avatar == "Bimble" && pose == CompanionPose.Idle)
-            walkRigs.TryGet(config.Avatar, config.CompanionOutfit, out rig);
-        if (pose == CompanionPose.Idle && rig?.SupportsIdle != true) rig = null;
-        var rigTexture = rig == null ? null : Services.Textures.GetFromFile(Path.Combine(assetDirectory, rig.File)).GetWrapOrDefault();
-        var gaitPosition = position - (physics.Active ? viewport.Pos : layout.Minimum);
-        var gaitSpace = physics.Active ? ((ulong)physics.Placement << 56) ^ physics.AttachedSurfaceId : 0;
+        var gaitPosition = position - (physics.Active || homeRoutine.Active ? viewport.Pos : layout.Minimum);
+        var gaitSpace = physics.Active ? ((ulong)physics.Placement << 56) ^ physics.AttachedSurfaceId : homeRoutine.Active ? 0x7000000000000000ul : 0;
         if (physics.AttachedSurfaceId != 0)
             foreach (var surface in surfaces)
                 if (surface.Id == physics.AttachedSurfaceId) { gaitPosition = position - surface.Minimum; break; }
         gait.Update(gaitPosition, layout.SpriteSize.X, elapsed, config.AnimationsEnabled && pose == CompanionPose.Walk,
-            facingLeft, gaitSpace, rigTexture != null ? rig!.CycleDistance : atlas?.CycleDistance ?? CompanionGait.DefaultCycleDistance,
-            PreviewPose == CompanionPose.Walk, directionalStride: rigTexture != null);
-        LunarWalkPose? rigPose = null;
-        if (rigTexture != null)
-        {
-            var blend = 1f;
-            if (config.Avatar == "Bimble" && rig!.SupportsIdle)
-            {
-                if (bimbleRigFile != rig.File) { bimbleRigFile = rig.File; bimbleWalkBlend = 0; }
-                bimbleWalkBlend = LunarWalkRig.NextWalkBlend(bimbleWalkBlend, pose == CompanionPose.Walk,
-                    config.AnimationsEnabled, elapsed);
-                blend = bimbleWalkBlend;
-            }
-            try { rigPose = rig!.Evaluate(gait.Phase, facingLeft, position, layout.SpriteSize, gait.Heading, blend); }
-            catch (InvalidOperationException) { /* Optional art geometry retains the existing atlas fallback. */ }
-        }
+            facingLeft, gaitSpace, atlas?.CycleDistance ?? CompanionGait.DefaultCycleDistance,
+            PreviewPose == CompanionPose.Walk);
         var frameIndex = pose == CompanionPose.Walk ? gait.Frame : CompanionAtlas.SelectFrame(pose, poseTime, config.AnimationsEnabled);
         var blink = BlinkAmount(animationTime, config.CompanionBlinkInterval, config.AnimationsEnabled && config.CompanionBlinkEnabled);
         if (config.Avatar == "Wink" && pose == CompanionPose.Idle)
@@ -198,16 +191,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         DrawHome(draw, layout);
         var hitStart = position + layout.SpriteSize * .18f;
         var hitEnd = position + layout.SpriteSize * .82f;
-        var clipMinimum = physics.Active ? physics.ClipMinimum : layout.Minimum;
-        var clipMaximum = physics.Active ? physics.ClipMaximum : layout.Maximum;
+        var clipMinimum = physics.Active ? physics.ClipMinimum : homeRoutine.Active ? viewport.Pos : layout.Minimum;
+        var clipMaximum = physics.Active ? physics.ClipMaximum : homeRoutine.Active ? viewport.Pos + viewport.Size : layout.Maximum;
         draw.PushClipRect(clipMinimum, clipMaximum, true);
         try
         {
-            if (rigPose != null && rigTexture != null)
+            if (homeRoutine.UsesNapArt && DrawNap(draw, layout, out var napBounds))
             {
-                foreach (var q in rigPose.Quads)
-                    draw.AddImageQuad(rigTexture.Handle, q.A, q.B, q.C, q.D, q.UvA, q.UvB, q.UvC, q.UvD, 0xFFFFFFFFu);
-                (hitStart, hitEnd) = rigPose.Bounds;
+                (hitStart, hitEnd) = napBounds;
             }
             else if (artTexture != null)
             {
@@ -220,7 +211,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                     draw.AddImageQuad(artTexture.Handle, roll.A, roll.B, roll.C, roll.D, roll.UvA, roll.UvB, roll.UvC, roll.UvD, tint);
                     (hitStart, hitEnd) = roll.HitBounds;
                 }
-                else if (config.Avatar is "Wink" or "Nova" && pose == CompanionPose.Walk)
+                else if (pose == CompanionPose.Walk)
                 {
                     var floating = atlas!.GetFloat(gait.Phase, facingLeft, position, layout.SpriteSize);
                     draw.AddImageQuad(artTexture.Handle, floating.A, floating.B, floating.C, floating.D,
@@ -236,24 +227,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                     (hitStart, hitEnd) = atlas.HitBounds(frameIndex, facingLeft, position, layout.SpriteSize);
                 }
             }
-            else if (ProceduralCompanion.IsProcedural(config.Avatar))
+            else
                 ProceduralCompanion.Draw(draw, position, layout.SpriteSize, config, pose,
                     config.Avatar == "Wink" ? .17f + .13f * blink : animationTime, hoveredLastFrame);
-            else
-            {
-                var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory,
-                    CompanionAtlas.FileName(config.Avatar, config.CompanionOutfit))).GetWrapOrDefault();
-                if (texture == null) { hoveredLastFrame = false; return; }
-                var frame = CompanionAtlas.GetFrame(config.Avatar, frameIndex, facingLeft, position, layout.SpriteSize);
-                draw.AddImage(texture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd);
-                // The inspected frame bounds exclude large transparent gutters.
-                // Clicking uses a rectangle, not per-pixel silhouette detection.
-                hitStart = frame.Position;
-                hitEnd = frame.Position + frame.Size;
-            }
-            ProceduralCompanion.DrawEffects(draw, position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
+            if (!homeRoutine.UsesNapArt)
+                ProceduralCompanion.DrawEffects(draw, position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);
         }
         finally { draw.PopClipRect(); }
+        if (homeRoutine.Sleeping && config.CompanionNapZsEnabled) DrawSleepZs(draw, home, viewport.Pos, viewport.Size);
         // A stable pause region avoids rapid walk/idle changes as animated ear
         // and foot silhouettes move past a stationary pointer. Only the visible
         // body hit rectangle below creates an input window.
@@ -273,7 +254,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         Vector2? handReady = hoveredLastFrame ? position + layout.SpriteSize * new Vector2(.5f, .1f) : null;
         if (handReady == null && homeVisible)
         {
-            var (houseMin, houseMax) = CompanionPhysics.HomeBounds(layout);
+            var (houseMin, houseMax) = HomeBounds(layout);
             var houseSize = houseMax - houseMin;
             if (ImGui.IsMouseHoveringRect(houseMin + houseSize * new Vector2(.08f, .035f), houseMax - houseSize * new Vector2(.08f, .08f), false))
                 handReady = houseMin + houseSize * new Vector2(.5f, .12f);
@@ -310,6 +291,31 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         if (clicked) openCompanion();
     }
 
+    private CompanionHomeRect HomeBounds(CompanionLayout layout)
+    {
+        var viewport = ImGui.GetMainViewport();
+        return CompanionHomeGeometry.Bounds(layout, viewport.Pos, viewport.Size,
+            new Vector2(config.CompanionHomeX, config.CompanionHomeY));
+    }
+
+    private bool DrawNap(ImDrawListPtr draw, CompanionLayout layout,
+        out (Vector2 Minimum, Vector2 Maximum) bounds)
+    {
+        bounds = default;
+        if (napArtwork?.TryGet(config.Avatar, config.CompanionOutfit, out var sheet) != true) return false;
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, sheet!.File)).GetWrapOrDefault();
+        var houseTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, "companion-house.png")).GetWrapOrDefault();
+        if (texture == null || houseTexture == null) return false;
+        var tint = ProceduralCompanion.IsProcedural(config.Avatar)
+            ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(Vector4.One, ProceduralCompanion.Palette(config.CompanionPalette), .36f))
+            : 0xFFFFFFFFu;
+        bounds = CompanionHomeRenderer.DrawNap(draw, texture.Handle, houseTexture.Handle, sheet, homeRoutine,
+            layout.SpriteSize, HomeBounds(layout), houseMirrored, homeVisible, tint);
+        return true;
+    }
+
+    private void DrawSleepZs(ImDrawListPtr draw, CompanionHomeRect house, Vector2 viewportPosition, Vector2 viewportSize)
+        => CompanionHomeRenderer.DrawZs(draw, house, houseMirrored, homeRoutine.SleepPhase, viewportPosition, viewportSize);
     private void DrawHome(ImDrawListPtr draw, CompanionLayout layout)
     {
         homeVisible = false;
@@ -317,24 +323,24 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, "companion-house.png")).GetWrapOrDefault();
         if (texture == null) return;
         homeVisible = true;
-        var (top, bottom) = CompanionPhysics.HomeBounds(layout);
+        var (top, bottom) = HomeBounds(layout);
         var viewport = ImGui.GetMainViewport();
         var middle = (top.X + bottom.X) * .5f;
         houseMirrored = CompanionPhysics.HomeFacesLeft(middle, viewport.Pos.X, viewport.Size.X, houseMirrored);
-        draw.PushClipRect(layout.Minimum, layout.Maximum, true);
-        draw.AddImage(texture.Handle, top, bottom, new Vector2(houseMirrored ? 1 : 0, 0), new Vector2(houseMirrored ? 0 : 1, 1));
+        draw.PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, true);
+        CompanionHomeRenderer.DrawHouse(draw, texture.Handle, new CompanionHomeRect(top, bottom), houseMirrored);
         draw.PopClipRect();
     }
 
     private bool HandleHouse(CompanionLayout layout, Vector2 viewportPosition, Vector2 viewportSize, float scale, bool petHasPriority)
     {
         if (!config.CompanionHomeEnabled || !homeVisible || !layout.IsVisible || viewportSize.X <= 0 || viewportSize.Y <= 0) return false;
-        var (minimum, maximum) = CompanionPhysics.HomeBounds(layout);
+        var (minimum, maximum) = HomeBounds(layout);
         var edge = maximum - minimum;
         // The source artwork has generous transparent gutters; those do not
         // capture clicks. The pet's visible hitbox always wins an overlap.
-        minimum += edge * new Vector2(.08f, .035f);
-        maximum -= edge * new Vector2(.08f, .08f);
+        minimum += edge * new Vector2(.015f, .015f);
+        maximum -= edge * new Vector2(.015f, .015f);
         var hovered = ImGui.IsMouseHoveringRect(minimum, maximum, false);
         if (!housePressed && (!hovered || petHasPriority)) return false;
         if (BeginOverlay("##OmniKitCompanionHouse", minimum, maximum - minimum))
@@ -345,7 +351,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             {
                 housePressed = true;
                 housePressPosition = ImGui.GetMousePos();
-                houseOriginalBox = new Vector4(config.CompanionBoxLeft, config.CompanionBoxTop, config.CompanionBoxRight, config.CompanionBoxBottom);
+                houseOriginalAnchor = new Vector2(config.CompanionHomeX, config.CompanionHomeY);
             }
             if (housePressed && ImGui.IsMouseDown(ImGuiMouseButton.Left))
             {
@@ -353,8 +359,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 if (delta.LengthSquared() >= 36 * scale * scale) houseDragging = true;
                 if (houseDragging)
                 {
-                    var moved = CompanionPhysics.TranslateHomeBox(houseOriginalBox, delta / viewportSize);
-                    SetHomeBox(moved);
+                    SetHomeAnchor(Vector2.Clamp(houseOriginalAnchor + delta / viewportSize, Vector2.Zero, Vector2.One));
                 }
             }
             if (housePressed && ImGui.IsMouseReleased(ImGuiMouseButton.Left)) FinishHouseDrag(true);
@@ -372,19 +377,18 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 try { config.Save(); }
                 catch (Exception exception)
                 {
-                    SetHomeBox(houseOriginalBox);
+                    SetHomeAnchor(houseOriginalAnchor);
                     Services.Log.Error("Companion home could not be saved ({ErrorType}).", exception.GetType().Name);
                 }
             }
-            else SetHomeBox(houseOriginalBox);
+            else SetHomeAnchor(houseOriginalAnchor);
         }
         housePressed = houseDragging = false;
     }
 
-    private void SetHomeBox(Vector4 box)
+    private void SetHomeAnchor(Vector2 anchor)
     {
-        config.CompanionBoxLeft = box.X; config.CompanionBoxTop = box.Y;
-        config.CompanionBoxRight = box.Z; config.CompanionBoxBottom = box.W;
+        config.CompanionHomeX = anchor.X; config.CompanionHomeY = anchor.Y;
     }
 
     private void DrawGrabHand(ImDrawListPtr draw, Vector2 viewportPosition, Vector2 viewportSize, Vector2 spriteSize, float elapsed, bool dragging, Vector2? readyPoint)
@@ -402,7 +406,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var incoming = Math.Clamp(handTime / .2f, 0, 1);
         var ease = 1 - MathF.Pow(1 - incoming, 3);
         var frame = ready ? 0 : !dragging ? 3 : incoming < .45f ? 0 : incoming < 1 ? 1 : 2;
-        var edge = Math.Min(Math.Min(viewportSize.X, viewportSize.Y), spriteSize.Y * 1.1f);
+        var handScale = float.IsFinite(config.CompanionGrabHandScale) ? Math.Clamp(config.CompanionGrabHandScale, .2f, 1) : .4f;
+        var edge = Math.Min(Math.Min(viewportSize.X, viewportSize.Y), spriteSize.Y * handScale);
         var size = new Vector2(edge);
         // Source wrists are slightly offset inside their otherwise regular
         // cells. Align the wrist across poses while the closed grip meets the pointer.
@@ -418,6 +423,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
 
     private bool DrawComment(ImDrawListPtr draw, Vector2 position, Vector2 size, Vector2 viewportPosition, Vector2 viewportSize, float scale)
     {
+        if (homeRoutine.UsesNapArt) return false;
         var now = ImGui.GetTime();
         if (!config.CompanionCommentsEnabled)
         { nextCommentAt = commentUntil = 0; comment = string.Empty; return false; }

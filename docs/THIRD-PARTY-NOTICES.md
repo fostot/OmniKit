@@ -47,22 +47,23 @@ the installed host environment, not copied into OmniKit's release. Their upstrea
 projects retain their own licenses. Font Awesome glyphs and game icons are drawn
 through host APIs; no font or game-asset extraction is included.
 
-Bimble and the moon-bear portraits are original AI-generated assets created with
-OpenAI image generation on 2026-10-22. Their prompts and inspection notes are in
-[assets/PROMPTS.md](../assets/PROMPTS.md). Additional original walking-part sheets
-and the limbless Moonblob atlas have their own
-[walk-rig prompts](../assets/WALK-ANIMATION-PROMPTS.md) and
-[Moonblob prompts](../assets/MOONBLOB-ROLL-PROMPTS.md). They are not copied game
-characters or third-party stock art. This provenance statement does not change third-party
-library licenses.
+Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember and Prism are original AI-generated
+assets created with the built-in OpenAI image tool on 2026-10-22. Exact prompts,
+hashes and inspection notes are in the
+[whole-body companion and Wink icon record](../assets/WHOLE-BODY-COMPANION-PROMPTS.md),
+[original abstract companion record](../assets/ABSTRACT-COMPANION-PROMPTS.md) and
+[Moonblob record](../assets/MOONBLOB-ROLL-PROMPTS.md). They are not copied game
+characters or third-party stock art. This provenance statement does not change
+third-party library licenses.
 The original moon house and four-pose grab hand were generated with the built-in
 OpenAI image tool. Their exact prompts and provenance are recorded in
 [HOUSE-PROMPT.md](../assets/HOUSE-PROMPT.md) and
 [GRAB-HAND-PROMPT.md](../assets/GRAB-HAND-PROMPT.md).
-The replacement Bimble Navigator/Stargazer rig artwork is also original built-in
-OpenAI output; exact prompts and hashes are in
-[BIMBLE-V2-PROMPTS.md](../assets/BIMBLE-V2-PROMPTS.md). Older source assets are
-retained unchanged.
+Entrance/nap artwork is retained byte-identically: the original abstract nap
+sheet covers Moonblob, Wink and Nova, while the five newer whole-body atlases
+include their own nap poses. Exact prompts, hashes and measured layout are in
+[COMPANION-NAPS-PROMPTS.md](../assets/COMPANION-NAPS-PROMPTS.md) and the whole-body
+record linked above. No third-party character art or house is baked into the poses.
 
 ## Microsoft.Data.Sqlite MIT license
 

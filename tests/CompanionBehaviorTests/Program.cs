@@ -27,6 +27,7 @@ var roaming = assembly.GetType("OmniKit.Ui.RoamingCompanion", true)!;
 var physics = assembly.GetType("OmniKit.Ui.CompanionPhysics", true)!;
 var configType = assembly.GetType("OmniKit.Configuration", true)!;
 var checks = 0;
+var surfacesOnly = args.Contains("--surfaces-only");
 void Check(bool value, string reason) { checks++; if (!value) throw new InvalidOperationException(reason); }
 void Set(object target, string name, object value) => (target.GetType().GetField(name, instance)
     ?? target.GetType().GetField("<" + name + ">P", instance))!.SetValue(target, value);
@@ -49,6 +50,7 @@ void Set(object target, string name, object value) => (target.GetType().GetField
     return (vertices, triangles);
 }
 var blink = roaming.GetMethod("BlinkAmount", statics)!;
+if (!surfacesOnly)
 foreach (var interval in new[] { 1f, 3f, 10f })
 {
     var seenClosed = false;
@@ -102,9 +104,56 @@ try
     Surfaces(false, Vector2.Zero); Surfaces(false, Vector2.Zero);
     Check(Surfaces(false, Vector2.Zero).Length == 0, "Closed frames expire from the observed list.");
 
+    object[] HudSurfaces(bool show)
+    {
+        ImGui.NewFrame();
+        if(show)
+        {
+            var flags=ImGuiWindowFlags.NoDecoration|ImGuiWindowFlags.NoSavedSettings|ImGuiWindowFlags.NoMouseInputs|ImGuiWindowFlags.NoBackground;
+            void Frame(string name,Vector2 at,Vector2 size,bool ink,bool clipped=false)
+            {
+                ImGui.SetNextWindowPos(at); ImGui.SetNextWindowSize(size); ImGui.Begin(name,flags);
+                if(clipped) ImGui.GetWindowDrawList().PushClipRect(Vector2.Zero,Vector2.One,true);
+                if(ink) ImGui.GetWindowDrawList().AddRectFilled(at+new Vector2(4),at+size-new Vector2(4),0xFFDAA45C);
+                if(clipped) ImGui.GetWindowDrawList().PopClipRect();
+                ImGui.End();
+            }
+            Frame("Synthetic click-through unit frame",new Vector2(50,100),new Vector2(220,40),true);
+            Frame("Synthetic front unit frame",new Vector2(50,100),new Vector2(220,40),true);
+            Frame("Synthetic empty input overlay",new Vector2(350,100),new Vector2(150,30),false);
+            Frame("Synthetic fully clipped HUD",new Vector2(350,180),new Vector2(150,30),true,true);
+            Frame("##OmniKitVisibleTargetControls",new Vector2(350,240),new Vector2(150,30),true);
+            ImGui.SetNextWindowPos(Vector2.Zero); ImGui.SetNextWindowSize(new Vector2(640,440));
+            ImGui.Begin("Synthetic fullscreen canvas",flags);
+            ImGui.GetWindowDrawList().AddRectFilled(new Vector2(10),new Vector2(50),0xFFDAA45C);
+            ImGui.BeginChild("Synthetic child",new Vector2(200,40)); ImGui.TextUnformatted("Child is not a platform"); ImGui.EndChild();
+            ImGui.End();
+        }
+        var result=((IEnumerable)read.Invoke(reader,[Vector2.Zero,new Vector2(640,440)])!).Cast<object>().ToArray();
+        ImGui.Render(); return result;
+    }
+    HudSurfaces(true);
+    observed=HudSurfaces(true);
+    Check(observed.Length==2,"Visible click-through HUD frames are supported; empty, clipped, own, child and fullscreen overlays are excluded.");
+    foreach(var entry in observed)
+        Check((Vector2)entry.GetType().GetProperty("Minimum")!.GetValue(entry)! == new Vector2(54,104)
+            && (Vector2)entry.GetType().GetProperty("Maximum")!.GetValue(entry)! == new Vector2(266,136),
+            "A transparent NoMouseInputs frame uses its actual visible ink bounds.");
+    Check((int)observed[0].GetType().GetProperty("Order")!.GetValue(observed[0])!
+        < (int)observed[1].GetType().GetProperty("Order")!.GetValue(observed[1])!,"Overlapping HUD frames preserve native ImGui stacking order.");
+    renderer.Save(ImGui.GetDrawData(),Path.Combine(output,"click-through-surfaces.png"));
+    HudSurfaces(false); HudSurfaces(false);
+    Check(HudSurfaces(false).Length==0,"A closed click-through HUD expires and cannot remain a stale landing platform.");
+    if(surfacesOnly)
+    {
+        Console.WriteLine($"Companion native surface snapshots: {checks} checks passed; no game calls.");
+        return;
+    }
+
     var config = Activator.CreateInstance(configType)!;
     var companion = RuntimeHelpers.GetUninitializedObject(roaming);
     Set(companion, "config", config); Set(companion, "physics", Activator.CreateInstance(physics, nonPublic: true)!);
+    Set(companion, "homeRoutine", Activator.CreateInstance(assembly.GetType("OmniKit.Ui.CompanionHomeRoutine", true)!, new object[] { 1 })!);
     Set(companion, "comment", "A little adventure, then a little nap."); Set(companion, "commentUntil", 999d);
     var drawComment = roaming.GetMethod("DrawComment", instance)!;
     foreach (var scale in new[] { 1f, 1.5f })
@@ -159,13 +208,16 @@ try
     Check(!(bool)roaming.GetField("housePressed", instance)!.GetValue(companion)!, "A pet overlapping the house keeps click priority.");
     HouseFrame(overHouse, false); HouseFrame(overHouse, null); HouseFrame(overHouse, true);
     HouseFrame(new Vector2(1000), null);
-    Check(saves == 0 && Math.Abs(Value("CompanionBoxRight") - 1) < .00001f && Math.Abs(Value("CompanionBoxBottom") - 1) < .00001f,
-        "Actual native mouse dragging moves and clamps the entire home area without saving during movement.");
+    Check(saves == 0 && Math.Abs(Value("CompanionHomeX") - 1) < .00001f && Math.Abs(Value("CompanionHomeY") - 1) < .00001f,
+        "Actual native mouse dragging moves and clamps the independent house without saving during movement.");
     HouseFrame(new Vector2(1000), null); HouseFrame(new Vector2(1000), false); HouseFrame(new Vector2(1000), null);
     Check(saves == 1, "The actual house drag persists exactly once on release.");
-    Check(Math.Abs(Value("CompanionBoxRight") - Value("CompanionBoxLeft") - .23f) < .00001f
-        && Math.Abs(Value("CompanionBoxBottom") - Value("CompanionBoxTop") - .37f) < .00001f,
-        "Dragging never resizes the saved roaming area.");
+    var movedHouse = roaming.GetMethod("HomeBounds", instance)!.Invoke(companion, [Layout()])!;
+    Check((Vector2)movedHouse.GetType().GetProperty("Maximum")!.GetValue(movedHouse)! == new Vector2(640, 440),
+        "The actual independent house reaches the full right and bottom viewport edges.");
+    Check(Math.Abs(Value("CompanionBoxLeft") - .72f) < .00001f && Math.Abs(Value("CompanionBoxRight") - .95f) < .00001f
+        && Math.Abs(Value("CompanionBoxTop") - .55f) < .00001f && Math.Abs(Value("CompanionBoxBottom") - .92f) < .00001f,
+        "Dragging the house never moves or resizes the saved roaming area.");
 
     object TextureResult(Type type, ulong handle) => LocalProxy.Create(type, (method, _) => method.Name switch
     {
@@ -182,8 +234,9 @@ try
     foreach (var rightSide in new[] { true, false })
     {
         Set(config, "CompanionBoxLeft", rightSide ? .72f : .05f); Set(config, "CompanionBoxRight", rightSide ? .95f : .28f);
+        Set(config, "CompanionHomeX", rightSide ? .85f : .15f); Set(config, "CompanionHomeY", .92f);
         ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList(); drawHome.Invoke(companion, [draw, Layout()]);
-        Check(draw.VtxBuffer.Size == 4 && draw.VtxBuffer[0].Uv.X == (rightSide ? 1 : 0), "The actual home draw mirrors its whole texture inward.");
+        Check(draw.VtxBuffer.Size == 4 && draw.VtxBuffer[0].Uv.X == (rightSide ? .925f : .08f), "The actual home draw crops transparent gutters and mirrors inward.");
         ImGui.Render();
     }
     Set(companion, "handTime", 1f);
@@ -193,6 +246,8 @@ try
         drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), step.Item2, step.Item1, null]);
         var expected = new Vector2(step.Item3 % 2, step.Item3 / 2) * .5f;
         Check(draw.VtxBuffer.Size == 4 && draw.VtxBuffer[0].Uv == expected, "Grab cues use open, closing, hold, then release atlas poses.");
+        Check(Math.Abs(draw.VtxBuffer[1].Pos.X - draw.VtxBuffer[0].Pos.X - 96 * .4f) < .001f,
+            "Every grab pose uses the smaller default hand size.");
         for (var c = 0; c < draw.CmdBuffer.Size; c++)
             if (draw.CmdBuffer[c].ElemCount > 0)
                 Check(draw.CmdBuffer[c].ClipRect.X >= 0 && draw.CmdBuffer[c].ClipRect.Y >= 0

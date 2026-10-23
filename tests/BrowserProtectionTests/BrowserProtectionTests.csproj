@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/OmniKit.Browser/ContentProtection.cs" Link="ContentProtection.cs" />
+    <EmbeddedResource Include="../../src/OmniKit.Browser/blocked-hosts.txt" LogicalName="OmniKit.Browser.blocked-hosts.txt" />
+  </ItemGroup>
+</Project>

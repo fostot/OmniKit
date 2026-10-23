@@ -2,12 +2,6 @@ using System.Numerics;
 
 namespace OmniKit.Ui;
 
-internal readonly record struct CompanionSurface(ulong Id, Vector2 Minimum, Vector2 Maximum, float HeaderHeight, int Order)
-{
-    public Vector2 Size => Maximum - Minimum;
-    public bool Contains(Vector2 point) => point.X >= Minimum.X && point.Y >= Minimum.Y && point.X <= Maximum.X && point.Y <= Maximum.Y;
-}
-
 internal readonly record struct CompanionPhysicsOptions(bool Perch, bool Contain, bool Fall);
 internal enum CompanionPlacement { None, Carried, Perched, Contained, Falling, Floor, Returning }
 
@@ -104,7 +98,7 @@ internal sealed class CompanionPhysics
 
     public void Update(IReadOnlyList<CompanionSurface> surfaces, Vector2 viewportMinimum, Vector2 viewportMaximum,
         Vector2 size, float elapsed, bool animate, bool hoverPaused, CompanionPhysicsOptions options,
-        Vector2? homePosition = null)
+        Vector2? homePosition = null, CompanionSurface? obstacle = null)
     {
         if (!Active || !Fits(viewportMinimum, viewportMaximum, size)) { Reset(); return; }
         ClipMinimum = viewportMinimum;
@@ -159,32 +153,55 @@ internal sealed class CompanionPhysics
             return;
         }
 
+        var avoidHouse = CompanionObstacle.TryBounds(obstacle, size, out var blockMinimum, out var blockMaximum);
+        if (avoidHouse && Placement == CompanionPlacement.Falling && CompanionObstacle.Inside(Position, blockMinimum, blockMaximum))
+            Position = CompanionObstacle.NearestExit(Position, blockMinimum, blockMaximum, viewportMinimum, viewportMaximum - size);
+
         var speed = Math.Max(16, size.Y * .34f);
         if (Placement == CompanionPlacement.Floor && homePosition.HasValue) BeginReturn();
         if (Placement == CompanionPlacement.Returning)
         {
             if (homePosition is not { } home || !Finite(home)) { Pose = CompanionPose.Idle; return; }
-            var destination = Clamp(home, viewportMinimum, viewportMaximum, size);
-            var delta = destination - Position;
-            var distance = delta.Length();
-            if (distance <= speed * dt)
+            var destination = CompanionObstacle.Destination(home, size, viewportMinimum, viewportMaximum, obstacle);
+            var previous = Position;
+            Position = CompanionObstacle.Step(Position, destination, size, speed * dt, viewportMinimum, viewportMaximum, obstacle);
+            if (Vector2.DistanceSquared(Position, destination) < .0001f)
             {
-                Position = destination;
                 Reset();
                 return;
             }
+            var delta = Position - previous;
             direction = CompanionGait.FacingFor(delta, direction < 0) ? -1 : 1;
-            Position += delta / distance * (speed * dt);
-            Pose = CompanionPose.Walk;
+            Pose = delta.LengthSquared() > .000001f ? CompanionPose.Walk : CompanionPose.Idle;
             return;
         }
         if (Placement == CompanionPlacement.Falling)
         {
+            var previous = Position;
             velocity.Y = Math.Min(700, velocity.Y + 900 * dt);
             Position += velocity * dt;
             Position = new Vector2(Math.Clamp(Position.X, viewportMinimum.X, viewportMaximum.X - size.X), Position.Y);
-            // Only an explicit drop attaches to a frame. A walk-off falls all
-            // the way to the screen floor before beginning the walk home.
+            if (avoidHouse && CompanionObstacle.CrossesInterior(previous, Position, blockMinimum, blockMaximum))
+            {
+                // Drift to a free side before descending past the house. It is
+                // an obstacle, never a landing platform or a foreign UI surface.
+                var left = blockMinimum.X >= viewportMinimum.X;
+                var right = blockMaximum.X <= viewportMaximum.X - size.X;
+                var edge = left && (!right || Math.Abs(previous.X - blockMinimum.X) <= Math.Abs(previous.X - blockMaximum.X))
+                    ? blockMinimum.X : right ? blockMaximum.X : previous.X;
+                Position = new Vector2(previous.X + Math.Clamp(edge - previous.X, -180 * dt, 180 * dt),
+                    Math.Min(Position.Y, Math.Max(previous.Y, blockMinimum.Y)));
+                velocity.X = 0;
+            }
+            if (options.Perch && CrossedSurface(surfaces, previous, Position, size, viewportMinimum, viewportMaximum)
+                is { } landing)
+            {
+                var fraction = (landing.Minimum.Y - previous.Y - size.Y * .9f) / (Position.Y - previous.Y);
+                Position = new Vector2(float.Lerp(previous.X, Position.X, fraction), landing.Minimum.Y - size.Y * .9f);
+                Attach(landing, CompanionPlacement.Perched);
+                React(CompanionPose.Land, .35f);
+                return;
+            }
             if (Position.Y + size.Y >= viewportMaximum.Y)
             {
                 Placement = CompanionPlacement.Floor;
@@ -245,6 +262,31 @@ internal sealed class CompanionPhysics
     private void BeginFall() { Placement = CompanionPlacement.Falling; surfaceId = 0; velocity.Y = 0; reactionTime = 0; Pose = CompanionPose.Fall; }
     private void BeginReturn() { Placement = CompanionPlacement.Returning; surfaceId = 0; velocity = Vector2.Zero; reactionTime = 0; Pose = CompanionPose.Walk; }
 
+    private static CompanionSurface? CrossedSurface(IReadOnlyList<CompanionSurface> surfaces, Vector2 previous,
+        Vector2 next, Vector2 size, Vector2 viewportMinimum, Vector2 viewportMaximum)
+    {
+        var foot = previous.Y + size.Y * .9f;
+        var descent = next.Y - previous.Y;
+        if (descent <= 0) return null;
+        CompanionSurface? best = null;
+        foreach (var surface in surfaces)
+        {
+            // Strictly cross from above: walking off a ledge must not immediately
+            // catch that same plane while the trailing edge still overlaps it.
+            if (!Finite(surface.Minimum) || !Finite(surface.Maximum) || surface.Size.Y <= 0
+                || !CanPerch(surface, size, viewportMinimum) || surface.Minimum.Y <= foot + .001f
+                || surface.Minimum.Y > foot + descent || surface.Minimum.Y + size.Y * .1f > viewportMaximum.Y)
+                continue;
+            var fraction = (surface.Minimum.Y - foot) / descent;
+            var left = float.Lerp(previous.X, next.X, fraction);
+            if (left + size.X <= surface.Minimum.X || left >= surface.Maximum.X) continue;
+            if (best == null || surface.Minimum.Y < best.Value.Minimum.Y
+                || surface.Minimum.Y == best.Value.Minimum.Y && surface.Order > best.Value.Order)
+                best = surface;
+        }
+        return best;
+    }
+
     public static CompanionLayout HomeArea(CompanionLayout layout, bool enabled)
     {
         if (!enabled || !layout.IsVisible) return layout;
@@ -273,6 +315,7 @@ internal sealed class CompanionPhysics
 
     public static bool HomeFacesLeft(float middle, float viewportLeft, float viewportWidth, bool previous)
         => middle > viewportLeft + viewportWidth * .55f || middle >= viewportLeft + viewportWidth * .45f && previous;
+
     private void React(CompanionPose pose, float duration)
     {
         reaction = Pose = pose;

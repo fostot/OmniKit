@@ -32,7 +32,7 @@ dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- 
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-provider-menu,ai-account-menu,ai-model-menu,ai-account-tooltip,ai-model-tooltip,ai-endpoint,ai-cli-cancel,ai-provider-switch --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-model-discovery,ai-model-manual,ai-model-empty,ai-model-failure --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-codex,ai-claude,conversation-ai,conversation-codex,conversation-claude,conversation-busy
-dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=companion-menu,outfit-menu,palette-menu,pose-menu --scale=2
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=companion-menu,palette-menu,pose-menu,hud-outline --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=hud-effects,hud-effects-static,hud-effect-menu,hud-effect-bottom-menu,data-confirm,data-browser
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=data-browser,data-browser-error,data-browser-capture,data-browser-capture-off,data-browser-capture-error,data-browser-capture-long
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=home,home-off,home-wink,home-wink-off

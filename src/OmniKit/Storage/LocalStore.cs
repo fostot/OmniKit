@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 6;
+    private const int SchemaVersion = 7;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -177,6 +177,7 @@ public sealed class LocalStore
             if (schemaVersion < 4) fields = fields.Except(VersionFourFields);
             if (schemaVersion < 5) fields = fields.Except(VersionFiveFields);
             if (schemaVersion < 6) fields = fields.Except(VersionSixFields);
+            if (schemaVersion < 7) fields = fields.Except(VersionSevenFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -254,6 +255,19 @@ public sealed class LocalStore
             settings.BrowserInterceptLinks = false;
             settings.QuestItemUseEnabled = false;
         }
+        if (settings.Version < 7)
+        {
+            if (settings.Avatar is "Bimble" or "Moonbear") settings.Avatar = "Moonblob";
+            settings.InteractionHudOutlineThickness = 1f;
+            settings.QuestEmoteUseEnabled = false;
+            settings.CompanionHomeX = (float)(((double)settings.CompanionBoxLeft + settings.CompanionBoxRight) * .5);
+            settings.CompanionHomeY = settings.CompanionBoxBottom;
+            settings.CompanionGrabHandScale = .40f;
+            settings.CompanionNapsEnabled = true;
+            settings.CompanionNapInterval = 45f;
+            settings.CompanionNapDuration = 20f;
+            settings.CompanionNapZsEnabled = true;
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -270,6 +284,10 @@ public sealed class LocalStore
         [nameof(Settings.InteractionHudEffectIntensity), nameof(Settings.InteractionHudEffectSpeed), nameof(Settings.InteractionHudEffectAnimated),
         nameof(Settings.CompanionHomeEnabled), nameof(Settings.CompanionGrabHandEnabled), nameof(Settings.CompanionCommentsEnabled), nameof(Settings.CompanionCommentInterval),
         nameof(Settings.CompanionBlinkEnabled), nameof(Settings.CompanionBlinkInterval), nameof(Settings.BrowserInterceptLinks), nameof(Settings.QuestItemUseEnabled)];
+
+    private static readonly string[] VersionSevenFields =
+        [nameof(Settings.InteractionHudOutlineThickness), nameof(Settings.QuestEmoteUseEnabled), nameof(Settings.CompanionGrabHandScale), nameof(Settings.CompanionNapsEnabled), nameof(Settings.CompanionNapInterval),
+        nameof(Settings.CompanionNapDuration), nameof(Settings.CompanionNapZsEnabled), nameof(Settings.CompanionHomeX), nameof(Settings.CompanionHomeY)];
 
     private static readonly string[] VersionFourFields =
     [
@@ -306,11 +324,18 @@ public sealed class LocalStore
             throw new InvalidOperationException("Unsupported configuration version.");
         if (!Enum.IsDefined((Interaction.HudTextEffect)settings.InteractionHudEffect))
             throw new InvalidOperationException("Choose a supported HUD text effect.");
+        if (!FiniteRange(settings.InteractionHudOutlineThickness, .5f, 4f))
+            throw new InvalidOperationException("HUD outline thickness is outside the supported range.");
         if (!FiniteRange(settings.InteractionHudEffectIntensity, 0f, 2f) ||
             !FiniteRange(settings.InteractionHudEffectSpeed, .1f, 3f))
             throw new InvalidOperationException("HUD effect intensity or speed is outside the supported range.");
         if (!FiniteRange(settings.CompanionCommentInterval, 30f, 600f) || !FiniteRange(settings.CompanionBlinkInterval, 1f, 10f))
             throw new InvalidOperationException("Companion comment or blink timing is outside the supported range.");
+        if (!FiniteRange(settings.CompanionGrabHandScale, .20f, 1f) ||
+            !FiniteRange(settings.CompanionNapInterval, 15f, 300f) || !FiniteRange(settings.CompanionNapDuration, 5f, 120f))
+            throw new InvalidOperationException("Companion hand size or nap timing is outside the supported range.");
+        if (!FiniteRange(settings.CompanionHomeX, 0f, 1f) || !FiniteRange(settings.CompanionHomeY, 0f, 1f))
+            throw new InvalidOperationException("The companion home position must be inside the viewport.");
         if ((settings.InteractionTargets & ~(int)Interaction.InteractionTargets.All) != 0 ||
             !Enum.IsDefined((Interaction.EnemyInteractMode)settings.EnemyInteractMode))
             throw new InvalidOperationException("Choose supported interaction target types and an enemy action.");
@@ -394,6 +419,7 @@ public sealed class LocalStore
         target.SettingsModifier = (ModifierKeys)value.SettingsModifier;
         target.SoftInteractEnabled = value.SoftInteractEnabled;
         target.QuestItemUseEnabled = value.QuestItemUseEnabled;
+        target.QuestEmoteUseEnabled = value.QuestEmoteUseEnabled;
         target.InteractionTargets = (Interaction.InteractionTargets)value.InteractionTargets;
         target.EnemyInteractMode = (Interaction.EnemyInteractMode)value.EnemyInteractMode;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
@@ -406,6 +432,7 @@ public sealed class LocalStore
         target.InteractionHudOffsetX = value.InteractionHudOffsetX;
         target.InteractionHudScale = value.InteractionHudScale;
         target.InteractionHudOutline = value.InteractionHudOutline;
+        target.InteractionHudOutlineThickness = value.InteractionHudOutlineThickness;
         target.InteractionHudEffect = (Interaction.HudTextEffect)value.InteractionHudEffect;
         target.InteractionHudEffectIntensity = value.InteractionHudEffectIntensity;
         target.InteractionHudEffectSpeed = value.InteractionHudEffectSpeed;
@@ -426,7 +453,14 @@ public sealed class LocalStore
         target.CompanionContainmentEnabled = value.CompanionContainmentEnabled;
         target.CompanionFallingEnabled = value.CompanionFallingEnabled;
         target.CompanionHomeEnabled = value.CompanionHomeEnabled;
+        target.CompanionHomeX = value.CompanionHomeX;
+        target.CompanionHomeY = value.CompanionHomeY;
         target.CompanionGrabHandEnabled = value.CompanionGrabHandEnabled;
+        target.CompanionGrabHandScale = value.CompanionGrabHandScale;
+        target.CompanionNapsEnabled = value.CompanionNapsEnabled;
+        target.CompanionNapInterval = value.CompanionNapInterval;
+        target.CompanionNapDuration = value.CompanionNapDuration;
+        target.CompanionNapZsEnabled = value.CompanionNapZsEnabled;
         target.CompanionCommentsEnabled = value.CompanionCommentsEnabled;
         target.CompanionCommentInterval = value.CompanionCommentInterval;
         target.CompanionBlinkEnabled = value.CompanionBlinkEnabled;
@@ -471,6 +505,7 @@ public sealed class LocalStore
         public int SettingsModifier;
         public bool SoftInteractEnabled;
         public bool QuestItemUseEnabled;
+        public bool QuestEmoteUseEnabled;
         public int InteractionTargets;
         public int EnemyInteractMode;
         public bool InteractionHudEnabled;
@@ -483,6 +518,7 @@ public sealed class LocalStore
         public float InteractionHudOffsetX;
         public float InteractionHudScale = 1f;
         public bool InteractionHudOutline;
+        public float InteractionHudOutlineThickness = 1f;
         public int InteractionHudEffect = (int)Interaction.HudTextEffect.Shadow;
         public float InteractionHudEffectIntensity = 1f;
         public float InteractionHudEffectSpeed = 1f;
@@ -493,7 +529,7 @@ public sealed class LocalStore
         public int BotanistGearset;
         public bool AvatarEnabled;
         public bool AnimationsEnabled;
-        public string Avatar = "Bimble";
+        public string Avatar = "Moonblob";
         public string CompanionOutfit = "Navigator";
         public string CompanionPalette = "Moonlight";
         public bool CompanionMagicEnabled = true;
@@ -503,7 +539,14 @@ public sealed class LocalStore
         public bool CompanionContainmentEnabled = true;
         public bool CompanionFallingEnabled = true;
         public bool CompanionHomeEnabled = true;
+        public float CompanionHomeX = .835f;
+        public float CompanionHomeY = .92f;
         public bool CompanionGrabHandEnabled = true;
+        public float CompanionGrabHandScale = .40f;
+        public bool CompanionNapsEnabled = true;
+        public float CompanionNapInterval = 45f;
+        public float CompanionNapDuration = 20f;
+        public bool CompanionNapZsEnabled = true;
         public bool CompanionCommentsEnabled = true;
         public float CompanionCommentInterval = 120f;
         public bool CompanionBlinkEnabled = true;
@@ -537,6 +580,7 @@ public sealed class LocalStore
             SettingsModifier = (int)value.SettingsModifier,
             SoftInteractEnabled = value.SoftInteractEnabled,
             QuestItemUseEnabled = value.QuestItemUseEnabled,
+            QuestEmoteUseEnabled = value.QuestEmoteUseEnabled,
             InteractionTargets = (int)value.InteractionTargets,
             EnemyInteractMode = (int)value.EnemyInteractMode,
             InteractionHudEnabled = value.InteractionHudEnabled,
@@ -549,6 +593,7 @@ public sealed class LocalStore
             InteractionHudOffsetX = value.InteractionHudOffsetX,
             InteractionHudScale = value.InteractionHudScale,
             InteractionHudOutline = value.InteractionHudOutline,
+            InteractionHudOutlineThickness = value.InteractionHudOutlineThickness,
             InteractionHudEffect = (int)value.InteractionHudEffect,
             InteractionHudEffectIntensity = value.InteractionHudEffectIntensity,
             InteractionHudEffectSpeed = value.InteractionHudEffectSpeed,
@@ -569,7 +614,14 @@ public sealed class LocalStore
             CompanionContainmentEnabled = value.CompanionContainmentEnabled,
             CompanionFallingEnabled = value.CompanionFallingEnabled,
             CompanionHomeEnabled = value.CompanionHomeEnabled,
+            CompanionHomeX = value.CompanionHomeX,
+            CompanionHomeY = value.CompanionHomeY,
             CompanionGrabHandEnabled = value.CompanionGrabHandEnabled,
+            CompanionGrabHandScale = value.CompanionGrabHandScale,
+            CompanionNapsEnabled = value.CompanionNapsEnabled,
+            CompanionNapInterval = value.CompanionNapInterval,
+            CompanionNapDuration = value.CompanionNapDuration,
+            CompanionNapZsEnabled = value.CompanionNapZsEnabled,
             CompanionCommentsEnabled = value.CompanionCommentsEnabled,
             CompanionCommentInterval = value.CompanionCommentInterval,
             CompanionBlinkEnabled = value.CompanionBlinkEnabled,

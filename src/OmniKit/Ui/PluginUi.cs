@@ -78,7 +78,7 @@ internal sealed class PluginUi : IDisposable
     public Func<string>? BrowserInterceptionStatus { get; set; }
     public bool TryQueueCapturedWebsite(string url)
     {
-        if (!wiki.TryOpenUrl(url, requireReady: true)) return false;
+        if (!wiki.TryOpenUrl(url, requireReady: false)) return false;
         Interlocked.Exchange(ref capturedBrowserRequest, 1);
         return true;
     }
@@ -119,7 +119,7 @@ internal sealed class PluginUi : IDisposable
     private void Refresh()
     {
         entries = catalog.GetEntries().Concat(GearsetActions.GetEntries()).Concat(sources.GetEntries())
-            .Append(new SearchEntry("omnikit:companion", "Ask your companion", "Open your moon companion", "ask question chat ai bimble moonbear companion", "OmniKit", () => OpenCompanion()))
+            .Append(new SearchEntry("omnikit:companion", "Ask your companion", "Open your moon companion", "ask question chat ai moonblob wink nova companion", "OmniKit", () => OpenCompanion()))
             .Concat(config.VoiceEnabled ? new[] { new SearchEntry("omnikit:speak", "Speak a command", "Listen for one phrase", "voice microphone speak command", "OmniKit", () => StartVoice(false)) } : []).ToArray();
         refreshedAt = Environment.TickCount64;
     }
@@ -278,14 +278,7 @@ internal sealed class PluginUi : IDisposable
         if (config.AvatarEnabled)
         {
             var portraitSize = new Vector2(44) * s;
-            if (ProceduralCompanion.IsProcedural(config.Avatar))
-                ProceduralCompanion.Draw(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
-            else
-            {
-                var path = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets", config.Avatar == "Moonbear" ? "moonbear.png" : "bimble.png");
-                var texture = Services.Textures.GetFromFile(path).GetWrapOrDefault();
-                if (texture != null) ImGui.GetWindowDrawList().AddImage(texture.Handle, origin, origin + portraitSize);
-            }
+            ProceduralCompanion.Draw(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
             ProceduralCompanion.DrawEffects(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
         }
         ImGui.SetCursorScreenPos(origin + new Vector2(config.AvatarEnabled ? 54 : 0, 1) * s);
@@ -405,7 +398,7 @@ internal sealed class PluginUi : IDisposable
                 hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
-                else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel" }.Any(filter.Contains)) section = 1;
+                else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel", "emote", "soothe" }.Any(filter.Contains)) section = 1;
                 else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "effect", "intensity" }.Any(filter.Contains)) section = 2;
                 else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab" }.Any(filter.Contains))
                 { section = 3; companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
@@ -482,6 +475,9 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.Checkbox("Use verified quest items", ref config.QuestItemUseEnabled)) Save();
         UiText.Hint("On Interact, use a proven quest item after selecting its target. First supported case: Tiller's Shovel on the cumbersome rocks in Rocks in a Hard Place. Debris keeps ordinary interaction. Unknown quests require manual item use.");
         if (config.QuestItemUseEnabled && interaction.QuestItems?.Status is { Length: > 0 } questItemStatus) UiText.Status(questItemStatus);
+        if (ImGui.Checkbox("Use verified quest emotes", ref config.QuestEmoteUseEnabled)) Save();
+        UiText.Hint("On Interact, perform a proven required emote after selecting its target. First supported case: /soothe the irate coachmen in A Bridge Too Full. Unknown quests require a manual emote.");
+        if (config.QuestEmoteUseEnabled && interaction.QuestEmotes?.Status is { Length: > 0 } questEmoteStatus) UiText.Status(questEmoteStatus);
         VisibleTarget();
         if (UiText.CollapsingHeader("Gathering outfits"))
         {
@@ -568,6 +564,9 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.SliderFloat("Font size", ref fontPercent, 50, 200, "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
         { config.InteractionHudScale = fontPercent / 100f; Save(); }
         if (ImGui.Checkbox("Text outline", ref config.InteractionHudOutline)) Save();
+        if (config.InteractionHudOutline && ImGui.SliderFloat("Outline thickness", ref config.InteractionHudOutlineThickness,
+                .5f, 4f, "%.1f", ImGuiSliderFlags.AlwaysClamp)) Save();
+        UiText.Hint("Thickness follows the visible letters in every effect. Colored echoes and particles keep their own styling.");
         var effectLabel = config.InteractionHudEffect switch
         {
             HudTextEffect.SoftGlow => "Soft glow", HudTextEffect.GentleShimmer => "Gentle shimmer",
@@ -651,15 +650,6 @@ internal sealed class PluginUi : IDisposable
                     if (UiText.Selectable(AvatarLabel(avatar), config.Avatar == avatar)) { config.Avatar = avatar; Save(); }
                 ImGui.EndCombo();
             }
-            if (config.Avatar is "Bimble" or "Moonbear")
-            {
-                if (UiText.BeginCombo("Outfit", OutfitLabel(config.CompanionOutfit)))
-                {
-                    foreach (var outfit in Configuration.OutfitNames)
-                        if (UiText.Selectable(OutfitLabel(outfit), config.CompanionOutfit == outfit)) { config.CompanionOutfit = outfit; Save(); }
-                    ImGui.EndCombo();
-                }
-            }
             if (UiText.BeginCombo("Aura / shape color", config.CompanionPalette))
             {
                 foreach (var palette in Configuration.PaletteNames)
@@ -698,9 +688,20 @@ internal sealed class PluginUi : IDisposable
             if (UiText.CollapsingHeader("Home & personality"))
             {
                 if (ImGui.Checkbox("Show companion home", ref config.CompanionHomeEnabled)) Save();
-                UiText.Hint("Drag the house to move the roaming area. Its entrance faces inward near a screen edge.");
+                UiText.Hint("Drag the house anywhere on screen. The drawn roaming area stays where you put it; naps are the only trip outside it.");
                 if (ImGui.Checkbox("Show grab hand", ref config.CompanionGrabHandEnabled)) Save();
                 UiText.Hint("Show the ready, pickup and release hand over the companion and its house.");
+                if (config.CompanionGrabHandEnabled && ImGui.SliderFloat("Hand size", ref config.CompanionGrabHandScale, .2f, 1, "%.2f", ImGuiSliderFlags.AlwaysClamp)) Save();
+                ImGui.BeginDisabled(!config.CompanionHomeEnabled || !config.AnimationsEnabled);
+                if (ImGui.Checkbox("Take naps at home", ref config.CompanionNapsEnabled)) Save();
+                UiText.Hint("Requires the home and animation. Walks to the house at bedtime, sleeps inside, then walks back to the drawn area. Entirely local; no AI request.");
+                if (config.CompanionNapsEnabled)
+                {
+                    if (ImGui.SliderFloat("Time awake", ref config.CompanionNapInterval, 15, 300, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+                    if (ImGui.SliderFloat("Nap length", ref config.CompanionNapDuration, 5, 120, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+                    if (ImGui.Checkbox("Chimney Zs", ref config.CompanionNapZsEnabled)) Save();
+                }
+                ImGui.EndDisabled();
                 if (ImGui.Checkbox("Local comments", ref config.CompanionCommentsEnabled)) Save();
                 UiText.Hint("Occasional local text phrases. No AI request, microphone or speech playback.");
                 ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
@@ -1106,8 +1107,8 @@ internal sealed class PluginUi : IDisposable
         ImGui.SameLine(); if (UiText.Button("Browser controls")) ToggleBrowserControls();
         UiText.Hint("The website stays visible. The browser's icon shows or hides navigation, address and extension controls. Manage unpacked Manifest V3 extensions inside those controls.");
         if (ImGui.Checkbox("Capture game & plugin web links", ref config.BrowserInterceptLinks))
-        { Save(); if (config.BrowserInterceptLinks) OpenBrowser(); }
-        UiText.Hint("Optional: route standard HTTP/HTTPS link opens from this game process when OmniKit's browser is ready. Recognized authentication and non-web links pass through. Custom browser launchers and other processes cannot be captured.");
+        { Save(); }
+        UiText.Hint("Optional: route standard HTTP/HTTPS link opens from this game process. A captured link starts the browser when closed. Recognized authentication and non-web links pass through. Custom browser launchers and other processes cannot be captured.");
         if (config.BrowserInterceptLinks && BrowserInterceptionStatus != null) UiText.Status(BrowserInterceptionStatus());
     }
 
@@ -1131,15 +1132,17 @@ internal sealed class PluginUi : IDisposable
 
     private static string AvatarLabel(string avatar) => avatar switch
     {
-        "Bimble" => "Bimble · moon bunny",
-        "Moonbear" => "Moonbear · space bear",
         "Moonblob" => "Moonblob · rolling blob",
         "Wink" => "Wink · blinking eye",
         "Nova" => "Nova · neon burst",
+        "Mochi" => "Mochi · moon cake",
+        "Puff" => "Puff · moon cloud",
+        "Orbit" => "Orbit · tiny planet",
+        "Ember" => "Ember · star flame",
+        "Prism" => "Prism · crystal spirit",
         _ => avatar,
     };
 
-    private static string OutfitLabel(string outfit) => outfit == "Stargazer" ? "Stargazer (violet/silver)" : "Navigator (navy/gold)";
 
     private bool Save()
     {
