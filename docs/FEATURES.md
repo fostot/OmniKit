@@ -11,11 +11,11 @@ in the release notes before they can be called verified in game.
 | Open game panels and installed plugins | Catalogue reads the game's main commands and Dalamud's exposed plugin UIs; live behavior pending. |
 | Find community recruitment | Official Community Finder links are present; currently open through the system browser. |
 | Camera-directed interaction | Eight world-object categories can be toggled independently. World-object interaction preserves the hard target. Separate hostile/neutral enemy switches start off; enemy actions require an explicit choice of Target only or Target + start auto-attack. Only a fresh key press acts. Enemy classification uses the game's current hostility flag and can change. Live enemy behavior requires validation. |
-| Independent visible-target HUD and configurable key | Styled text without a frame; nothing appears without a candidate. Detection continues through menus while actions pause. Shift-right-click opens Lock/Unlock, Move, Modify and Hide. Full Ctrl/Alt/Shift chords are recorded by pressing keys. Live behavior still needs verification. |
+| Independent visible-target HUD and configurable key | Styled text without a frame; no candidate means no gameplay text. Active NPC/object interactions and cutscenes hide it. Unrelated menus pause actions while detection continues. Font size, optional outline and four text effects are in HUD; Modify opens the controls at the top with an explicit editing sample. Shift-right-click opens Lock/Unlock, Move, Modify and Hide. Full Ctrl/Alt/Shift chords are recorded by pressing keys. Live behavior still needs verification. |
 | Gathering gearset switching and restoring prior equipment | Gathering service implemented; saved opt-in, restoration preference and miner/botanist choices are in the settings schema. Behavior requires live verification. |
 | Native Umbra plugin-menu entry | Standard main/config UI hooks are the integration contract; enabled by the main plugin wiring. |
 | Native Umbra toolbar widget and popup with matching icons | Optional sidecar implemented using actual Umbra widgets, menus and Font Awesome icons. Add its DLL through Umbra's own plugin interface; it does not silently edit a toolbar. |
-| Bimble, Moonbear, Moonblob, Wink and Nova companions | Seven illustrated 24-pose atlases cover walking, idle/blink, mouth, carry, fall, land and push. Bimble/Moonbear retain Navigator and Stargazer outfits; Bimble's ears change through the poses. The abstract three have new cute illustrated designs. Six aura palettes remain available. Live game appearance remains pending. |
+| Bimble, Moonbear, Moonblob, Wink and Nova companions | Bimble/Moonbear use articulated 2D walking parts in both outfits, with distance-driven alternating stance/swing and fixed body proportions. Moonblob is limbless and rolls a stable image continuously; Wink/Nova float from stable images. Atlas artwork remains for idle/blink, mouth and reactions. Six aura palettes remain available. Moving previews and geometry checks are separate from live game appearance. |
 | Pick up the companion and interact with supported frames | Optional Frame interaction under Companion → Appearance. Read-only surface snapshots cover visible rectangular native addons and compatible windows/bars in the same ImGui context. Perching, falling, contained walking and pushing have isolated state tests. Hidden/unsupported surfaces return to the saved roaming area. Native game surface behavior still needs live validation. |
 | Explicit mouth-animation preview | Implemented through Preview animation. Synthesized speech and audio-driven lip sync are not implemented. |
 | Minimal launcher and organized settings | Idle launcher is only a search bar and gear. Typing expands results; clearing collapses. Frameless settings use teal controls, 2 px rounding, a 540 × 400 default and 480 × 330 minimum, six native tabs and Appearance/Voice/AI subtabs. The footer shows the complete compiled version and by Zero; About includes a copyable full commit. Offscreen native checks are separate from pending game appearance. |
@@ -29,7 +29,7 @@ in the release notes before they can be called verified in game.
 | Keep the character and topic focused; resist instruction override | AI instructions implemented, with hard action limits in code. Perfect resistance to prompt injection is not promised. |
 | Reuse other plugins' data and actions | Versioned OmniKit action-registration IPC implemented. Providers must explicitly integrate; arbitrary private plugin files are not read. Read-only AI knowledge adapters remain planned. |
 | In-game browser | Optional navigation through Browsingway's registered command is implemented. A user-created visible overlay is required; the command confirms dispatch, not rendering. Otherwise wiki links use the system browser. |
-| Local database for settings | SQLite schema v4, with atomic migration from v1/v2/v3, preserved preferences and keyboard chords, and explicit validation. Conversation/audio storage is not enabled. |
+| Local database for settings | SQLite schema v5, with atomic migration from v1–v4, preserved preferences and keyboard chords, and explicit validation. Conversation/audio storage is not enabled. |
 | JSON settings export/import | Implemented through an explicit whitelist. Entire imports validate before changes; credentials and callbacks never appear in exports. Imported preferences cannot grant new AI transmission consent. |
 | GitHub repository, packaged releases and custom Dalamud repository | Public fostot/OmniKit repository, immutable preview releases and repo.json feed. Public download integrity is verified at publication; successful loading in each user's game is separate. |
 
@@ -42,10 +42,10 @@ DPAPI credential store. ChatGPT registrations and tokens use a different protect
 store, outside the settings DTO, database and exports. CLI credentials remain
 under the selected CLI's control.
 
-Exports use schema version 4 and include only explicitly listed preferences.
-Versions 1, 2 and 3 migrate atomically to version 4, preserving previous fields and
-keyboard chords while adding safe target, frame and AI-connection defaults. Older plugins
-cannot open a version 4 database. Exports
+Exports use schema version 5 and include only explicitly listed preferences.
+Versions 1–4 migrate atomically to version 5, preserving previous fields and
+keyboard chords while adding safe defaults and the previous shadow appearance.
+Older plugins cannot open a version 5 database. Exports
 contain no credential values, conversation history or audio. Custom provider URLs
 and voice phrases can still reveal personal choices; exported files are local user
 data, not repository source or release assets.

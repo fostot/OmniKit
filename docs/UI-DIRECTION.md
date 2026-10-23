@@ -26,14 +26,21 @@ one main key, then release every key before the new chord is committed. Escape
 cancels. Capture feedback must remain visible, fit the available width, and stop
 when its control is hidden or the settings window closes.
 
-The interaction HUD is styled text without a window panel. It keeps the camera
-candidate visible as a preview when actions are paused. Shift + right-click
-exposes Move, Lock/Unlock, Hide and Settings; position and scale are adjustable.
+The interaction HUD is styled text without a window panel. It hides during NPC
+dialogue, active NPC/object interactions and cutscenes; other paused actions do
+not add a Preview suffix. Shift +
+right-click exposes Move, Lock/Unlock, Hide and Settings. Modify opens the HUD tab
+at the top, with font size, independent outline and readable text effects first.
+A clearly labelled sample appears only during editing, including with the
+gameplay HUD disabled or no candidate. Interaction suppression wins over editing.
 
 Bimble and Moonbear use separate Navigator (navy/gold) and Stargazer
-(violet/silver) outfit atlases. Each atlas contains 8 walking, 4 idle/blink and
-4 mouth poses, plus paired carry, fall, landing and edge-pushing poses.
-Moonblob, Wink and Nova use illustrated 24-pose atlases too. Six palettes
+(violet/silver) painted parts for continuous joint-driven walking. One foot
+stays planted while the other swings; the same body image keeps its proportions.
+Bimble's upper ear bands have restrained delayed motion. Moonblob has no limbs
+and rolls continuously from one stable image. Wink and Nova use stable floating
+images while moving. Cadence follows travelled distance, not a free-running frame
+counter. Illustrated atlas poses remain for idle/blink, mouth and reactions. Six palettes
 control the aura and softly tint these three companions: Moonlight, Aurora,
 Nebula, Rose, Ember and Starlight. The saved screen rectangle remains the default
 roaming area. Optional Frame interaction lets the user pick up a companion and

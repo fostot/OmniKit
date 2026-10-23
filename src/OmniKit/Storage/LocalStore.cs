@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 4;
+    private const int SchemaVersion = 5;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -82,7 +82,7 @@ public sealed class LocalStore
         }
         using var setVersion = connection.CreateCommand();
         setVersion.Transaction = transaction;
-        setVersion.CommandText = "PRAGMA user_version = 4;";
+        setVersion.CommandText = $"PRAGMA user_version = {SchemaVersion};";
         setVersion.ExecuteNonQuery();
         transaction.Commit();
     }
@@ -175,6 +175,7 @@ public sealed class LocalStore
             if (schemaVersion == 1) fields = fields.Except(VersionTwoFields);
             if (schemaVersion < 3) fields = fields.Except(VersionThreeFields);
             if (schemaVersion < 4) fields = fields.Except(VersionFourFields);
+            if (schemaVersion < 5) fields = fields.Except(VersionFiveFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -233,11 +234,19 @@ public sealed class LocalStore
             settings.AiConnection = (int)Assistant.AiConnectionKind.ApiKey;
             settings.ChatGptModel = ""; settings.CodexModel = ""; settings.ClaudeModel = "";
         }
+        if (settings.Version < 5)
+        {
+            settings.InteractionHudOutline = false;
+            settings.InteractionHudEffect = (int)Interaction.HudTextEffect.Shadow;
+        }
         settings.Version = SchemaVersion;
     }
 
     private static readonly string[] VersionThreeFields =
         [nameof(Settings.CompanionOutfit), nameof(Settings.CompanionPalette), nameof(Settings.CompanionMagicEnabled)];
+
+    private static readonly string[] VersionFiveFields =
+        [nameof(Settings.InteractionHudOutline), nameof(Settings.InteractionHudEffect)];
 
     private static readonly string[] VersionFourFields =
     [
@@ -272,6 +281,8 @@ public sealed class LocalStore
     {
         if (settings is null || settings.Version != SchemaVersion)
             throw new InvalidOperationException("Unsupported configuration version.");
+        if (!Enum.IsDefined((Interaction.HudTextEffect)settings.InteractionHudEffect))
+            throw new InvalidOperationException("Choose a supported HUD text effect.");
         if ((settings.InteractionTargets & ~(int)Interaction.InteractionTargets.All) != 0 ||
             !Enum.IsDefined((Interaction.EnemyInteractMode)settings.EnemyInteractMode))
             throw new InvalidOperationException("Choose supported interaction target types and an enemy action.");
@@ -365,6 +376,8 @@ public sealed class LocalStore
         target.InteractionHudLocked = value.InteractionHudLocked;
         target.InteractionHudOffsetX = value.InteractionHudOffsetX;
         target.InteractionHudScale = value.InteractionHudScale;
+        target.InteractionHudOutline = value.InteractionHudOutline;
+        target.InteractionHudEffect = (Interaction.HudTextEffect)value.InteractionHudEffect;
         target.GatheringAutoSwitch = value.GatheringAutoSwitch;
         target.GatheringRestore = value.GatheringRestore;
         target.MinerGearset = value.MinerGearset;
@@ -429,6 +442,8 @@ public sealed class LocalStore
         public bool InteractionHudLocked = true;
         public float InteractionHudOffsetX;
         public float InteractionHudScale = 1f;
+        public bool InteractionHudOutline;
+        public int InteractionHudEffect = (int)Interaction.HudTextEffect.Shadow;
         public bool GatheringAutoSwitch;
         public bool GatheringRestore;
         public int MinerGearset;
@@ -482,6 +497,8 @@ public sealed class LocalStore
             InteractionHudLocked = value.InteractionHudLocked,
             InteractionHudOffsetX = value.InteractionHudOffsetX,
             InteractionHudScale = value.InteractionHudScale,
+            InteractionHudOutline = value.InteractionHudOutline,
+            InteractionHudEffect = (int)value.InteractionHudEffect,
             GatheringAutoSwitch = value.GatheringAutoSwitch,
             GatheringRestore = value.GatheringRestore,
             MinerGearset = value.MinerGearset,

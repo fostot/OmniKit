@@ -15,9 +15,17 @@ catalogue, run commands, change settings or operate another plugin.
 Use **Continue with ChatGPT** to open the official sign-in/consent page in your
 system browser. OmniKit registers its own public client using OpenAI's supported
 open-source application flow. It does not borrow Codex's client ID or extract
-browser cookies. Complete consent, return to settings, then load the models
-available to that account and choose one. Account availability, model access and
-plan limits are determined by OpenAI.
+browser cookies. Complete consent and return to settings to load the models
+available to that account. An empty or unavailable saved choice defaults to a
+lightweight text-chat model from that returned list; a valid manual choice is
+kept. This preference uses model-name tiers rather than measured prices. You
+can choose another model. Account availability, model access and plan limits
+are determined by OpenAI.
+
+If discovery fails, its status distinguishes connection, access, response-format
+and size problems from a successfully empty list. Refreshing unsuccessfully
+keeps earlier model choices. No unavailable model or alternate billing route is
+silently substituted.
 
 Multiple registrations can be kept locally and selected in settings. Credentials
 are encrypted with Windows DPAPI for the current Windows user, separately from

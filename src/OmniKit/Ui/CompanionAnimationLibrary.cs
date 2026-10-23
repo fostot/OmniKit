@@ -5,7 +5,20 @@ namespace OmniKit.Ui;
 
 internal readonly record struct CompanionSpriteRegion(Vector4 Rect, Vector2 Anchor, Vector4 Body);
 
-internal sealed record CompanionSpriteAtlas(string File, Vector2 SheetSize, float SourceScale, CompanionSpriteRegion[] Frames)
+internal readonly record struct CompanionRollQuad(Vector2 A, Vector2 B, Vector2 C, Vector2 D,
+    Vector2 UvA, Vector2 UvB, Vector2 UvC, Vector2 UvD, Vector2 Center, float Radius)
+{
+    public (Vector2 Minimum, Vector2 Maximum) HitBounds => (Center - new Vector2(Radius), Center + new Vector2(Radius));
+}
+
+internal readonly record struct CompanionFloatQuad(Vector2 A, Vector2 B, Vector2 C, Vector2 D,
+    Vector2 UvA, Vector2 UvB, Vector2 UvC, Vector2 UvD, Vector2 HitMinimum, Vector2 HitMaximum)
+{
+    public (Vector2 Minimum, Vector2 Maximum) HitBounds => (HitMinimum, HitMaximum);
+}
+
+internal sealed record CompanionSpriteAtlas(string File, Vector2 SheetSize, float SourceScale, CompanionSpriteRegion[] Frames,
+    float CycleDistance = CompanionGait.DefaultCycleDistance)
 {
     public CompanionFrame GetFrame(int index, bool mirrored, Vector2 position, Vector2 cellSize)
     {
@@ -30,6 +43,66 @@ internal sealed record CompanionSpriteAtlas(string File, Vector2 SheetSize, floa
         var right = mirrored ? region.Anchor.X - body.X : body.Z - region.Anchor.X;
         return (origin + new Vector2(left, body.Y - region.Anchor.Y) * scale,
             origin + new Vector2(right, body.W - region.Anchor.Y) * scale);
+    }
+
+    /// <summary>Roll the original upright texture continuously around its reviewed body circle.</summary>
+    public CompanionRollQuad GetRoll(float phase, bool mirrored, Vector2 position, Vector2 cellSize)
+    {
+        var region = Frames[0]; var rect = region.Rect; var body = region.Body;
+        var sourceCenter = new Vector2((body.X + body.Z) * .5f, (body.Y + body.W) * .5f);
+        var sourceRadius = ((body.Z - body.X) + (body.W - body.Y)) * .25f;
+        var scale = Math.Min(cellSize.X, cellSize.Y) / SourceScale;
+        var radius = sourceRadius * scale;
+        var center = position + new Vector2(cellSize.X * .5f, cellSize.Y * .9f - radius);
+        phase = float.IsFinite(phase) ? phase - MathF.Floor(phase) : 0;
+        var angle = phase * MathF.Tau;
+        var cosine = MathF.Cos(angle); var sine = MathF.Sin(angle);
+        Vector2 Point(float x, float y)
+        {
+            var p = (new Vector2(x, y) - sourceCenter) * scale;
+            p = new Vector2(p.X * cosine - p.Y * sine, p.X * sine + p.Y * cosine);
+            if (mirrored) p.X = -p.X;
+            return center + p;
+        }
+        return new CompanionRollQuad(Point(rect.X, rect.Y), Point(rect.Z, rect.Y), Point(rect.Z, rect.W), Point(rect.X, rect.W),
+            new Vector2(rect.X, rect.Y) / SheetSize, new Vector2(rect.Z, rect.Y) / SheetSize,
+            new Vector2(rect.Z, rect.W) / SheetSize, new Vector2(rect.X, rect.W) / SheetSize, center, radius);
+    }
+
+    /// <summary>Float one stable image without redrawing or stretching its body and face.</summary>
+    public CompanionFloatQuad GetFloat(float phase, bool mirrored, Vector2 position, Vector2 cellSize)
+    {
+        var region = Frames[0]; var rect = region.Rect; var body = region.Body;
+        var sourceCenter = new Vector2((body.X + body.Z) * .5f, (body.Y + body.W) * .5f);
+        var scale = Math.Min(cellSize.X, cellSize.Y) / SourceScale;
+        var center = new Vector2(cellSize.X * .5f, cellSize.Y * .9f) + (sourceCenter - region.Anchor) * scale;
+        var left = center + (new Vector2(rect.X, rect.Y) - sourceCenter) * scale;
+        var right = center + (new Vector2(rect.Z, rect.W) - sourceCenter) * scale;
+        var gap = Math.Max(0, Math.Min(Math.Min(left.X, left.Y), Math.Min(cellSize.X - right.X, cellSize.Y - right.Y)));
+        var cornerRadius = Vector2.Max(Vector2.Abs(left - center), Vector2.Abs(right - center)).Length();
+        // Limit motion by the source crop's actual spare room, so even its
+        // transparent corners stay inside the user-chosen logical cell.
+        var angleLimit = Math.Min(.035f, gap * .6f / Math.Max(.001f, cornerRadius));
+        var bobLimit = Math.Min(Math.Min(cellSize.X, cellSize.Y) * .012f, gap * .35f);
+        phase = float.IsFinite(phase) ? phase - MathF.Floor(phase) : 0;
+        var angle = angleLimit * MathF.Sin(phase * MathF.Tau - .4f);
+        var bob = bobLimit * MathF.Sin(phase * MathF.Tau);
+        var cosine = MathF.Cos(angle); var sine = MathF.Sin(angle);
+        if (mirrored) center.X = cellSize.X - center.X;
+        center += position;
+        Vector2 Point(float x, float y)
+        {
+            var p = (new Vector2(x, y) - sourceCenter) * scale;
+            p = new Vector2(p.X * cosine - p.Y * sine, p.X * sine + p.Y * cosine);
+            if (mirrored) p.X = -p.X;
+            return center + p + new Vector2(0, bob);
+        }
+        var bodyHalf = new Vector2(body.Z - body.X, body.W - body.Y) * scale * .5f;
+        var hitHalf = bodyHalf + new Vector2(angleLimit * bodyHalf.Length() + bobLimit);
+        return new CompanionFloatQuad(Point(rect.X, rect.Y), Point(rect.Z, rect.Y), Point(rect.Z, rect.W), Point(rect.X, rect.W),
+            new Vector2(rect.X, rect.Y) / SheetSize, new Vector2(rect.Z, rect.Y) / SheetSize,
+            new Vector2(rect.Z, rect.W) / SheetSize, new Vector2(rect.X, rect.W) / SheetSize,
+            Vector2.Max(position, center - hitHalf), Vector2.Min(position + cellSize, center + hitHalf));
     }
 }
 
@@ -75,11 +148,15 @@ internal sealed class CompanionAnimationLibrary
             var dimensions = item.GetProperty("size");
             var sheetSize = new Vector2(dimensions[0].GetSingle(), dimensions[1].GetSingle());
             var sourceScale = item.GetProperty("commonSourceScalePx").GetSingle();
+            var cycleDistance = item.TryGetProperty("cycleDistance", out var cycleNode)
+                ? cycleNode.GetSingle() : CompanionGait.DefaultCycleDistance;
             if (!Finite(sheetSize) || sheetSize.X <= 0 || sheetSize.Y <= 0 || sheetSize.X > 8192 || sheetSize.Y > 8192
-                || !float.IsFinite(sourceScale) || sourceScale < 64 || sourceScale > 2048) continue;
+                || !float.IsFinite(sourceScale) || sourceScale < 64 || sourceScale > 2048
+                || !float.IsFinite(cycleDistance) || cycleDistance < .1f || cycleDistance > 8f) continue;
             var framesNode = item.GetProperty("frames");
-            if (framesNode.GetArrayLength() != 24) continue;
-            var frames = new CompanionSpriteRegion[24];
+            const int frameCount = 24;
+            if (framesNode.GetArrayLength() != frameCount) continue;
+            var frames = new CompanionSpriteRegion[frameCount];
             var valid = true;
             var index = 0;
             foreach (var frame in framesNode.EnumerateArray())
@@ -95,7 +172,8 @@ internal sealed class CompanionAnimationLibrary
                     || anchor.Y - rect.Y > sourceScale * .9f || rect.W - anchor.Y > sourceScale * .1f) { valid = false; break; }
                 frames[index++] = new CompanionSpriteRegion(rect, anchor, body);
             }
-            if (valid) atlases[character + "/" + outfit] = new CompanionSpriteAtlas(file, sheetSize, sourceScale, frames);
+            if (valid) atlases[character + "/" + outfit]
+                = new CompanionSpriteAtlas(file, sheetSize, sourceScale, frames, cycleDistance);
         }
     }
 

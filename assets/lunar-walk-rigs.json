@@ -1,0 +1,1014 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "Source rectangles use pixels with exclusive right/bottom edges. Pivots are normalized within each crop. Body rectangle is logical cell [left,top,width,height]; joints and lengths are normalized cell units.",
+  "partOrder": [
+    "body",
+    "nearArm",
+    "farArm",
+    "nearThigh",
+    "farThigh",
+    "nearShin",
+    "farShin",
+    "nearFoot",
+    "farFoot"
+  ],
+  "rendering": "Use source PNGs unchanged. Internal proximal and distal pivots overlap painted capsule ends at joints. Fixed part scale and skeletal lengths preserve planted feet; body bands provide bounded ear follow-through.",
+  "rigs": [
+    {
+      "character": "Bimble",
+      "outfit": "Navigator",
+      "file": "bimble-walk-rig.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "format": "RGBA",
+      "sha256": "ff260b7ec283f666f79d4c0395dc4f65d8c76fa4c398b40346b9673ec90874b7",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 255,
+        "cropEdgeMaximum": 3
+      },
+      "parts": [
+        {
+          "index": 0,
+          "name": "body",
+          "rect": [
+            34,
+            11,
+            459,
+            480
+          ],
+          "coreBounds96": [
+            40,
+            16,
+            453,
+            474
+          ],
+          "edgeAlphaMaximum": 2
+        },
+        {
+          "index": 1,
+          "name": "near arm",
+          "rect": [
+            583,
+            163,
+            777,
+            509
+          ],
+          "coreBounds96": [
+            589,
+            169,
+            772,
+            503
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 2,
+          "name": "far arm",
+          "rect": [
+            975,
+            162,
+            1174,
+            510
+          ],
+          "coreBounds96": [
+            981,
+            167,
+            1169,
+            505
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 3,
+          "name": "near thigh",
+          "rect": [
+            154,
+            550,
+            372,
+            883
+          ],
+          "coreBounds96": [
+            160,
+            556,
+            366,
+            877
+          ],
+          "edgeAlphaMaximum": 1,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 4,
+          "name": "far thigh",
+          "rect": [
+            527,
+            548,
+            767,
+            887
+          ],
+          "coreBounds96": [
+            533,
+            553,
+            761,
+            881
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 5,
+          "name": "near shin",
+          "rect": [
+            983,
+            571,
+            1151,
+            881
+          ],
+          "coreBounds96": [
+            989,
+            577,
+            1145,
+            875
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 6,
+          "name": "far shin",
+          "rect": [
+            182,
+            911,
+            341,
+            1234
+          ],
+          "coreBounds96": [
+            188,
+            916,
+            335,
+            1228
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 7,
+          "name": "near foot",
+          "rect": [
+            461,
+            996,
+            823,
+            1198
+          ],
+          "coreBounds96": [
+            467,
+            1002,
+            817,
+            1193
+          ],
+          "edgeAlphaMaximum": 1,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        },
+        {
+          "index": 8,
+          "name": "far foot",
+          "rect": [
+            886,
+            996,
+            1237,
+            1200
+          ],
+          "coreBounds96": [
+            892,
+            1002,
+            1231,
+            1195
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        }
+      ],
+      "bodyRect": [
+        0.24,
+        0.17500000000000002,
+        0.52,
+        0.56
+      ],
+      "hip": [
+        0.55,
+        0.715
+      ],
+      "shoulder": [
+        0.6,
+        0.545
+      ],
+      "thighLength": 0.09,
+      "shinLength": 0.11,
+      "footSize": [
+        0.18,
+        0.075
+      ],
+      "armLength": 0.16,
+      "cycleDistance": 0.34
+    },
+    {
+      "character": "Moonbear",
+      "outfit": "Navigator",
+      "file": "moonbear-walk-rig.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "format": "RGBA",
+      "sha256": "efb8911dfa928b1fe091e7feed4391fa03cb644cc5a1d71a9b5fbc9e4b415cc6",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 255,
+        "cropEdgeMaximum": 6
+      },
+      "parts": [
+        {
+          "index": 0,
+          "name": "body",
+          "rect": [
+            53,
+            28,
+            489,
+            533
+          ],
+          "coreBounds96": [
+            59,
+            34,
+            483,
+            527
+          ],
+          "edgeAlphaMaximum": 1
+        },
+        {
+          "index": 1,
+          "name": "near arm",
+          "rect": [
+            592,
+            148,
+            828,
+            549
+          ],
+          "coreBounds96": [
+            597,
+            155,
+            823,
+            544
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 2,
+          "name": "far arm",
+          "rect": [
+            967,
+            151,
+            1213,
+            552
+          ],
+          "coreBounds96": [
+            973,
+            157,
+            1208,
+            547
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 3,
+          "name": "near thigh",
+          "rect": [
+            136,
+            556,
+            387,
+            918
+          ],
+          "coreBounds96": [
+            141,
+            563,
+            381,
+            913
+          ],
+          "edgeAlphaMaximum": 6,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 4,
+          "name": "far thigh",
+          "rect": [
+            533,
+            562,
+            801,
+            926
+          ],
+          "coreBounds96": [
+            540,
+            568,
+            795,
+            921
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 5,
+          "name": "near shin",
+          "rect": [
+            988,
+            581,
+            1180,
+            921
+          ],
+          "coreBounds96": [
+            994,
+            587,
+            1174,
+            915
+          ],
+          "edgeAlphaMaximum": 4,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 6,
+          "name": "far shin",
+          "rect": [
+            166,
+            917,
+            345,
+            1248
+          ],
+          "coreBounds96": [
+            172,
+            924,
+            339,
+            1242
+          ],
+          "edgeAlphaMaximum": 6,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 7,
+          "name": "near foot",
+          "rect": [
+            450,
+            1004,
+            840,
+            1222
+          ],
+          "coreBounds96": [
+            456,
+            1011,
+            834,
+            1217
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        },
+        {
+          "index": 8,
+          "name": "far foot",
+          "rect": [
+            877,
+            1004,
+            1247,
+            1223
+          ],
+          "coreBounds96": [
+            884,
+            1011,
+            1242,
+            1217
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        }
+      ],
+      "bodyRect": [
+        0.25,
+        0.135,
+        0.5,
+        0.58
+      ],
+      "hip": [
+        0.55,
+        0.715
+      ],
+      "shoulder": [
+        0.6,
+        0.545
+      ],
+      "thighLength": 0.09,
+      "shinLength": 0.11,
+      "footSize": [
+        0.18,
+        0.075
+      ],
+      "armLength": 0.16,
+      "cycleDistance": 0.34
+    },
+    {
+      "character": "Bimble",
+      "outfit": "Stargazer",
+      "file": "bimble-walk-rig-stargazer.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "format": "RGBA",
+      "sha256": "9a2f18c0002943b0ac9a27e669b28c3b17e30b4c8b5765b6beccd095faad4970",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 255,
+        "cropEdgeMaximum": 3
+      },
+      "parts": [
+        {
+          "index": 0,
+          "name": "body",
+          "rect": [
+            34,
+            10,
+            460,
+            482
+          ],
+          "coreBounds96": [
+            40,
+            15,
+            454,
+            476
+          ],
+          "edgeAlphaMaximum": 2
+        },
+        {
+          "index": 1,
+          "name": "near arm",
+          "rect": [
+            582,
+            163,
+            779,
+            510
+          ],
+          "coreBounds96": [
+            587,
+            168,
+            774,
+            505
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 2,
+          "name": "far arm",
+          "rect": [
+            975,
+            162,
+            1177,
+            512
+          ],
+          "coreBounds96": [
+            980,
+            168,
+            1171,
+            506
+          ],
+          "edgeAlphaMaximum": 1,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 3,
+          "name": "near thigh",
+          "rect": [
+            153,
+            549,
+            373,
+            884
+          ],
+          "coreBounds96": [
+            159,
+            555,
+            367,
+            879
+          ],
+          "edgeAlphaMaximum": 1,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 4,
+          "name": "far thigh",
+          "rect": [
+            526,
+            547,
+            769,
+            888
+          ],
+          "coreBounds96": [
+            532,
+            553,
+            763,
+            882
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 5,
+          "name": "near shin",
+          "rect": [
+            981,
+            571,
+            1152,
+            882
+          ],
+          "coreBounds96": [
+            987,
+            577,
+            1146,
+            876
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 6,
+          "name": "far shin",
+          "rect": [
+            180,
+            911,
+            343,
+            1235
+          ],
+          "coreBounds96": [
+            186,
+            916,
+            337,
+            1229
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 7,
+          "name": "near foot",
+          "rect": [
+            461,
+            996,
+            824,
+            1199
+          ],
+          "coreBounds96": [
+            466,
+            1001,
+            818,
+            1194
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        },
+        {
+          "index": 8,
+          "name": "far foot",
+          "rect": [
+            885,
+            995,
+            1239,
+            1202
+          ],
+          "coreBounds96": [
+            891,
+            1001,
+            1233,
+            1196
+          ],
+          "edgeAlphaMaximum": 2,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        }
+      ],
+      "bodyRect": [
+        0.24,
+        0.17500000000000002,
+        0.52,
+        0.56
+      ],
+      "hip": [
+        0.55,
+        0.715
+      ],
+      "shoulder": [
+        0.6,
+        0.545
+      ],
+      "thighLength": 0.09,
+      "shinLength": 0.11,
+      "footSize": [
+        0.18,
+        0.075
+      ],
+      "armLength": 0.16,
+      "cycleDistance": 0.34
+    },
+    {
+      "character": "Moonbear",
+      "outfit": "Stargazer",
+      "file": "moonbear-walk-rig-stargazer.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "format": "RGBA",
+      "sha256": "836931d4f0fd51703bfe3ce557908c1aa1612b89e62702a5d8421589d4b00a00",
+      "alphaStatistics": {
+        "minimum": 0,
+        "maximum": 255,
+        "cropEdgeMaximum": 15
+      },
+      "parts": [
+        {
+          "index": 0,
+          "name": "body",
+          "rect": [
+            53,
+            27,
+            490,
+            535
+          ],
+          "coreBounds96": [
+            59,
+            33,
+            484,
+            529
+          ],
+          "edgeAlphaMaximum": 3
+        },
+        {
+          "index": 1,
+          "name": "near arm",
+          "rect": [
+            591,
+            147,
+            832,
+            550
+          ],
+          "coreBounds96": [
+            597,
+            154,
+            825,
+            545
+          ],
+          "edgeAlphaMaximum": 4,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 2,
+          "name": "far arm",
+          "rect": [
+            965,
+            150,
+            1216,
+            554
+          ],
+          "coreBounds96": [
+            972,
+            156,
+            1209,
+            548
+          ],
+          "edgeAlphaMaximum": 4,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.8
+          ]
+        },
+        {
+          "index": 3,
+          "name": "near thigh",
+          "rect": [
+            134,
+            555,
+            389,
+            917
+          ],
+          "coreBounds96": [
+            140,
+            561,
+            382,
+            914
+          ],
+          "edgeAlphaMaximum": 15,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 4,
+          "name": "far thigh",
+          "rect": [
+            530,
+            560,
+            804,
+            929
+          ],
+          "coreBounds96": [
+            537,
+            566,
+            798,
+            923
+          ],
+          "edgeAlphaMaximum": 4,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 5,
+          "name": "near shin",
+          "rect": [
+            987,
+            578,
+            1182,
+            922
+          ],
+          "coreBounds96": [
+            993,
+            584,
+            1176,
+            916
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 6,
+          "name": "far shin",
+          "rect": [
+            163,
+            915,
+            348,
+            1249
+          ],
+          "coreBounds96": [
+            169,
+            921,
+            340,
+            1243
+          ],
+          "edgeAlphaMaximum": 15,
+          "pivot": [
+            0.5,
+            0.15
+          ],
+          "endPivot": [
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "index": 7,
+          "name": "near foot",
+          "rect": [
+            447,
+            1004,
+            841,
+            1225
+          ],
+          "coreBounds96": [
+            454,
+            1011,
+            836,
+            1219
+          ],
+          "edgeAlphaMaximum": 3,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        },
+        {
+          "index": 8,
+          "name": "far foot",
+          "rect": [
+            875,
+            1004,
+            1250,
+            1225
+          ],
+          "coreBounds96": [
+            881,
+            1010,
+            1244,
+            1219
+          ],
+          "edgeAlphaMaximum": 5,
+          "pivot": [
+            0.28,
+            0.1
+          ]
+        }
+      ],
+      "bodyRect": [
+        0.25,
+        0.135,
+        0.5,
+        0.58
+      ],
+      "hip": [
+        0.55,
+        0.715
+      ],
+      "shoulder": [
+        0.6,
+        0.545
+      ],
+      "thighLength": 0.09,
+      "shinLength": 0.11,
+      "footSize": [
+        0.18,
+        0.075
+      ],
+      "armLength": 0.16,
+      "cycleDistance": 0.34
+    }
+  ]
+}

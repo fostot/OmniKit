@@ -27,6 +27,8 @@ try
         InteractionHudLocked = false,
         InteractionHudOffsetX = -220f,
         InteractionHudScale = 1.5f,
+        InteractionHudOutline = true,
+        InteractionHudEffect = HudTextEffect.SoftGlow,
         CompanionBoxLeft = .2f,
         CompanionSize = 120f,
         CompanionOutfit = "Stargazer",
@@ -71,17 +73,23 @@ try
         "CompanionPerchEnabled", "CompanionContainmentEnabled", "CompanionFallingEnabled",
         "AiConnection", "ChatGptModel", "CodexModel", "ClaudeModel",
     };
-    var versionThreeDocument = JsonNode.Parse(exported)!;
+    var versionFiveFields = new[] { "InteractionHudOutline", "InteractionHudEffect" };
+    var versionFourDocument = JsonNode.Parse(exported)!;
+    versionFourDocument["SchemaVersion"] = 4;
+    versionFourDocument["Settings"]!["Version"] = 4;
+    foreach (var field in versionFiveFields) versionFourDocument["Settings"]!.AsObject().Remove(field);
+    var versionFourJson = versionFourDocument.ToJsonString();
+    var versionThreeDocument = versionFourDocument.DeepClone();
     versionThreeDocument["SchemaVersion"] = 3;
     versionThreeDocument["Settings"]!["Version"] = 3;
     foreach (var field in versionFourFields) versionThreeDocument["Settings"]!.AsObject().Remove(field);
     var versionThreeJson = versionThreeDocument.ToJsonString();
-    var versionTwoDocument = JsonNode.Parse(exported)!;
+    var versionTwoDocument = versionFourDocument.DeepClone();
     versionTwoDocument["SchemaVersion"] = 2;
     versionTwoDocument["Settings"]!["Version"] = 2;
     foreach (var field in versionThreeFields.Concat(versionFourFields)) versionTwoDocument["Settings"]!.AsObject().Remove(field);
     var versionTwoJson = versionTwoDocument.ToJsonString();
-    var legacyDocument = JsonNode.Parse(exported)!;
+    var legacyDocument = versionFourDocument.DeepClone();
     legacyDocument["SchemaVersion"] = 1;
     var legacySettings = legacyDocument["Settings"]!.AsObject();
     legacySettings["Version"] = 1;
@@ -92,7 +100,7 @@ try
 
     void CheckLegacy(Configuration migrated)
     {
-        Check(migrated.Version == 4 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
+        Check(migrated.Version == 5 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
             migrated.InteractModifier == ModifierKeys.None, "Legacy virtual-key modifiers must migrate to the correct masks.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         foreach (var field in legacySettings)
@@ -100,7 +108,7 @@ try
                 Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Migration must preserve legacy field " + field.Key);
         var defaults = new Configuration();
         var defaultSnapshot = JsonNode.Parse(store.Export(defaults))!["Settings"]!.AsObject();
-        foreach (var field in versionTwoFields.Concat(versionThreeFields).Concat(versionFourFields))
+        foreach (var field in versionTwoFields.Concat(versionThreeFields).Concat(versionFourFields).Concat(versionFiveFields))
             Check(JsonNode.DeepEquals(snapshot[field], defaultSnapshot[field]), "Migration must use the default for new field " + field);
     }
 
@@ -119,7 +127,7 @@ try
         AnimationsEnabled = false,
     };
     var upgradedFallback = store.Upgrade(legacyFallback);
-    Check(upgradedFallback.Version == 4 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
+    Check(upgradedFallback.Version == 5 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
         upgradedFallback.SettingsModifier == ModifierKeys.Control && upgradedFallback.InteractionHudOffsetY == -73f &&
         !upgradedFallback.AvatarEnabled && !upgradedFallback.AnimationsEnabled &&
         legacyFallback.Version == 1 && (int)legacyFallback.LauncherModifier == 18,
@@ -162,13 +170,13 @@ try
     var migratedStore = new LocalStore(legacyDirectory);
     CheckLegacy(migratedStore.Load()!);
     var migratedRow = ReadDatabase(legacyDirectory);
-    Check(migratedRow.DatabaseSchema == 4 && migratedRow.RowSchema == 4 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 4,
+    Check(migratedRow.DatabaseSchema == 5 && migratedRow.RowSchema == 5 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 5,
         "Database version, row version and JSON schema must migrate together.");
     CheckLegacy(new LocalStore(legacyDirectory).Load()!);
 
     void CheckVersionTwo(Configuration migrated)
     {
-        Check(migrated.Version == 4 && migrated.CompanionOutfit == "Navigator" && migrated.CompanionPalette == "Moonlight" && migrated.CompanionMagicEnabled &&
+        Check(migrated.Version == 5 && migrated.CompanionOutfit == "Navigator" && migrated.CompanionPalette == "Moonlight" && migrated.CompanionMagicEnabled &&
             migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
             "Version two must gain the new companion defaults.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
@@ -182,12 +190,12 @@ try
     CheckVersionTwo(store.Upgrade(versionTwoFallback));
     var versionTwoDirectory = LegacyDatabase("version-two", versionTwoJson, 2);
     CheckVersionTwo(new LocalStore(versionTwoDirectory).Load()!);
-    Check(ReadDatabase(versionTwoDirectory).DatabaseSchema == 4 && ReadDatabase(versionTwoDirectory).RowSchema == 4,
+    Check(ReadDatabase(versionTwoDirectory).DatabaseSchema == 5 && ReadDatabase(versionTwoDirectory).RowSchema == 5,
         "Version two SQLite schema and row must migrate together.");
 
     void CheckVersionThree(Configuration migrated)
     {
-        Check(migrated.Version == 4 && migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
+        Check(migrated.Version == 5 && migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
             "Version three must gain world targets with enemies off and no preselected enemy action.");
         Check(!migrated.CompanionFrameInteractionEnabled && migrated.CompanionPickupEnabled && migrated.CompanionPerchEnabled &&
             migrated.CompanionContainmentEnabled && migrated.CompanionFallingEnabled,
@@ -206,8 +214,36 @@ try
     var versionThreeDirectory = LegacyDatabase("version-three", versionThreeJson, 3);
     CheckVersionThree(new LocalStore(versionThreeDirectory).Load()!);
     var versionThreeRow = ReadDatabase(versionThreeDirectory);
-    Check(versionThreeRow.DatabaseSchema == 4 && versionThreeRow.RowSchema == 4 && JsonNode.Parse(versionThreeRow.Json)!["SchemaVersion"]!.GetValue<int>() == 4,
+    Check(versionThreeRow.DatabaseSchema == 5 && versionThreeRow.RowSchema == 5 && JsonNode.Parse(versionThreeRow.Json)!["SchemaVersion"]!.GetValue<int>() == 5,
         "Version three SQLite schema, row and JSON must migrate together.");
+
+    void CheckVersionFour(Configuration migrated)
+    {
+        Check(migrated.Version == 5 && !migrated.InteractionHudOutline && migrated.InteractionHudEffect == HudTextEffect.Shadow,
+            "Version four must retain its shadow appearance without enabling an outline.");
+        var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
+        foreach (var field in versionFourDocument["Settings"]!.AsObject())
+            if (field.Key != "Version") Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Version four migration must preserve " + field.Key);
+    }
+    var versionFourTarget = new Configuration();
+    store.ImportInto(versionFourTarget, versionFourJson);
+    CheckVersionFour(versionFourTarget);
+    var versionFourFallback = JsonSerializer.Deserialize<Configuration>(versionFourDocument["Settings"]!.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
+    CheckVersionFour(store.Upgrade(versionFourFallback));
+    var versionFourDirectory = LegacyDatabase("version-four", versionFourJson, 4);
+    CheckVersionFour(new LocalStore(versionFourDirectory).Load()!);
+    var versionFourRow = ReadDatabase(versionFourDirectory);
+    Check(versionFourRow.DatabaseSchema == 5 && versionFourRow.RowSchema == 5 && JsonNode.Parse(versionFourRow.Json)!["SchemaVersion"]!.GetValue<int>() == 5,
+        "Version four SQLite schema, row and JSON must migrate together.");
+    var badVersionFour = versionFourDocument.DeepClone();
+    badVersionFour["Settings"]!["InteractionHudScale"] = 3;
+    var badVersionFourJson = badVersionFour.ToJsonString();
+    var badVersionFourDirectory = LegacyDatabase("version-four-invalid", badVersionFourJson, 4);
+    var badVersionFourRejected = false;
+    try { _ = new LocalStore(badVersionFourDirectory); } catch (InvalidOperationException) { badVersionFourRejected = true; }
+    var preservedVersionFour = ReadDatabase(badVersionFourDirectory);
+    Check(badVersionFourRejected && preservedVersionFour.DatabaseSchema == 4 && preservedVersionFour.RowSchema == 4 && preservedVersionFour.Json == badVersionFourJson,
+        "An invalid version four migration must preserve the complete original schema and snapshot.");
 
     var badLegacy = JsonNode.Parse(legacyJson)!;
     badLegacy["Settings"]!["InteractionDistance"] = 99;
@@ -255,8 +291,8 @@ try
     Invalid("null", "Null root");
     Invalid(new string(' ', 262145), "Oversize input");
     Invalid(new string('界', 100000), "Oversize UTF-8 input");
-    Invalid(exported.Replace("\"SchemaVersion\": 4", "\"SchemaVersion\": 5"), "Future schema");
-    Invalid(exported.Replace("\"SchemaVersion\": 4", "\"SchemaVersion\": 4, \"SchemaVersion\": 4"), "Duplicate root fields");
+    Invalid(exported.Replace("\"SchemaVersion\": 5", "\"SchemaVersion\": 6"), "Future schema");
+    Invalid(exported.Replace("\"SchemaVersion\": 5", "\"SchemaVersion\": 5, \"SchemaVersion\": 5"), "Duplicate root fields");
     Invalid(exported.Replace("\"Avatar\": \"Moonbear\"", "\"Avatar\": \"Moonbear\", \"Avatar\": \"Bimble\""), "Duplicate nested fields");
     Invalid(Change("UnapprovedFutureField", "should not import"), "Unknown fields");
     var missing = JsonNode.Parse(exported)!;
@@ -324,6 +360,19 @@ try
     Invalid(Change("InteractionDistance", Configuration.MinimumDetectionDistance - .1f), "Detection distance below minimum");
     Invalid(Change("InteractionHudOffsetX", 10001), "Invalid HUD offset");
     Invalid(Change("InteractionHudScale", 0.49), "Invalid HUD scale");
+    Invalid(Change("InteractionHudEffect", 4), "Unknown HUD effect");
+    Invalid(Change("InteractionHudEffect", -1), "Negative HUD effect");
+    foreach (var effect in Enum.GetValues<HudTextEffect>())
+    foreach (var outline in new[] { false, true })
+    {
+        var styled = new Configuration { InteractionHudEffect = effect, InteractionHudOutline = outline };
+        var styledTarget = new Configuration();
+        store.ImportInto(styledTarget, store.Export(styled));
+        store.Save(styledTarget);
+        var styledReload = store.Load()!;
+        Check(styledReload.InteractionHudEffect == effect && styledReload.InteractionHudOutline == outline,
+            "Outline must remain independent of every effect across JSON and SQLite.");
+    }
     Invalid(Change("CompanionBoxLeft", .99), "Inverted companion rectangle");
     Invalid(Change("CompanionBoxBottom", .5), "Inverted companion rectangle height");
     Invalid(Change("CompanionBoxRight", 1.1), "Companion rectangle outside viewport");
@@ -405,7 +454,7 @@ try
     var futureRejected = false;
     try { _ = new LocalStore(testDirectory); } catch (InvalidOperationException) { futureRejected = true; }
     Check(futureRejected, "Future database versions must be preserved and rejected.");
-    Console.WriteLine("Storage checks passed: v1/v2/v3 migration to v4, rollback, interaction categories and enemy modes, companion settings, atomic validation, export whitelist and AI consent.");
+    Console.WriteLine("Storage checks passed: v1/v2/v3/v4 migration to v5, independent HUD effects/outline, rollback, interaction categories and enemy modes, companion settings, atomic validation, export whitelist and AI consent.");
 }
 finally
 {

@@ -1,3 +1,47 @@
+# 0.1.0.0007: HUD editing, coherent movement and ChatGPT models
+
+The visible-target HUD hides during active NPC/object interactions, dialogue
+and cutscenes, including its editing sample. Other paused actions no longer replace the live target with a Preview
+suffix. Modify opens HUD settings at the top, with font size first. Size and
+position remain editable when the gameplay HUD is disabled. An explicit editing
+sample provides feedback without a target. A separate outline toggle and None,
+Shadow, Soft glow and Gentle shimmer effects are saved locally. Schema v5
+migrates older settings while retaining the previous shadow appearance.
+
+Bimble and Moonbear now walk using painted 2D body/limb parts with fixed
+proportions, alternating planted feet, two-joint legs and opposing arms. The
+movement cycle follows distance travelled instead of a separate timer. Bimble's
+ear region has restrained delayed flex. Moving a supporting window does not
+count as a step. Both outfits use the same joint choreography.
+
+Walking also follows diagonal travel in both screen axes, with shorter vertical
+strides, continuous heading changes and a facing dead band near vertical paths.
+The movement clock uses high-resolution elapsed time instead of millisecond
+system ticks. Focused checks cover steady-heading foot planting, all-direction
+geometry and equal elapsed-time travel at 60/144 Hz and variable frame pacing.
+
+Moonblob is a completely limbless jelly creature again. Its movement rotates one
+stable image continuously around its body circle, with one revolution per body
+circumference. Wink and Nova float from stable images instead of cycling through
+redrawn body shapes. Existing idle, mouth and physical reaction poses remain;
+animation off still stops movement. Artwork originals are preserved and optional
+rig failures retain the atlas fallback.
+
+ChatGPT model discovery accepts both documented catalog formats, has a separate
+bounded catalog size allowance, and distinguishes a successful empty list from
+authentication, network, format, size, cancellation and provider failures. Failed
+refreshes preserve cached model choices. When the previous choice is empty or
+unavailable, OmniKit selects a lightweight text-chat model from the returned
+catalog. A valid manual selection stays selected. The preference uses model
+name tiers, not a claim of measured price; no unavailable catalog or model ID is
+invented and no alternate billing connection is used.
+
+Focused movement geometry, offline model-discovery and minimum-size settings
+checks cover these changes. Rendered moving previews are separate from live game
+acceptance. The exact cause of the reported live catalog failure remains
+unconfirmed because no user credentials or live provider response were accessed.
+The base remains 0.1.0; the artifact count/hash identify its source commit.
+
 # 0.1.0.0005: companion motion, target choices and AI connections
 
 Fixed Companion settings getting stuck on the AI tab. The regression check now

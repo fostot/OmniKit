@@ -35,679 +35,621 @@
   "atlases": [
     {
       "character": "moonblob",
-      "file": "moonblob-motion.png",
+      "file": "moonblob-limbless.png",
       "size": [
         1024,
         1536
       ],
-      "format": "RGBA",
-      "sha256": "445e0f5eef7fe4383082e97216eb0848c312bd9be8a00a1ed63bb7a7c42bb353",
-      "layoutOrder": [
-        4,
-        6
+      "commonSourceScalePx": 305,
+      "destinationAnchorNormalized": [
+        0.5,
+        0.9
       ],
-      "commonSourceScalePx": 281,
-      "anchorMeaning": "Visual horizontal center and lower body/foot baseline from alpha >=96, manually reviewed in contact sheet.",
-      "alphaStatistics": {
-        "minimum": 0,
-        "maximum": 254,
-        "transparentPixels": 494500,
-        "partialAlphaPixels": 1078364
-      },
+      "sha256": "6c88b89d296e413a81dedb8a13c4fef94203f5ffc00707fb350fd8276b75ca15",
       "frames": [
         {
           "index": 0,
           "rect": [
-            32,
-            42,
-            251,
-            238
+            27,
+            45,
+            245,
+            256
           ],
           "anchor": [
-            142.0,
-            232
+            136.5,
+            251
           ],
           "alphaBounds16": [
-            37,
-            47,
-            246,
-            233
+            32,
+            50,
+            240,
+            251
           ],
           "bodyBounds96": [
-            38,
-            48,
-            246,
-            232
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            32,
+            50,
+            240,
+            251
+          ]
         },
         {
           "index": 1,
           "rect": [
-            281,
-            39,
-            490,
-            240
+            286,
+            45,
+            501,
+            258
           ],
           "anchor": [
-            385.5,
-            234
+            393.0,
+            252
           ],
           "alphaBounds16": [
-            286,
-            44,
-            485,
-            235
+            291,
+            50,
+            496,
+            253
           ],
           "bodyBounds96": [
-            287,
-            45,
-            484,
-            234
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            291,
+            50,
+            496,
+            253
+          ]
         },
         {
           "index": 2,
           "rect": [
-            520,
-            74,
-            742,
-            238
+            536,
+            51,
+            754,
+            257
           ],
           "anchor": [
-            631.0,
-            232
+            645.0,
+            251
           ],
           "alphaBounds16": [
-            525,
-            79,
-            737,
-            233
+            541,
+            56,
+            749,
+            252
           ],
           "bodyBounds96": [
-            526,
-            80,
-            736,
-            232
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            541,
+            56,
+            749,
+            252
+          ]
         },
         {
           "index": 3,
           "rect": [
-            775,
-            46,
-            991,
-            238
+            789,
+            51,
+            1002,
+            258
           ],
           "anchor": [
-            882.5,
-            233
+            895.5,
+            252
           ],
           "alphaBounds16": [
-            780,
-            51,
-            986,
-            233
+            794,
+            56,
+            997,
+            253
           ],
           "bodyBounds96": [
-            780,
-            52,
-            985,
-            233
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            794,
+            56,
+            997,
+            253
+          ]
         },
         {
           "index": 4,
           "rect": [
-            31,
-            278,
-            245,
-            478
+            29,
+            295,
+            247,
+            501
           ],
           "anchor": [
-            138.5,
-            472
+            138.0,
+            495
           ],
           "alphaBounds16": [
-            36,
-            283,
-            240,
-            473
+            34,
+            300,
+            242,
+            496
           ],
           "bodyBounds96": [
-            37,
-            284,
-            240,
-            472
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 4
+            34,
+            300,
+            242,
+            496
+          ]
         },
         {
           "index": 5,
           "rect": [
             283,
-            290,
-            502,
-            474
+            294,
+            500,
+            501
           ],
           "anchor": [
-            392.5,
-            469
+            391.0,
+            496
           ],
           "alphaBounds16": [
             288,
-            295,
-            497,
-            469
+            299,
+            495,
+            496
           ],
           "bodyBounds96": [
             288,
-            296,
-            497,
-            469
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            299,
+            495,
+            496
+          ]
         },
         {
           "index": 6,
           "rect": [
-            528,
-            283,
-            742,
-            478
+            538,
+            293,
+            751,
+            502
           ],
           "anchor": [
-            635.5,
-            472
+            644.5,
+            497
           ],
           "alphaBounds16": [
-            533,
-            288,
-            737,
-            473
+            543,
+            298,
+            746,
+            497
           ],
           "bodyBounds96": [
-            534,
-            289,
-            737,
-            472
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 4
+            543,
+            298,
+            746,
+            497
+          ]
         },
         {
           "index": 7,
           "rect": [
-            776,
-            299,
-            990,
-            475
+            786,
+            298,
+            998,
+            503
           ],
           "anchor": [
-            882.5,
-            469
+            892.5,
+            497
           ],
           "alphaBounds16": [
-            781,
-            304,
-            985,
-            470
+            791,
+            303,
+            993,
+            498
           ],
           "bodyBounds96": [
-            781,
-            305,
-            984,
-            469
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            791,
+            303,
+            993,
+            498
+          ]
         },
         {
           "index": 8,
           "rect": [
-            24,
-            521,
-            253,
-            707
+            29,
+            532,
+            248,
+            738
           ],
           "anchor": [
-            138.5,
-            702
+            139.0,
+            732
           ],
           "alphaBounds16": [
-            29,
-            526,
-            248,
-            702
+            34,
+            537,
+            243,
+            733
           ],
           "bodyBounds96": [
-            30,
-            526,
-            247,
-            702
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            34,
+            537,
+            243,
+            733
+          ]
         },
         {
           "index": 9,
           "rect": [
-            274,
-            519,
-            504,
-            709
+            280,
+            527,
+            502,
+            738
           ],
           "anchor": [
-            389.0,
-            704
+            391.5,
+            733
           ],
           "alphaBounds16": [
-            279,
-            524,
-            499,
-            704
+            285,
+            532,
+            497,
+            733
           ],
           "bodyBounds96": [
-            280,
-            525,
-            498,
-            704
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            285,
+            532,
+            497,
+            733
+          ]
         },
         {
           "index": 10,
           "rect": [
-            521,
-            520,
-            749,
-            708
+            528,
+            532,
+            753,
+            739
           ],
           "anchor": [
-            634.5,
-            702
+            641.0,
+            733
           ],
           "alphaBounds16": [
-            526,
-            525,
-            744,
-            703
+            533,
+            537,
+            748,
+            734
           ],
           "bodyBounds96": [
-            526,
-            526,
-            743,
-            702
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 4
+            533,
+            537,
+            748,
+            734
+          ]
         },
         {
           "index": 11,
           "rect": [
-            767,
-            521,
-            999,
-            707
+            781,
+            532,
+            996,
+            738
           ],
           "anchor": [
-            883.5,
-            701
+            888.0,
+            732
           ],
           "alphaBounds16": [
-            772,
-            526,
-            994,
-            702
+            786,
+            537,
+            991,
+            733
           ],
           "bodyBounds96": [
-            773,
-            527,
-            994,
-            701
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            786,
+            537,
+            991,
+            733
+          ]
         },
         {
           "index": 12,
           "rect": [
-            23,
-            749,
-            258,
-            940
+            27,
+            759,
+            248,
+            965
           ],
           "anchor": [
-            140.5,
-            935
+            137.5,
+            959
           ],
           "alphaBounds16": [
-            28,
-            754,
-            253,
-            935
+            32,
+            764,
+            243,
+            960
           ],
           "bodyBounds96": [
-            29,
-            755,
-            252,
-            935
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            32,
+            764,
+            243,
+            960
+          ]
         },
         {
           "index": 13,
           "rect": [
-            274,
-            747,
-            505,
-            941
+            279,
+            762,
+            502,
+            967
           ],
           "anchor": [
-            389.5,
-            935
+            391.0,
+            961
           ],
           "alphaBounds16": [
-            279,
-            752,
-            500,
-            936
+            284,
+            767,
+            497,
+            962
           ],
           "bodyBounds96": [
-            280,
-            753,
-            499,
-            935
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 6
+            284,
+            767,
+            497,
+            962
+          ]
         },
         {
           "index": 14,
           "rect": [
-            519,
-            745,
-            751,
-            936
+            529,
+            761,
+            753,
+            968
           ],
           "anchor": [
-            634.5,
-            931
+            640.5,
+            962
           ],
           "alphaBounds16": [
-            524,
-            750,
-            746,
-            931
+            534,
+            766,
+            748,
+            963
           ],
           "bodyBounds96": [
-            525,
-            751,
-            744,
-            931
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 5
+            534,
+            766,
+            748,
+            963
+          ]
         },
         {
           "index": 15,
           "rect": [
-            773,
-            750,
-            1008,
-            940
+            780,
+            760,
+            998,
+            968
           ],
           "anchor": [
-            890.5,
-            934
+            889.0,
+            962
           ],
           "alphaBounds16": [
-            778,
-            755,
-            1003,
-            935
+            785,
+            765,
+            993,
+            963
           ],
           "bodyBounds96": [
-            779,
-            757,
-            1002,
-            934
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 4
+            785,
+            765,
+            993,
+            963
+          ]
         },
         {
           "index": 16,
           "rect": [
-            50,
-            957,
-            229,
-            1208
+            46,
+            980,
+            228,
+            1252
           ],
           "anchor": [
-            139.5,
-            1202
+            137.0,
+            1247
           ],
           "alphaBounds16": [
-            55,
-            962,
-            224,
-            1203
+            51,
+            985,
+            223,
+            1247
           ],
           "bodyBounds96": [
-            56,
-            963,
+            51,
+            985,
             223,
-            1202
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            1247
+          ]
         },
         {
           "index": 17,
           "rect": [
-            292,
-            972,
-            475,
-            1210
+            281,
+            999,
+            498,
+            1239
           ],
           "anchor": [
-            383.5,
-            1204
+            389.5,
+            1233
           ],
           "alphaBounds16": [
-            297,
-            977,
-            470,
-            1205
+            286,
+            1004,
+            493,
+            1234
           ],
           "bodyBounds96": [
-            298,
-            978,
-            469,
-            1204
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            286,
+            1004,
+            493,
+            1234
+          ]
         },
         {
           "index": 18,
           "rect": [
-            521,
-            1010,
-            756,
-            1202
+            525,
+            1036,
+            751,
+            1246
           ],
           "anchor": [
-            638.5,
-            1196
+            638.0,
+            1240
           ],
           "alphaBounds16": [
-            526,
-            1015,
-            751,
-            1197
+            530,
+            1041,
+            746,
+            1241
           ],
           "bodyBounds96": [
-            527,
-            1016,
-            750,
-            1196
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            530,
+            1041,
+            746,
+            1241
+          ]
         },
         {
           "index": 19,
           "rect": [
-            792,
-            972,
-            972,
-            1222
+            793,
+            976,
+            983,
+            1245
           ],
           "anchor": [
-            882.0,
-            1217
+            888.5,
+            1239
           ],
           "alphaBounds16": [
-            797,
-            977,
-            967,
-            1217
+            798,
+            981,
+            978,
+            1240
           ],
           "bodyBounds96": [
             798,
-            977,
-            966,
-            1217
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            981,
+            978,
+            1240
+          ]
         },
         {
           "index": 20,
           "rect": [
-            24,
-            1292,
-            260,
-            1449
+            12,
+            1315,
+            276,
+            1478
           ],
           "anchor": [
-            142.0,
-            1444
+            143.5,
+            1473
           ],
           "alphaBounds16": [
-            29,
-            1297,
-            255,
-            1444
+            17,
+            1320,
+            271,
+            1473
           ],
           "bodyBounds96": [
-            30,
-            1298,
-            254,
-            1444
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            17,
+            1320,
+            271,
+            1473
+          ]
         },
         {
           "index": 21,
           "rect": [
-            278,
-            1239,
-            500,
-            1455
+            288,
+            1250,
+            506,
+            1478
           ],
           "anchor": [
-            389.0,
-            1450
+            397.0,
+            1472
           ],
           "alphaBounds16": [
-            283,
-            1244,
-            495,
-            1450
+            293,
+            1255,
+            501,
+            1473
           ],
           "bodyBounds96": [
-            284,
-            1244,
-            494,
-            1450
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            293,
+            1255,
+            501,
+            1473
+          ]
         },
         {
           "index": 22,
           "rect": [
-            516,
-            1259,
-            754,
-            1456
+            523,
+            1291,
+            757,
+            1477
           ],
           "anchor": [
-            635.5,
-            1450
+            640.0,
+            1472
           ],
           "alphaBounds16": [
-            521,
-            1264,
-            749,
-            1451
+            528,
+            1296,
+            752,
+            1472
           ],
           "bodyBounds96": [
-            523,
-            1265,
-            748,
-            1450
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 2
+            528,
+            1296,
+            752,
+            1472
+          ]
         },
         {
           "index": 23,
           "rect": [
-            768,
-            1266,
-            995,
-            1459
+            767,
+            1292,
+            1009,
+            1477
           ],
           "anchor": [
-            882.0,
-            1453
+            888.0,
+            1472
           ],
           "alphaBounds16": [
-            773,
-            1271,
-            990,
-            1454
+            772,
+            1297,
+            1004,
+            1472
           ],
           "bodyBounds96": [
-            774,
-            1271,
-            990,
-            1453
-          ],
-          "minimumGutterToAlpha16Px": 5,
-          "cropEdgeMaximumAlpha": 3
+            772,
+            1297,
+            1004,
+            1472
+          ]
         }
       ],
-      "destinationAnchorNormalized": [
-        0.5,
-        0.9
-      ]
+      "cycleDistance": 2.1064121,
+      "movement": "Runtime rolls stable frame0 continuously around its reviewed body circle; distance per revolution equals body circumference. Frames1..7 document authored rotation poses; non-walk states8..23 remain atlas poses."
     },
     {
       "character": "wink",

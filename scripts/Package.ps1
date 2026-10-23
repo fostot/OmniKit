@@ -50,7 +50,10 @@ $runtimeFiles = @(
     'assets/bimble-physical.png', 'assets/moonbear-physical.png',
     'assets/bimble-physical-stargazer.png', 'assets/moonbear-physical-stargazer.png',
     'assets/moonblob-motion.png', 'assets/wink-motion.png', 'assets/nova-motion.png',
-    'assets/abstract-companions.frames.json', 'assets/lunar-companions.frames.json'
+    'assets/abstract-companions.frames.json', 'assets/lunar-companions.frames.json',
+    'assets/bimble-walk-rig.png', 'assets/bimble-walk-rig-stargazer.png',
+    'assets/moonbear-walk-rig.png', 'assets/moonbear-walk-rig-stargazer.png',
+    'assets/moonblob-limbless.png', 'assets/lunar-walk-rigs.json'
 )
 foreach ($relative in $runtimeFiles) {
     $source = Join-Path $releasePath $relative

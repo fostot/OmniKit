@@ -13,7 +13,7 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 4;
+    public int Version { get; set; } = 5;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Bimble", "Moonbear", "Moonblob", "Wink", "Nova" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
@@ -35,6 +35,8 @@ public sealed class Configuration : IPluginConfiguration
     public bool InteractionHudLocked = true;
     public float InteractionHudOffsetX = 0f;
     public float InteractionHudScale = 1f;
+    public bool InteractionHudOutline = false;
+    public HudTextEffect InteractionHudEffect = HudTextEffect.Shadow;
     public bool GatheringAutoSwitch = false;
     public bool GatheringRestore = true;
     public int MinerGearset = -1;

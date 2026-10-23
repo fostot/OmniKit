@@ -61,6 +61,17 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
     private const string HudWindowId = "##OmniKitVisibleTargetControls";
     private const string HudPopupId = "##OmniKitVisibleTargetMenu";
+    private static readonly ConditionFlag[] HudInteractionConditions =
+    [
+        ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78, ConditionFlag.OccupiedInCutSceneEvent,
+        ConditionFlag.OccupiedInEvent, ConditionFlag.OccupiedInQuestEvent, ConditionFlag.OccupiedSummoningBell,
+        ConditionFlag.Gathering, ConditionFlag.ExecutingGatheringAction,
+    ];
+    private static readonly string[] HudInteractionAddons =
+    [
+        "Talk", "CutSceneSelectString", "Shop", "InclusionShop", "FreeShop", "JournalAccept", "JournalResult",
+        "RetainerList", "RetainerTaskAsk", "RetainerTaskResult", "Gathering", "GatheringMasterpiece",
+    ];
     private const ImGuiWindowFlags HudWindowFlags = ImGuiWindowFlags.NoDecoration
         | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollWithMouse
         | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground
@@ -71,6 +82,8 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     public string CandidateCategoryName => candidate == null ? "None" : SoftTargetPolicy.Label(candidate.Category);
     public string? Hint { get; private set; }
     public bool ActionPaused { get; private set; } = true;
+    public bool HudPreviewEnabled { get; set; }
+    public bool HudHiddenForInteraction { get; private set; }
     public GatheringGearService Gathering { get; } = new(config);
     public event Action? ConfigureHudRequested;
 
@@ -211,8 +224,9 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             }
         }
 
-        if (!config.SoftInteractEnabled || !config.InteractionHudEnabled || faulted
-            || candidate is not { } selected)
+        HudHiddenForInteraction = IsWorldInteractionActive();
+        if (HudHiddenForInteraction || (!HudPreviewEnabled && (!config.SoftInteractEnabled || !config.InteractionHudEnabled || faulted
+            || candidate == null)))
         {
             CloseHudMenu();
             hudDragging = false;
@@ -224,16 +238,16 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         var draw = ImGui.GetForegroundDrawList();
         var hudScale = float.IsFinite(config.InteractionHudScale)
             ? Math.Clamp(config.InteractionHudScale, 0.5f, 2f) : 1f;
-        var paused = ActionPaused || uiCapturesInput;
+        var paused = HudPreviewEnabled || ActionPaused || uiCapturesInput;
         var prefix = paused ? string.Empty : $"[{HotkeyChord.Format(config.InteractKey, config.InteractModifier)}]  ";
-        var suffix = paused ? "  · Preview" : string.Empty;
-        var name = selected.Name;
+        var suffix = HudPreviewEnabled ? "  · Preview" : string.Empty;
+        var name = candidate?.Name ?? "Visible target";
         var availableWidth = Math.Max(1f, viewportSize.X - 24f);
         // Even at a very large font scale the chord/preview marker and ellipsis
         // must fit inside the viewport. Keep the target name as the main text.
         hudScale = Math.Min(hudScale, availableWidth / Math.Max(1, ImGui.CalcTextSize(prefix + "…" + suffix).X));
         var fontSize = ImGui.GetFontSize() * hudScale;
-        var scale = Math.Clamp(fontSize / 17f, 0.5f, 6.25f);
+        var scale = Math.Clamp(fontSize / 17f, 0.5f, 3f);
         var nameWidth = Math.Max(0, availableWidth - ImGui.CalcTextSize(prefix + suffix).X * hudScale);
         while (name.Length > 1 && ImGui.CalcTextSize(name).X * hudScale > nameWidth)
             name = name[..^2].TrimEnd('…') + "…";
@@ -246,16 +260,54 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             float.IsFinite(config.InteractionHudOffsetY) ? config.InteractionHudOffsetY : 120f);
         var topLeft = ClampHudPosition(center + offset - new Vector2(textSize.X * 0.5f, 0), textSize);
         DrawHudControls(ref topLeft, textSize, center);
-        if (!config.InteractionHudEnabled)
+        if (!config.InteractionHudEnabled && !HudPreviewEnabled)
             return;
 
         var font = ImGui.GetFont();
-        draw.AddText(font, fontSize, topLeft + new Vector2(1.5f) * scale, 0xE6000000, text, 0);
+        if (config.InteractionHudEffect == HudTextEffect.Shadow)
+            draw.AddText(font, fontSize, topLeft + new Vector2(1.5f) * scale, 0xE6000000, text, 0);
+        if (config.InteractionHudEffect == HudTextEffect.SoftGlow)
+            DrawHudTextRing(draw, font, fontSize, topLeft, text, 2f * scale, 0x207CB7D7);
+        if (config.InteractionHudOutline)
+            DrawHudTextRing(draw, font, fontSize, topLeft, text, scale, 0xE6000000);
         draw.AddText(font, fontSize, topLeft, 0xFF9BC9DD, prefix, 0);
         var namePosition = topLeft + new Vector2(ImGui.CalcTextSize(prefix).X * hudScale, 0);
-        draw.AddText(font, fontSize, namePosition, 0xFFF0F3F6, name, 0);
+        // A slow, shallow color drift keeps luminance readable and never flashes.
+        var nameColor = config.InteractionHudEffect == HudTextEffect.GentleShimmer
+            ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(new Vector4(.965f, .953f, .941f, 1),
+                new Vector4(.86f, .94f, 1f, 1), (MathF.Sin((float)(ImGui.GetTime() * .8)) + 1f) * .5f))
+            : 0xFFF0F3F6;
+        draw.AddText(font, fontSize, namePosition, nameColor, name, 0);
         draw.AddText(font, fontSize, namePosition + new Vector2(ImGui.CalcTextSize(name).X * hudScale, 0),
             0xFFBEC4CA, suffix, 0);
+    }
+
+    private static void DrawHudTextRing(ImDrawListPtr draw, ImFontPtr font, float fontSize,
+        Vector2 position, string text, float radius, uint color)
+    {
+        for (var x = -1; x <= 1; x++)
+        for (var y = -1; y <= 1; y++)
+            if (x != 0 || y != 0)
+                draw.AddText(font, fontSize, position + new Vector2(x, y) * radius, color, text, 0);
+    }
+
+    private static bool IsWorldInteractionActive()
+    {
+        // World-interaction lifecycle flags cover the gaps between dialogue pages,
+        // quest prompts and retainer/gathering windows. UI capture, generic Occupied,
+        // player chat, inventory and settings alone do not suppress observation or HUD.
+        var conditions = Services.Conditions;
+        if (conditions != null)
+            foreach (var flag in HudInteractionConditions)
+                if (conditions[flag]) return true;
+        var gui = Services.GameGui;
+        if (gui == null) return false;
+        foreach (var name in HudInteractionAddons)
+        {
+            var addon = gui.GetAddonByName(name, 1);
+            if (!addon.IsNull && addon.IsVisible) return true;
+        }
+        return false;
     }
 
     private void DrawHudControls(ref Vector2 topLeft, Vector2 textSize, Vector2 center)

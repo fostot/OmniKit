@@ -42,12 +42,17 @@ small corner rounding and a footer showing the built version and **by Zero**.
   Try `guild`, `community`, `free company`, `inventory` or `job paladin`.
 - Optional camera-directed interaction: look toward an eligible nearby object
   and press the configured chord. The optional text HUD names the candidate,
-  including a preview while actions are paused. Shift + right-click it for
+  hiding during active NPC/object interactions and cutscenes. Other menus can pause actions without
+  replacing the target name with preview text. Shift + right-click it for
   Move, Lock/Unlock, Hide or Settings. No valid
   target means the key is left alone. One press requests one native interaction.
   **Interact → Detection distance** adjusts detection from 1–30 yalms. The default
   for new settings is 6; existing saved distances stay unchanged. This does not
   extend the game's allowed interaction reach.
+- **HUD** puts font size first, with an independent outline toggle and None,
+  Shadow, Soft glow or Gentle shimmer text effects. Modify opens this tab at the
+  top. An editing sample lets you see changes even without a target or with the
+  gameplay HUD disabled; active interactions still hide that sample.
 - **Interact → Target types** controls NPCs, quest objects, loot, aetherytes,
   gathering nodes, retainers, housing and other usable objects. Hostile and
   neutral enemies have separate switches, both off initially. Before enabling
@@ -68,9 +73,15 @@ small corner rounding and a footer showing the built version and **by Zero**.
   and **Nova**. Six aura palettes are available: Moonlight, Aurora,
   Nebula, Rose, Ember and Starlight. In **Companion → Appearance**, draw a
   roaming area, preview an animation, or turn off magic accents, animation or
-  the companion. Clicking the companion opens its conversation. Each avatar
-  atlas has 24 poses: walking, idle/blink, mouth, carry, fall, land and push.
-  Bimble's ears change shape throughout its movement. Mouth movement
+  the companion. Clicking the companion opens its conversation. Bimble and
+  Moonbear walk with articulated painted parts: alternating planted feet,
+  swinging legs and opposing arms keep the body consistent. Bimble has bounded
+  ear follow-through. Moonblob is completely limbless and rolls continuously
+  around its body circle; Wink and Nova float without changing shape each frame.
+  Movement cadence follows distance travelled, including on moving frames.
+  Diagonal travel has directional steps and stable facing near vertical paths;
+  movement uses a high-resolution timer for high-refresh displays.
+  Idle/blink, mouth, carry, fall, land and push retain their atlas poses. Mouth movement
   is an explicit preview; synthesized speech and lip sync are not implemented.
 - Optional **Companion → Appearance → Frame interaction** lets you pick up the
   companion and drop it onto a supported visible frame. It can perch on a top
@@ -127,9 +138,9 @@ ChatGPT registrations and tokens also stay outside the database and exports.
 Exports never include credentials, recordings or conversations. Exports can contain
 your custom provider address and voice phrases, so review them before sharing.
 Import always disables AI in the interface until you explicitly enable it again.
-Schema v4 adds target types, the explicit enemy action choice, frame interaction
-and AI connection preferences. It migrates v1, v2 and v3 settings while preserving
-existing preferences, including saved chords. Legacy
+Schema v5 adds the independent HUD outline and effect preferences. It migrates
+v1–v4 settings while preserving target types, the explicit enemy action choice,
+frame interaction, AI connection preferences and saved chords. Legacy
 v1 Ctrl/Alt/Shift virtual-key values are converted to chord masks. Failed
 database migrations keep the previous snapshot.
 

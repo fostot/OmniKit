@@ -4,7 +4,7 @@
 dotnet run --project tests/ChatGptTests/ChatGptTests.csproj -c Release
 ```
 
-The 73 checks use synthetic RSA keys and identities, temporary Windows DPAPI
+The 115 checks use synthetic RSA keys and identities, temporary Windows DPAPI
 storage, a real loopback callback socket and fake HTTP responses. They do not
 open a browser, contact a provider, read real credentials or perform inference.
 
@@ -20,3 +20,23 @@ after the full response. Streaming checks cover split UTF-8, many small events
 exceeding 256 KiB, bounded individual events and output, and rejection of failed,
 incomplete or malformed streams. These checks do not establish real account
 entitlement, browser consent behavior or successful live provider inference.
+
+Model discovery covers both documented response shapes: the
+[SIWC catalog](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference)
+uses models, visibility, slug and display_name; the
+[public Models API](https://developers.openai.com/api/reference/resources/models/methods/list)
+uses data and id. Fixtures preserve server ordering, hide nonlisted entries,
+deduplicate IDs, reject malformed or oversized catalogs and distinguish HTTP,
+format, cancellation and genuinely empty results. Metadata-rich catalog responses
+have a separate 2 MiB bound; token and signing-key responses retain their smaller
+bound. No test reads or prints an actual account's catalog.
+
+Default selection uses only IDs returned by that catalog. A valid saved choice
+is kept; otherwise known text-chat IDs prefer nano, then mini/Luna/small, then
+light/lite/fast/flash before ordinary or heavy tiers. Pro/heavy/max/Astra/reasoning
+labels are deprioritized, and obvious image/audio/embedding and other specialized
+models are not automatic defaults. Equal tiers use the ID for deterministic
+selection. This is a conservative name heuristic, not measured pricing or a
+guarantee of the least expensive model. Empty or unrecognized catalogs do not
+create a fallback model. Shuffled catalogs and preserved manual choices are
+covered without making an inference request.

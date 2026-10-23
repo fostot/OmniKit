@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Diagnostics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Keys;
 using OmniKit.Input;
@@ -9,6 +10,7 @@ namespace OmniKit.Ui;
 internal sealed class RoamingCompanion(Configuration config, Action openCompanion)
 {
     private readonly CompanionMotion motion = new();
+    private readonly CompanionGait gait = new();
     private readonly CompanionPhysics physics = new();
     private readonly CompanionSurfaces surfaceReader = new();
     private readonly string assetDirectory = Path.Combine(Services.PluginInterface.AssemblyLocation.DirectoryName!, "assets");
@@ -16,7 +18,10 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private float animationTime;
     private float poseTime;
     private CompanionPose lastPose;
+    private CompanionPose lastPreviewPose;
+    private CompanionLayout lastLayout;
     private CompanionAnimationLibrary? artwork;
+    private LunarWalkRigLibrary? walkRigs;
     private bool hoveredLastFrame;
     private bool hoverPausedLastFrame;
     private string lastAvatar = string.Empty;
@@ -39,6 +44,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         if (!config.AvatarEnabled) return;
         IsChoosingArea = true;
         physics.Reset();
+        gait.Rebase();
         pointerPressed = false;
         areaDragging = false;
         areaHint = "Drag an area for your companion. Escape cancels.";
@@ -60,6 +66,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             hoveredLastFrame = false;
             hoverPausedLastFrame = false;
             motion.Reset();
+            gait.Reset();
             physics.Reset();
             pointerPressed = false;
             return;
@@ -76,6 +83,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         {
             lastAvatar = config.Avatar;
             motion.Reset();
+            gait.Reset();
             physics.Reset();
             animationTime = 0;
         }
@@ -83,8 +91,12 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var layout = CompanionLayout.Create(viewport.Pos, viewport.Size,
             new Vector4(config.CompanionBoxLeft, config.CompanionBoxTop, config.CompanionBoxRight, config.CompanionBoxBottom),
             config.CompanionSize, scale, aspect);
-        var now = Environment.TickCount64;
-        var elapsed = lastTick == 0 ? 0 : (now - lastTick) / 1000f;
+        if (layout != lastLayout) gait.Rebase();
+        lastLayout = layout;
+        if (PreviewPose != lastPreviewPose) gait.Reset();
+        lastPreviewPose = PreviewPose;
+        var now = Stopwatch.GetTimestamp();
+        var elapsed = lastTick == 0 ? 0 : (float)Stopwatch.GetElapsedTime(lastTick, now).TotalSeconds;
         lastTick = now;
         var frameFeature = config.CompanionFrameInteractionEnabled;
         if (!frameFeature || !config.CompanionPickupEnabled && physics.IsCarried)
@@ -119,7 +131,27 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         poseTime = pose != lastPose || !config.AnimationsEnabled ? 0 : (poseTime + Math.Clamp(elapsed, 0, .05f)) % 1000;
         lastPose = pose;
         artwork ??= new CompanionAnimationLibrary(assetDirectory);
-        var frameIndex = CompanionAtlas.SelectFrame(pose, poseTime, config.AnimationsEnabled);
+        walkRigs ??= new LunarWalkRigLibrary(assetDirectory);
+        var hasAtlas = artwork.TryGet(config.Avatar, config.CompanionOutfit, out var atlas);
+        var artTexture = hasAtlas ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, atlas!.File)).GetWrapOrDefault() : null;
+        LunarWalkRig? rig = null;
+        if (pose == CompanionPose.Walk) walkRigs.TryGet(config.Avatar, config.CompanionOutfit, out rig);
+        var rigTexture = rig == null ? null : Services.Textures.GetFromFile(Path.Combine(assetDirectory, rig.File)).GetWrapOrDefault();
+        var gaitPosition = position - (physics.Active ? viewport.Pos : layout.Minimum);
+        var gaitSpace = physics.Active ? ((ulong)physics.Placement << 56) ^ physics.AttachedSurfaceId : 0;
+        if (physics.AttachedSurfaceId != 0)
+            foreach (var surface in surfaces)
+                if (surface.Id == physics.AttachedSurfaceId) { gaitPosition = position - surface.Minimum; break; }
+        gait.Update(gaitPosition, layout.SpriteSize.X, elapsed, config.AnimationsEnabled && pose == CompanionPose.Walk,
+            facingLeft, gaitSpace, rigTexture != null ? rig!.CycleDistance : atlas?.CycleDistance ?? CompanionGait.DefaultCycleDistance,
+            PreviewPose == CompanionPose.Walk, directionalStride: rigTexture != null);
+        LunarWalkPose? rigPose = null;
+        if (rigTexture != null)
+        {
+            try { rigPose = rig!.Evaluate(gait.Phase, facingLeft, position, layout.SpriteSize, gait.Heading); }
+            catch (InvalidOperationException) { /* Optional art geometry retains the existing atlas fallback. */ }
+        }
+        var frameIndex = pose == CompanionPose.Walk ? gait.Frame : CompanionAtlas.SelectFrame(pose, poseTime, config.AnimationsEnabled);
         var draw = ImGui.GetForegroundDrawList();
         var hitStart = position + layout.SpriteSize * .18f;
         var hitEnd = position + layout.SpriteSize * .82f;
@@ -128,16 +160,36 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         draw.PushClipRect(clipMinimum, clipMaximum, true);
         try
         {
-            var hasAtlas = artwork.TryGet(config.Avatar, config.CompanionOutfit, out var atlas);
-            var artTexture = hasAtlas ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, atlas!.File)).GetWrapOrDefault() : null;
-            if (artTexture != null)
+            if (rigPose != null && rigTexture != null)
             {
-                var frame = atlas!.GetFrame(frameIndex, facingLeft, position, layout.SpriteSize);
+                foreach (var q in rigPose.Quads)
+                    draw.AddImageQuad(rigTexture.Handle, q.A, q.B, q.C, q.D, q.UvA, q.UvB, q.UvC, q.UvD, 0xFFFFFFFFu);
+                (hitStart, hitEnd) = rigPose.Bounds;
+            }
+            else if (artTexture != null)
+            {
                 var tint = ProceduralCompanion.IsProcedural(config.Avatar)
                     ? ImGui.ColorConvertFloat4ToU32(Vector4.Lerp(Vector4.One, ProceduralCompanion.Palette(config.CompanionPalette), .36f))
                     : 0xFFFFFFFFu;
-                draw.AddImage(artTexture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
-                (hitStart, hitEnd) = atlas.HitBounds(frameIndex, facingLeft, position, layout.SpriteSize);
+                if (config.Avatar == "Moonblob" && pose == CompanionPose.Walk)
+                {
+                    var roll = atlas!.GetRoll(gait.Phase, facingLeft, position, layout.SpriteSize);
+                    draw.AddImageQuad(artTexture.Handle, roll.A, roll.B, roll.C, roll.D, roll.UvA, roll.UvB, roll.UvC, roll.UvD, tint);
+                    (hitStart, hitEnd) = roll.HitBounds;
+                }
+                else if (config.Avatar is "Wink" or "Nova" && pose == CompanionPose.Walk)
+                {
+                    var floating = atlas!.GetFloat(gait.Phase, facingLeft, position, layout.SpriteSize);
+                    draw.AddImageQuad(artTexture.Handle, floating.A, floating.B, floating.C, floating.D,
+                        floating.UvA, floating.UvB, floating.UvC, floating.UvD, tint);
+                    (hitStart, hitEnd) = floating.HitBounds;
+                }
+                else
+                {
+                    var frame = atlas!.GetFrame(frameIndex, facingLeft, position, layout.SpriteSize);
+                    draw.AddImage(artTexture.Handle, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
+                    (hitStart, hitEnd) = atlas.HitBounds(frameIndex, facingLeft, position, layout.SpriteSize);
+                }
             }
             else if (ProceduralCompanion.IsProcedural(config.Avatar))
                 ProceduralCompanion.Draw(draw, position, layout.SpriteSize, config, pose, animationTime, hoveredLastFrame);

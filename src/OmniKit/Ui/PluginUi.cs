@@ -49,6 +49,7 @@ internal sealed class PluginUi : IDisposable
     private int section;
     private int companionTab;
     private bool selectSettingsTab;
+    private bool resetHudScroll;
     private int shownCompanionTab = -1;
     private long refreshedAt;
     private SearchEntry[] entries = [];
@@ -93,7 +94,7 @@ internal sealed class PluginUi : IDisposable
     public void OpenMain() { query = ""; status = ""; gearFeedback = false; mainOpen = true; launcher.Focus(); Refresh(); }
     public void ToggleMain() { if (mainOpen) mainOpen = false; else OpenMain(); }
     public void OpenSettings() { hotkeys.Cancel(); settingsOpen = true; selectSettingsTab = true; Refresh(); }
-    private void OpenHudSettings() { section = 2; selectSettingsTab = true; OpenSettings(); }
+    private void OpenHudSettings() { section = 2; settingsSearch = ""; resetHudScroll = true; OpenSettings(); }
     private void OpenCompanion(string text = "") { question = text; companionOpen = true; mainOpen = false; focusSearch = true; }
     private void Refresh()
     {
@@ -140,6 +141,7 @@ internal sealed class PluginUi : IDisposable
 
     public void Draw()
     {
+        interaction.HudPreviewEnabled = false;
         CapturesText = ImGui.GetIO().WantTextInput;
         if (!mainOpen) SearchHasFocus = false;
         fileDialogs.Draw();
@@ -350,7 +352,7 @@ internal sealed class PluginUi : IDisposable
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
                 else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack" }.Any(filter.Contains)) section = 1;
-                else if (filter.Contains("hud") || filter.Contains("target")) section = 2;
+                else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer" }.Any(filter.Contains)) section = 2;
                 else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains))
                 { section = 3; companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
                 else if (new[] { "data", "export", "import", "json", "source", "umbra", "wiki" }.Any(filter.Contains)) section = 4;
@@ -513,16 +515,31 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawHudSettings()
     {
+        interaction.HudPreviewEnabled = true;
+        if (resetHudScroll) { ImGui.SetScrollY(0); resetHudScroll = false; }
+        var fontPercent = config.InteractionHudScale * 100f;
+        if (ImGui.SliderFloat("Font size", ref fontPercent, 50, 200, "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
+        { config.InteractionHudScale = fontPercent / 100f; Save(); }
+        if (ImGui.Checkbox("Text outline", ref config.InteractionHudOutline)) Save();
+        var effectLabel = config.InteractionHudEffect switch
+        { HudTextEffect.SoftGlow => "Soft glow", HudTextEffect.GentleShimmer => "Gentle shimmer", _ => config.InteractionHudEffect.ToString() };
+        if (ImGui.BeginCombo("Text effect", effectLabel))
+        {
+            foreach (var (effect, label) in new[] { (HudTextEffect.None, "None"), (HudTextEffect.Shadow, "Shadow"),
+                         (HudTextEffect.SoftGlow, "Soft glow"), (HudTextEffect.GentleShimmer, "Gentle shimmer") })
+                if (ImGui.Selectable(label, config.InteractionHudEffect == effect)) { config.InteractionHudEffect = effect; Save(); }
+            ImGui.EndCombo();
+        }
+        ImGui.TextWrapped("Live preview on screen. No action runs while you edit.");
+        if (interaction.HudHiddenForInteraction) ImGui.TextWrapped("Preview is hidden while interacting, talking, gathering, or watching a cutscene.");
         if (ImGui.Checkbox("Show visible target on screen", ref config.InteractionHudEnabled)) Save();
-        ImGui.TextWrapped("Styled text only. It stays visible through menus and disappears when there is no target.");
-        VisibleTarget();
-        if (!config.InteractionHudEnabled) return;
+        if (!config.InteractionHudEnabled) ImGui.TextWrapped("The preview is shown only while editing. The HUD is hidden during play.");
         if (ImGui.Checkbox("Lock position", ref config.InteractionHudLocked)) Save();
-        ImGui.TextWrapped("Shift + right-click the visible text for Move, Lock, Hide, or these settings.");
-        if (ImGui.SliderFloat("Text size", ref config.InteractionHudScale, .5f, 2, "%.2f")) Save();
         if (ImGui.SliderFloat("Horizontal offset", ref config.InteractionHudOffsetX, -800, 800, "%.0f")) Save();
         if (ImGui.SliderFloat("Vertical offset", ref config.InteractionHudOffsetY, -500, 500, "%.0f")) Save();
         if (ImGui.Button("Reset HUD position")) { config.InteractionHudOffsetX = 0; config.InteractionHudOffsetY = 120; Save(); }
+        ImGui.TextWrapped("Shift + right-click the visible text for Move, Lock, Hide, or these settings.");
+        VisibleTarget();
     }
 
     private void GearCombo(string label, ref int value, string job)
@@ -728,7 +745,8 @@ internal sealed class PluginUi : IDisposable
                         try
                         {
                             chat.ChatGpt.SelectAccount(account.Id); config.AiEnabled = false; chatGptModels = []; Save();
-                            connectionStatus = "Account selected. Refresh its models, then enable AI questions.";
+                            if (chat.ChatGpt.IsConnected) StartModelRefresh();
+                            else connectionStatus = "Account selected. Reconnect it before enabling AI questions.";
                         }
                         catch { connectionStatus = "The saved account could not be selected. Try again."; }
                     }
@@ -775,7 +793,8 @@ internal sealed class PluginUi : IDisposable
             ImGui.EndCombo();
         }
         ImGui.EndDisabled();
-        if (chatGptModels.Length == 0) ImGui.TextWrapped("Connect and refresh models to choose one available to this account.");
+        if (chatGptModels.Length == 0)
+            ImGui.TextWrapped(chat.ChatGpt.IsConnected ? "Refresh available models above. The result or error appears below." : "Connect and refresh models to choose one available to this account.");
     }
 
     private void DrawCliConnection()
@@ -836,11 +855,36 @@ internal sealed class PluginUi : IDisposable
         {
             if (operationConnection == config.AiConnection && connectionRequest?.IsCancellationRequested != true)
             {
-                chatGptModels = pendingModels.IsCompletedSuccessfully ? pendingModels.Result.ToArray() : [];
-                connectionStatus = chatGptModels.Length > 0 ? "Available models refreshed. Choose one below." : "No models were available. Check the ChatGPT connection and try again.";
+                if (pendingModels.IsCompletedSuccessfully) ApplyModels(pendingModels.Result);
+                else
+                {
+                    _ = pendingModels.Exception; // Observe failure without displaying provider text or a stack trace.
+                    connectionStatus = chat.ChatGpt.Status;
+                    if (chatGptModels.Length > 0) connectionStatus += " Previous model choices were kept.";
+                }
             }
+            else if (operationConnection == config.AiConnection) connectionStatus = "Model refresh canceled. Previous choices were kept.";
             pendingModels = null; connectionRequest?.Dispose(); connectionRequest = null;
         }
+    }
+
+    private void ApplyModels(IReadOnlyList<AiModelOption> models)
+    {
+        chatGptModels = models.ToArray();
+        var selected = ChatGptConnection.PreferredModel(models, config.ChatGptModel);
+        var changed = selected != config.ChatGptModel;
+        var saved = true;
+        if (changed) { config.ChatGptModel = selected; saved = Save(); }
+        if (models.Count == 0) connectionStatus = chat.ChatGpt.Status;
+        else if (selected.Length == 0) connectionStatus = $"Loaded {models.Count} models. Choose a model for text chat; no automatic choice was made.";
+        else
+        {
+            var name = models.First(model => model.Id == selected).Name;
+            connectionStatus = changed
+                ? $"Selected {name} as the lightweight default by model name. You can choose another model."
+                : $"Loaded {models.Count} models. Kept your selection: {name}.";
+        }
+        if (!saved) connectionStatus += " This preference could not be saved.";
     }
 
     private void CancelAiOperations() { request?.Cancel(); connectionRequest?.Cancel(); }

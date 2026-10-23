@@ -198,22 +198,101 @@ public sealed class ChatGptConnection : IDisposable
         try
         {
             var access = await AccessAsync(expectedAccount, cancel.Token).ConfigureAwait(false);
-            using var document = JsonDocument.Parse(await GetAsync(Resource + "/models", access, cancel.Token).ConfigureAwait(false));
-            ChatGptTokenValidator.RejectDuplicates(document.RootElement);
-            if (!document.RootElement.TryGetProperty("models", out var models) || models.ValueKind != JsonValueKind.Array || models.GetArrayLength() > 1000) throw new InvalidOperationException();
-            var result = new List<AiModelOption>();
-            foreach (var model in models.EnumerateArray())
-            {
-                if (ChatGptTokenValidator.Text(model, "visibility") != "list") continue;
-                var id = ChatGptTokenValidator.Text(model, "slug"); var name = ChatGptTokenValidator.Text(model, "display_name");
-                if (ValidModel(id) && name.Length is > 0 and <= 200 && !name.Any(char.IsControl) && result.All(option => option.Id != id)) result.Add(new(id, name));
-            }
-            status = result.Count > 0 ? "Available ChatGPT models refreshed." : "No models are available for this ChatGPT account.";
+            using var request = new HttpRequestMessage(HttpMethod.Get, Resource + "/models");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", access);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode) throw new ModelCatalogException(ModelHttpStatus(response.StatusCode));
+            // Catalog entries can include metadata much larger than the displayed
+            // id/name pair. Keep this bound separate from token/JWKS responses.
+            string body;
+            try { body = await ReadBoundedAsync(response.Content, cancel.Token, 2 * 1024 * 1024).ConfigureAwait(false); }
+            catch (InvalidOperationException) { throw new ModelCatalogException("The ChatGPT model catalog exceeded the supported size. No models were replaced."); }
+            var result = ParseModels(body);
+            status = result.Count > 0 ? $"Loaded {result.Count} available ChatGPT model(s)." :
+                "ChatGPT returned no selectable models for this account. Sign-in succeeded, but no model was offered for selection.";
             return result;
         }
         catch (AccountChangedException) { status = AccountChangedStatus; throw new InvalidOperationException(status); }
-        catch { status = "ChatGPT models could not be loaded. Check the selected account and reconnect if needed."; throw new InvalidOperationException(status); }
+        catch (ModelCatalogException error) { status = error.Message; throw new InvalidOperationException(status); }
+        catch (OperationCanceledException) { status = ct.IsCancellationRequested ? "Model refresh canceled." : "The ChatGPT model request timed out. Try refreshing again."; throw new InvalidOperationException(status); }
+        catch (HttpRequestException) { status = "Could not reach the ChatGPT model service. Check the connection and refresh again."; throw new InvalidOperationException(status); }
+        catch (JsonException) { status = "ChatGPT returned an unreadable model catalog. Refresh again or update OmniKit."; throw new InvalidOperationException(status); }
+        catch (InvalidDataException) { status = "ChatGPT returned an unsupported model catalog format. Refresh again or update OmniKit."; throw new InvalidOperationException(status); }
+        catch { status = "The ChatGPT model catalog could not be loaded. Check the selected account and reconnect if needed."; throw new InvalidOperationException(status); }
     }
+
+    internal static IReadOnlyList<AiModelOption> ParseModels(string json)
+    {
+        using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 32 });
+        var root = document.RootElement;
+        try { ChatGptTokenValidator.RejectDuplicates(root); }
+        catch (InvalidOperationException) { throw new InvalidDataException(); }
+        if (root.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+        // SIWC documents models/slug/display_name/visibility. The public Models
+        // API also documents data/id without a visibility field. Prefer SIWC
+        // whenever present, so a hidden or empty catalog cannot fall through.
+        var siwc = root.TryGetProperty("models", out var models);
+        if (!siwc && !root.TryGetProperty("data", out models)) throw new InvalidDataException();
+        if (models.ValueKind != JsonValueKind.Array || models.GetArrayLength() > 1000) throw new InvalidDataException();
+        var result = new List<AiModelOption>();
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var model in models.EnumerateArray())
+        {
+            if (model.ValueKind != JsonValueKind.Object) throw new InvalidDataException();
+            if (siwc && ChatGptTokenValidator.Text(model, "visibility") != "list") continue;
+            if (!siwc && model.TryGetProperty("visibility", out var visibility) &&
+                (visibility.ValueKind != JsonValueKind.String || visibility.GetString() != "list")) continue;
+            var id = ChatGptTokenValidator.Text(model, siwc ? "slug" : "id");
+            if (!ValidModel(id) || string.IsNullOrWhiteSpace(id) || id != id.Trim()) throw new InvalidDataException();
+            var name = siwc ? ChatGptTokenValidator.Text(model, "display_name") : id;
+            if (string.IsNullOrWhiteSpace(name)) name = id;
+            if (name.Length > 200 || name.Any(char.IsControl)) throw new InvalidDataException();
+            if (ids.Add(id)) result.Add(new(id, name));
+        }
+        return result;
+    }
+
+    internal static string PreferredModel(IReadOnlyList<AiModelOption> models, string current)
+    {
+        if (models.Any(model => model.Id == current)) return current;
+        // The catalog does not document per-model price/rank. This is a name-tier
+        // preference, not a pricing measurement; never invent an unavailable id.
+        return models.Where(IsTextChatModel).OrderBy(ModelTier)
+            .ThenBy(model => model.Id, StringComparer.Ordinal).Select(model => model.Id).FirstOrDefault() ?? "";
+    }
+
+    private static bool IsTextChatModel(AiModelOption model)
+    {
+        var id = model.Id.ToLowerInvariant();
+        var text = id + " " + model.Name.ToLowerInvariant();
+        if (new[] { "embedding", "image", "audio", "realtime", "transcrib", "whisper", "tts", "moderation", "search", "instruct", "deep-research" }.Any(text.Contains)) return false;
+        return id.StartsWith("gpt-", StringComparison.Ordinal) || id.StartsWith("chatgpt-", StringComparison.Ordinal) ||
+            id.StartsWith("ft:gpt-", StringComparison.Ordinal) || (id.Length > 1 && id[0] == 'o' && char.IsAsciiDigit(id[1]));
+    }
+
+    private static int ModelTier(AiModelOption model)
+    {
+        var words = (model.Id + " " + model.Name).ToLowerInvariant()
+            .Split(['-', '_', ' ', '.', ':', '/'], StringSplitOptions.RemoveEmptyEntries);
+        if (words.Any(word => word is "pro" or "heavy" or "max" or "astra" or "reasoning")) return 6;
+        if (words.Contains("nano")) return 0;
+        if (words.Any(word => word is "mini" or "luna" or "small")) return 1;
+        if (words.Any(word => word is "light" or "lite" or "fast" or "flash")) return 2;
+        if (words.Contains("codex")) return 5;
+        return model.Id.StartsWith("o", StringComparison.OrdinalIgnoreCase) ? 5 : 3;
+    }
+
+    private static string ModelHttpStatus(HttpStatusCode code) => code switch
+    {
+        HttpStatusCode.Unauthorized => "ChatGPT declined model access (401). Continue with ChatGPT to reconnect.",
+        HttpStatusCode.Forbidden => "ChatGPT did not allow model discovery (403). Check plan-use consent or the selected account.",
+        HttpStatusCode.TooManyRequests => "ChatGPT limited model discovery (429). Wait before refreshing again.",
+        >= HttpStatusCode.MultipleChoices and < HttpStatusCode.BadRequest => "ChatGPT redirected model discovery. Redirects are blocked; update OmniKit or try again later.",
+        >= HttpStatusCode.InternalServerError => "The ChatGPT model service is unavailable. Try refreshing later.",
+        _ => "ChatGPT did not accept the model-list request. Refresh again or update OmniKit.",
+    };
+
+    private sealed class ModelCatalogException(string message) : Exception(message);
 
     public async Task<string> AskAsync(string instructions, string question, string model, CancellationToken ct)
     {
@@ -327,9 +406,8 @@ public sealed class ChatGptConnection : IDisposable
         if (!response.IsSuccessStatusCode) throw new InvalidOperationException();
         return await ReadBoundedAsync(response.Content, ct).ConfigureAwait(false);
     }
-    internal static async Task<string> ReadBoundedAsync(HttpContent content, CancellationToken ct)
+    internal static async Task<string> ReadBoundedAsync(HttpContent content, CancellationToken ct, int limit = 262144)
     {
-        const int limit = 262144;
         if (content.Headers.ContentLength > limit) throw new InvalidOperationException();
         await using var stream = await content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         using var output = new MemoryStream();

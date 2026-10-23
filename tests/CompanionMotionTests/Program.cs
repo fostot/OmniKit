@@ -105,7 +105,8 @@ foreach (var pose in new[] { CompanionPose.Walk, CompanionPose.Idle, CompanionPo
         : pose == CompanionPose.Talk ? Enumerable.Range(12, 4) : Enumerable.Range(8, 4)),
         "Every requested animation reaches all and only its intended frames.");
 }
-Check(CompanionAtlas.SelectFrame(CompanionPose.Walk, 1f / 12f + .001f, true) == 1, "Walking uses twelve frames per second.");
+Check(CompanionAtlas.SelectFrame(CompanionPose.Walk, CompanionGait.DefaultCycleDistance / CompanionGait.PreviewSpeed / 8 + .001f, true) == 1,
+    "Time-only previews use the nominal movement speed and stride distance.");
 Check(CompanionAtlas.SelectFrame(CompanionPose.Walk, float.NaN, true) == 0, "Nonfinite animation time fails safely.");
 Check(CompanionAtlas.FileName("Bimble", "Navigator") == "bimble-motion.png"
     && CompanionAtlas.FileName("Bimble", "Stargazer") == "bimble-stargazer.png"
@@ -165,6 +166,59 @@ foreach (var item in new[] { (CompanionPose.Carry, 16), (CompanionPose.Fall, 18)
     Check(seen.SetEquals(new[] { item.Item2, item.Item2 + 1 }), "Reaction poses select only their two assigned frames.");
 }
 Check(!library.TryGet("unrecognized", "Navigator", out _), "Unknown art falls back without an arbitrary file lookup.");
+
+float TravelPhase(int steps, float duration, float widthsTravelled, float cycle = CompanionGait.DefaultCycleDistance)
+{
+    var sample = new CompanionGait();
+    sample.Update(Vector2.Zero, 96, 0, false, false, 0, cycle);
+    for (var i = 1; i <= steps; i++)
+        sample.Update(new Vector2(widthsTravelled * 96 * i / steps, 0), 96, duration / steps, true, false, 0, cycle);
+    return sample.Phase;
+}
+Check(Close(TravelPhase(20, 1, .36f), .8f) && Close(TravelPhase(60, 1, .36f), .8f),
+    "Equal travel produces equal gait phase at different frame rates.");
+Check(Close(TravelPhase(20, 1, .18f), TravelPhase(40, 2, .18f)),
+    "The gait depends on distance, not how long walking took.");
+Check(Close(TravelPhase(20, 1, .36f, 1.8f), .2f),
+    "A rolling character can use its circumference as a longer cycle distance.");
+var gait = new CompanionGait();
+gait.Update(Vector2.Zero, 100, 0, false, false, 7, .4f);
+for (var i = 1; i <= 8; i++)
+{
+    gait.Update(new Vector2(i * 5, 0), 100, .05f, true, false, 7, .4f);
+    Check(gait.Frame == i % 8, "A complete travelled stride visits all eight consecutive frames in order.");
+}
+gait.Update(new Vector2(42, 0), 100, .05f, true, false, 7, .4f);
+var heldPhase = gait.Phase;
+gait.Update(new Vector2(42, 0), 100, .05f, true, false, 7, .4f);
+Check(Close(gait.Phase, heldPhase), "Stationary characters do not cycle their feet.");
+gait.Update(new Vector2(400, 0), 100, .05f, false, false, 7, .4f);
+Check(Close(gait.Phase, heldPhase), "Paused movement rebases without advancing the gait.");
+gait.Update(new Vector2(401, 0), 100, .05f, true, false, 7, .4f);
+Check(Close(gait.Phase, heldPhase + .025f), "Resuming after a pause counts only the new step.");
+heldPhase = gait.Phase;
+gait.Update(new Vector2(400, 0), 100, .05f, true, true, 7, .4f);
+Check(Close(gait.Phase, heldPhase + .025f), "Changing facing preserves cadence and counts actual travel.");
+gait.Update(new Vector2(399, 0), 100, .05f, true, true, 7, .4f);
+Check(Close(gait.Phase, heldPhase + .05f), "Leftward travel advances the same ordered gait.");
+heldPhase = gait.Phase;
+gait.Update(new Vector2(2000, 0), 100, .05f, true, true, 7, .4f);
+Check(Close(gait.Phase, heldPhase), "Teleports cannot race through a walk cycle.");
+gait.Update(new Vector2(10, 10), 144, .05f, true, true, 8, .4f);
+Check(Close(gait.Phase, heldPhase), "Changing surface or cell size rebases without inventing travel.");
+var frameOrigin = new Vector2(100, 100);
+var onFrame = frameOrigin + new Vector2(10, 10);
+gait.Update(onFrame - frameOrigin, 144, .05f, true, true, 8, .4f);
+frameOrigin += new Vector2(30, 20); onFrame += new Vector2(30, 20);
+gait.Update(onFrame - frameOrigin, 144, .05f, true, true, 8, .4f);
+Check(Close(gait.Phase, heldPhase), "Moving an attached frame contributes no relative walking distance.");
+gait.Reset();
+gait.Update(Vector2.Zero, 96, .05f, true, false, 0, .45f, preview: true);
+Check(Close(gait.Phase, .04f), "A stationary explicit walk preview advances at nominal speed.");
+heldPhase = gait.Phase;
+gait.Update(Vector2.Zero, 96, .05f, false, false, 0, .45f, preview: true);
+Check(Close(gait.Phase, heldPhase), "Disabling animation also freezes an explicit preview.");
+
 var temporary = Directory.CreateTempSubdirectory("omnikit-atlas-tests-");
 try
 {
@@ -185,4 +239,8 @@ try
     }
 }
 finally { temporary.Delete(true); }
+checks += RigChecks.Run();
+checks += RollChecks.Run();
+checks += FloatChecks.Run();
+checks += HeadingChecks.Run();
 Console.WriteLine($"Companion motion/layout: {checks} checks passed.");

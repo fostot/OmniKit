@@ -72,6 +72,10 @@ var cases = new[]
     (Name: "ai-model-menu", Section: 3, Tab: 2, Enabled: true, Scroll: false),
     (Name: "ai-account-tooltip", Section: 3, Tab: 2, Enabled: true, Scroll: false),
     (Name: "ai-model-tooltip", Section: 3, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "ai-model-discovery", Section: 3, Tab: 2, Enabled: true, Scroll: true),
+    (Name: "ai-model-manual", Section: 3, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "ai-model-empty", Section: 3, Tab: 2, Enabled: true, Scroll: true),
+    (Name: "ai-model-failure", Section: 3, Tab: 2, Enabled: true, Scroll: true),
     (Name: "ai-endpoint", Section: 3, Tab: 2, Enabled: true, Scroll: false),
     (Name: "ai-codex", Section: 3, Tab: 2, Enabled: true, Scroll: true),
     (Name: "ai-claude", Section: 3, Tab: 2, Enabled: true, Scroll: true),
@@ -187,6 +191,38 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         Set(ui, "operationConnection", config.GetType().GetField("AiConnection")!.GetValue(config));
     }
     Set(ui, "chat", chat);
+    var modelUpdateCase = name is "ai-model-discovery" or "ai-model-manual" or "ai-model-empty" or "ai-model-failure";
+    if (modelUpdateCase)
+    {
+        var modelListType = typeof(IReadOnlyList<>).MakeGenericType(modelType);
+        var received = Array.CreateInstance(modelType, name == "ai-model-empty" ? 0 : 2);
+        if (received.Length > 0)
+        {
+            received.SetValue(Activator.CreateInstance(modelType, "gpt-fixture-pro", "Synthetic Pro"), 0);
+            received.SetValue(Activator.CreateInstance(modelType, "gpt-fixture-nano", "Synthetic Nano"), 1);
+        }
+        if (name == "ai-model-manual") Set(config, "ChatGptModel", "gpt-fixture-pro");
+        Set(chatGpt, "status", name == "ai-model-empty"
+            ? "ChatGPT returned no selectable models for this account. Sign-in succeeded, but no model was offered for selection."
+            : name == "ai-model-failure" ? "ChatGPT declined model access (401). Continue with ChatGPT to reconnect." : "Loaded 2 available ChatGPT model(s).");
+        var taskMethod = typeof(Task).GetMethods().Single(method => method.IsGenericMethodDefinition &&
+            method.Name == (name == "ai-model-failure" ? "FromException" : "FromResult"));
+        var task = taskMethod.MakeGenericMethod(modelListType).Invoke(null,
+            [name == "ai-model-failure" ? new InvalidOperationException("Untrusted fixture text must not be shown.") : received]);
+        Set(ui, "pendingModels", task);
+        Set(ui, "operationConnection", config.GetType().GetField("AiConnection")!.GetValue(config));
+        Set(ui, "connectionRequest", pendingCancellation);
+        uiType.GetMethod("UpdateConnection", flags)!.Invoke(ui, null);
+        var expected = name switch { "ai-model-empty" => "", "ai-model-discovery" => "gpt-fixture-nano", "ai-model-manual" => "gpt-fixture-pro", _ => "fixture-model-a" };
+        if (!Equals(config.GetType().GetField("ChatGptModel")!.GetValue(config), expected))
+            throw new InvalidOperationException("Model refresh did not preserve or choose the expected preference.");
+        var message = (string)uiType.GetField("connectionStatus", flags)!.GetValue(ui)!;
+        if (message.Contains("Untrusted fixture", StringComparison.Ordinal) ||
+            (name == "ai-model-failure" && (!message.Contains("401", StringComparison.Ordinal) || ((Array)uiType.GetField("chatGptModels", flags)!.GetValue(ui)!).Length != 2)))
+            throw new InvalidOperationException("Failed refresh did not preserve choices and the sanitized failure status.");
+        if (uiType.GetField("pendingModels", flags)!.GetValue(ui) != null)
+            throw new InvalidOperationException("Completed model refresh was not cleared.");
+    }
     var popupCase = name.EndsWith("-menu", StringComparison.Ordinal) || name.EndsWith("-tooltip", StringComparison.Ordinal);
     var navigationCase = name == "companion-navigation";
     var providerSwitch = name == "ai-provider-switch";

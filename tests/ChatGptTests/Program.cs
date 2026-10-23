@@ -97,6 +97,81 @@ try
     var encrypted = File.ReadAllBytes(Path.Combine(directory, "credentials", "chatgpt.dpapi"));
     Check(!Encoding.UTF8.GetString(encrypted).Contains("synthetic-access", StringComparison.Ordinal), "Only DPAPI ciphertext may be saved.");
     Check((await connection.ListModelsAsync(CancellationToken.None)).Single().Id == "fixture-model", "Models must come from visible account-specific catalog.");
+    var catalog = ChatGptConnection.ParseModels("""
+        {"models":[
+          {"slug":"gpt-fixture-mini","display_name":"Small fixture","visibility":"list"},
+          {"slug":"gpt-fixture-pro","display_name":"Hidden fixture","visibility":"hidden"},
+          {"slug":"gpt-fixture-unknown","display_name":"Unspecified visibility"},
+          {"slug":"gpt-fixture-mini","display_name":"Duplicate","visibility":"list"},
+          {"slug":"gpt-fixture-nano","display_name":"","visibility":"list"}]}
+        """);
+    Check(catalog.Select(model => model.Id).SequenceEqual(["gpt-fixture-mini", "gpt-fixture-nano"]) &&
+        catalog[1].Name == "gpt-fixture-nano", "SIWC retains visible order, deduplicates and safely falls back to the returned slug as a label.");
+    fixture.ModelsJson = """{"object":"list","data":[{"id":"gpt-fixture-mini","object":"model"},{"id":"gpt-fixture-nano","object":"model"},{"id":"gpt-hidden","visibility":"hidden"}]}""";
+    Check((await connection.ListModelsAsync(CancellationToken.None)).Select(model => model.Id).SequenceEqual(["gpt-fixture-mini", "gpt-fixture-nano"]),
+        "The documented standard data/id catalog does not require SIWC visibility fields.");
+    Check(ChatGptConnection.ParseModels("""{"models":[],"data":[{"id":"gpt-fixture-mini"}]}""").Count == 0,
+        "An explicit empty SIWC catalog cannot fall through to another catalog.");
+    foreach (var malformed in new[]
+    {
+        "[]", "{}", """{"models":{}}""", """{"data":[null]}""", """{"data":[{"id":""}]}""",
+        """{"models":[{"visibility":"list","slug":42}]}""", """{"data":[{"id":" bad-id "}]}""",
+        """{"data":[{"id":"gpt-fixture\n"}]}""", """{"data":[],"data":[{"id":"gpt-other"}]}""",
+        """{"models":"wrong","data":[{"id":"gpt-fixture"}]}""",
+    }) Reject(() => ChatGptConnection.ParseModels(malformed), "Malformed catalog must fail, not claim zero available models.");
+    Reject(() => ChatGptConnection.ParseModels(JsonSerializer.Serialize(new { data = Enumerable.Range(0, 1001).Select(index => new { id = "gpt-fixture-" + index }) })),
+        "Catalog entry counts remain bounded.");
+    var choices = new[]
+    {
+        new AiModelOption("gpt-fixture-pro", "Pro"), new AiModelOption("gpt-fixture", "Standard"),
+        new AiModelOption("gpt-fixture-mini", "Mini"), new AiModelOption("gpt-fixture-nano", "Nano"),
+        new AiModelOption("gpt-image-fixture-nano", "Image nano"), new AiModelOption("gpt-audio-fixture-nano", "Audio nano"),
+        new AiModelOption("text-embedding-fixture", "Embedding"),
+    };
+    Check(ChatGptConnection.PreferredModel(choices, "") == "gpt-fixture-nano", "An empty choice defaults to a returned lightweight text model.");
+    Check(ChatGptConnection.PreferredModel(choices.Reverse().ToArray(), "removed-model") == "gpt-fixture-nano",
+        "A missing model gets the same lightweight choice regardless of catalog order.");
+    Check(ChatGptConnection.PreferredModel(choices, "gpt-fixture-pro") == "gpt-fixture-pro", "A valid explicit choice is never silently replaced.");
+    Check(ChatGptConnection.PreferredModel([new("gpt-z", "Standard"), new("gpt-a", "Standard")], "") == "gpt-a",
+        "Unranked text models have a deterministic id-based fallback.");
+    Check(ChatGptConnection.PreferredModel([new("gpt-fixture-astra", "Astra"), new("gpt-fixture-luna", "Luna")], "") == "gpt-fixture-luna",
+        "Luna wins over a heavy tier when both are returned.");
+    Check(ChatGptConnection.PreferredModel([new("gpt-fixture-pro-mini", "Pro mini"), new("gpt-fixture-lite", "Lite")], "") == "gpt-fixture-lite",
+        "A pro or reasoning label cannot win solely because it also contains a lightweight word.");
+    Check(ChatGptConnection.PreferredModel([new("gpt-image-fixture", "Image"), new("unknown-fixture", "Unknown")], "") == "",
+        "No suitable returned text-chat id means no fabricated default.");
+    fixture.ModelsJson = """{"models":[]}""";
+    Check((await connection.ListModelsAsync(CancellationToken.None)).Count == 0 && connection.Status.Contains("no selectable", StringComparison.Ordinal),
+        "A successful empty catalog has a distinct sanitized empty status.");
+    fixture.ModelsJson = """{"unexpected":"synthetic-private-provider-body"}""";
+    await RejectAsync(() => connection.ListModelsAsync(CancellationToken.None), "Unsupported shapes must fail distinctly.");
+    Check(connection.Status.Contains("unsupported", StringComparison.Ordinal) && !connection.Status.Contains("synthetic-private", StringComparison.Ordinal),
+        "Unsupported schema status must not expose provider content.");
+    fixture.ModelsJson = "not-json";
+    await RejectAsync(() => connection.ListModelsAsync(CancellationToken.None), "Invalid JSON must fail distinctly.");
+    Check(connection.Status.Contains("unreadable", StringComparison.Ordinal), "Invalid JSON is not an empty catalog.");
+    fixture.ModelsJson = JsonSerializer.Serialize(new { models = new[] { new { visibility = "list", slug = "gpt-fixture-mini", display_name = "Mini", metadata = new string('x', 300000) } } });
+    Check((await connection.ListModelsAsync(CancellationToken.None)).Single().Id == "gpt-fixture-mini",
+        "A bounded metadata-rich catalog may exceed the smaller token-response limit.");
+    fixture.ModelsJson = new string('x', 2 * 1024 * 1024 + 1);
+    await RejectAsync(() => connection.ListModelsAsync(CancellationToken.None), "Oversized model catalogs must fail.");
+    Check(connection.Status.Contains("supported size", StringComparison.Ordinal), "Size failure has its own safe status.");
+    fixture.ModelsJson = "synthetic-private-provider-body";
+    foreach (var code in new[] { HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden, HttpStatusCode.TooManyRequests, HttpStatusCode.Found, HttpStatusCode.ServiceUnavailable })
+    {
+        fixture.ModelsStatus = code;
+        await RejectAsync(() => connection.ListModelsAsync(CancellationToken.None), "HTTP model-list failure must not look like success.");
+        Check(!connection.Status.Contains("no selectable", StringComparison.Ordinal) && !connection.Status.Contains("synthetic-private", StringComparison.Ordinal),
+            "HTTP diagnostics are safe and distinct from empty results.");
+    }
+    fixture.ModelsStatus = HttpStatusCode.OK; fixture.ModelsJson = Fixture.DefaultModels;
+    using (var canceled = new CancellationTokenSource())
+    {
+        canceled.Cancel();
+        await RejectAsync(() => connection.ListModelsAsync(canceled.Token), "Canceled model requests must not become empty lists.");
+        Check(connection.Status == "Model refresh canceled.", "Cancellation has a distinct status.");
+    }
+    Check(fixture.Inferences == 0, "Discovery and default selection must never perform inference or select another billing source.");
     Check(await connection.AskAsync("XIV only.", "Synthetic question.", "fixture-model", CancellationToken.None) == "Synthetic answer.", "Completed Responses request must succeed.");
     Check(fixture.SafePayload, "Requests must be streaming, unstored and tool-free without max_output_tokens.");
     fixture.ResponseEvents = manyEvents;
@@ -229,6 +304,9 @@ sealed class Fixture : HttpMessageHandler
     internal Action? OnBrowserOpen;
     internal string RefreshValue = "synthetic-refresh-rotated";
     internal string ResponseEvents = Events;
+    internal const string DefaultModels = """{"models":[{"visibility":"list","slug":"fixture-model","display_name":"Fixture Model"},{"visibility":"hidden","slug":"hidden-model","display_name":"Hidden"}]}""";
+    internal string ModelsJson = DefaultModels;
+    internal HttpStatusCode ModelsStatus = HttpStatusCode.OK;
     internal string LastBearer = "";
     internal bool SafePayload;
     internal int Exchanges, Refreshes, Revocations, Inferences, BrowserOpens, Requests;
@@ -318,9 +396,8 @@ sealed class Fixture : HttpMessageHandler
         if (uri.EndsWith("/oauth/revoke", StringComparison.Ordinal)) { Revocations++; return new(HttpStatusCode.OK); }
         if (request.Headers.Authorization?.Scheme != "Bearer") throw new Exception("Missing authorization.");
         LastBearer = request.Headers.Authorization.Parameter ?? "";
-        if (uri == "https://api.openai.com/v1/models") return Json(new { models = new[] {
-            new { visibility = "list", slug = "fixture-model", display_name = "Fixture Model" },
-            new { visibility = "hidden", slug = "hidden-model", display_name = "Hidden" } } });
+        if (uri == "https://api.openai.com/v1/models")
+            return new(ModelsStatus) { Content = new StringContent(ModelsJson, Encoding.UTF8, "application/json") };
         if (uri == "https://api.openai.com/v1/responses")
         {
             Inferences++;

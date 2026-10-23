@@ -55,6 +55,68 @@ internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum
 
 internal readonly record struct CompanionFrame(Vector2 UvStart, Vector2 UvEnd, Vector2 Position, Vector2 Size);
 
+/// <summary>Walk phase follows distance in the current surface's coordinate space.</summary>
+internal sealed class CompanionGait
+{
+    public const float DefaultCycleDistance = .45f;
+    public const float PreviewSpeed = .36f;
+    private bool initialized;
+    private Vector2 previousPosition;
+    private float previousWidth;
+    private ulong previousSpace;
+
+    public float Phase { get; private set; }
+    public Vector2 Heading { get; private set; } = Vector2.UnitX;
+    public int Frame => Math.Clamp((int)(Phase * 8), 0, 7);
+    public void Reset() { Phase = 0; Heading = Vector2.UnitX; Rebase(); }
+    public void Rebase() => initialized = false;
+
+    public static float DirectionalCycleDistance(float cycleDistance, Vector2 heading)
+        => cycleDistance * (1 - .58f * Math.Abs(heading.Y));
+
+    public static bool FacingFor(Vector2 travel, bool previousFacingLeft)
+    {
+        if (!float.IsFinite(travel.X) || !float.IsFinite(travel.Y) || travel.LengthSquared() < .000001f) return previousFacingLeft;
+        var horizontal = travel.X / travel.Length();
+        return horizontal < -.24f || horizontal <= .24f && previousFacingLeft;
+    }
+
+    public void Update(Vector2 position, float cellWidth, float elapsed, bool walking, bool facingLeft,
+        ulong space, float cycleDistance = DefaultCycleDistance, bool preview = false, bool directionalStride = false)
+    {
+        if (!float.IsFinite(position.X) || !float.IsFinite(position.Y) || !float.IsFinite(cellWidth) || cellWidth <= 0)
+        { Rebase(); return; }
+        var dt = float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
+        var continuous = initialized && previousWidth == cellWidth && previousSpace == space;
+        var delta = position - previousPosition;
+        var distance = delta.Length();
+        previousPosition = position; previousWidth = cellWidth; previousSpace = space;
+        initialized = true;
+        if (!walking || dt <= 0) return;
+        if (!float.IsFinite(cycleDistance) || cycleDistance < .1f || cycleDistance > 8f) cycleDistance = DefaultCycleDistance;
+        if (preview)
+        {
+            Heading = facingLeft ? -Vector2.UnitX : Vector2.UnitX;
+            Phase = (Phase + PreviewSpeed * dt / cycleDistance) % 1f;
+        }
+        // Relocation, resize, or a changed attachment rebases the sample.
+        // It must not race through poses as if the character walked that distance.
+        else if (continuous && float.IsFinite(distance) && distance <= Math.Max(2f, cellWidth * dt * 1.25f))
+        {
+            if (distance > .0001f)
+            {
+                var desired = delta / distance;
+                var angle = MathF.Atan2(Heading.X * desired.Y - Heading.Y * desired.X, Vector2.Dot(Heading, desired));
+                var step = Math.Clamp(angle, -MathF.Tau * dt * 2, MathF.Tau * dt * 2);
+                var cosine = MathF.Cos(step); var sine = MathF.Sin(step);
+                Heading = Vector2.Normalize(new Vector2(Heading.X * cosine - Heading.Y * sine, Heading.X * sine + Heading.Y * cosine));
+            }
+            if (directionalStride) cycleDistance = DirectionalCycleDistance(cycleDistance, Heading);
+            Phase = (Phase + distance / cellWidth / cycleDistance) % 1f;
+        }
+    }
+}
+
 /// <summary>Inspected atlas regions, rendered at a common scale and foot baseline.</summary>
 internal static class CompanionAtlas
 {
@@ -82,7 +144,8 @@ internal static class CompanionAtlas
     {
         if (!animated) return 8;
         seconds = float.IsFinite(seconds) ? Math.Max(0, seconds) % 1000 : 0;
-        if (pose == CompanionPose.Walk) return (int)(seconds * 12) % 8;
+        // Time-only callers are previews; automatic walking uses CompanionGait.
+        if (pose == CompanionPose.Walk) return (int)(seconds * CompanionGait.PreviewSpeed / CompanionGait.DefaultCycleDistance * 8) % 8;
         if (pose == CompanionPose.Talk) return 12 + (int)(seconds * 6) % 4;
         if (pose == CompanionPose.Carry) return 16 + (int)(seconds * 3) % 2;
         if (pose == CompanionPose.Fall) return 18 + (int)(seconds * 4) % 2;
@@ -112,16 +175,22 @@ internal sealed class CompanionMotion(int seed = 0)
     private bool initialized;
     private Vector2 destination;
     private float pause;
-    private float walkTime;
+    private readonly CompanionGait gait = new();
 
     public Vector2 Position { get; private set; }
     public bool FacingLeft { get; private set; }
     public bool Walking { get; private set; }
-    public int Frame => Walking ? CompanionAtlas.SelectFrame(CompanionPose.Walk, walkTime, true) : 8;
+    public int Frame => Walking ? gait.Frame : 8;
 
-    public void Reset() { initialized = false; Walking = false; walkTime = 0; }
+    public void Reset() { initialized = false; Walking = false; gait.Reset(); }
 
     public void Update(CompanionLayout layout, float elapsed, bool animate)
+    {
+        UpdateMovement(layout, elapsed, animate);
+        gait.Update(Position - layout.Minimum, layout.SpriteSize.X, elapsed, Walking, FacingLeft, 0);
+    }
+
+    private void UpdateMovement(CompanionLayout layout, float elapsed, bool animate)
     {
         if (!layout.IsVisible) { Walking = false; return; }
         if (!initialized)
@@ -135,7 +204,7 @@ internal sealed class CompanionMotion(int seed = 0)
         Position = layout.Clamp(Position);
         destination = layout.Clamp(destination);
         Walking = false;
-        if (!animate) { walkTime = 0; return; }
+        if (!animate) return;
         elapsed = float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
         if (elapsed <= 0) return;
         if (pause > 0)
@@ -153,13 +222,11 @@ internal sealed class CompanionMotion(int seed = 0)
         {
             Position = destination;
             pause = .8f + random.NextSingle() * 1.7f;
-            walkTime = 0;
             return;
         }
         Walking = true;
-        if (Math.Abs(delta.X) > .1f) FacingLeft = delta.X < 0;
+        FacingLeft = CompanionGait.FacingFor(delta, FacingLeft);
         var step = Math.Min(distance, Math.Max(8f, layout.SpriteSize.Y * .36f) * elapsed);
         Position = layout.Clamp(Position + delta / distance * step);
-        walkTime = (walkTime + elapsed) % 1000;
     }
 }

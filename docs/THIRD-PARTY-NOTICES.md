@@ -42,8 +42,11 @@ through host APIs; no font or game-asset extraction is included.
 
 Bimble and the moon-bear portraits are original AI-generated assets created with
 OpenAI image generation on 2026-10-22. Their prompts and inspection notes are in
-[assets/PROMPTS.md](../assets/PROMPTS.md). They are not copied game characters or
-third-party stock art. This provenance statement does not change third-party
+[assets/PROMPTS.md](../assets/PROMPTS.md). Additional original walking-part sheets
+and the limbless Moonblob atlas have their own
+[walk-rig prompts](../assets/WALK-ANIMATION-PROMPTS.md) and
+[Moonblob prompts](../assets/MOONBLOB-ROLL-PROMPTS.md). They are not copied game
+characters or third-party stock art. This provenance statement does not change third-party
 library licenses.
 
 ## Microsoft.Data.Sqlite MIT license

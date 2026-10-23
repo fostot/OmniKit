@@ -26,6 +26,7 @@ internal sealed class CompanionPhysics
     public CompanionPlacement Placement { get; private set; }
     public bool Active => Placement != CompanionPlacement.None;
     public bool IsCarried => Placement == CompanionPlacement.Carried;
+    public ulong AttachedSurfaceId => surfaceId;
     public Vector2 Position { get; private set; }
     public bool FacingLeft => reactionTime > 0 && reaction == CompanionPose.Push ? reactionFacingLeft : direction < 0;
     public CompanionPose Pose { get; private set; } = CompanionPose.Idle;

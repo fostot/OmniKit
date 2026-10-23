@@ -14,9 +14,17 @@ establish them. None is marked passed until observed.
   Equip a saved job set and confirm an ambiguous job search asks for a choice.
 - Enable soft interaction and its HUD. Face two nearby NPCs, rotate/zoom the
   camera, check stable selection, range and blocked line of sight. Toggle HUD off.
+  Start NPC dialogue, a vendor, quest/choice menu, retainer interaction and a
+  gathering session: the text and editor sample must hide. Close the interaction
+  and confirm the candidate returns without a
+  Preview suffix. Other menus must not resume interaction actions.
   One press must interact once, no candidate must leave the key alone, and chat,
   cutscenes, occupied states and alt-tab must suppress interaction. Combat must
   suppress world-object actions; explicitly enabled enemy actions remain usable.
+- Shift-right-click the HUD and choose Modify. Font size must appear at the top;
+  compare 50%, 100% and 200% with outline on/off and each text effect. Repeat
+  without a candidate and with the gameplay HUD disabled. Only editing may show
+  a labelled sample. Check readability, small-window scrolling and persistence.
 - Test a vendor, quest NPC, usable quest object and treasure. Game restrictions
   may still reject a visible candidate. Do not count a prompt as successful use.
 - Toggle each target type separately and turn them all off. Hostile and neutral
@@ -34,6 +42,15 @@ establish them. None is marked passed until observed.
   walking, ear movement, blinking and explicit mouth preview, including both facing directions.
   Draw a roaming area and confirm the complete companion and magic stay inside.
   Verify click-to-talk, resize, animation off, magic off and companion off.
+- Inspect a complete walk loop and its wrap: feet alternate, the support foot
+  stays planted, arms oppose the legs, and the head/body do not change size.
+  Stop, turn, pause, resize and move a supporting frame; those movements must
+  not spin the gait. Check the limbless blob's continuous roll and stable
+  floating Wink/Nova bodies. Verify full silhouettes and picking bounds at
+  minimum and maximum companion sizes.
+  Include diagonal and nearly vertical paths, sharp turns and high-refresh
+  displays. Tiny horizontal drift must not repeatedly flip facing. Compare
+  frame pacing at 60/144 Hz where available; no alternating frozen/moving frames.
 - Enable Frame interaction. Drag each avatar/outfit onto a native game window,
   a compatible plugin window and an Umbra bar. Test top-edge perching, walking
   off and falling onto lower surfaces, landing, contained walking and edge

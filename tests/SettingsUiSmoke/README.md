@@ -24,6 +24,7 @@ dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- 
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=companion-navigation --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-off,ai-on,ai-chatgpt,ai-chatgpt-connected,ai-chatgpt-middle,ai-codex,ai-claude,ai-cli-busy,ai-cli-error --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-provider-menu,ai-account-menu,ai-model-menu,ai-account-tooltip,ai-model-tooltip,ai-endpoint,ai-cli-cancel,ai-provider-switch --scale=2
+dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=ai-model-discovery,ai-model-manual,ai-model-empty,ai-model-failure --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --case=companion-menu,outfit-menu,palette-menu,pose-menu --scale=2
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --measure-hotkeys
 dotnet run --project tests/SettingsUiSmoke/SettingsUiSmoke.csproj -c Release -- --companions
@@ -43,3 +44,10 @@ Frame interaction cases show the master setting and each sub-option, with animat
 The companion navigation case uses real ImGui mouse events to click AI → Appearance → Voice → AI with AI enabled, checking the active tab after each transition. It also checks programmatic Appearance and AI selection. This catches a later tab reasserting its selection during the same draw loop; it does not invoke provider, microphone or game actions.
 
 AI cases cover API/local-server settings (including the expanded endpoint field), disconnected and connected ChatGPT states, deliberately long synthetic account and model labels, their native dropdowns and wrapped tooltips, both CLI providers, and pending/error status. The cancel case clicks the real Cancel connection button against an in-memory pending task and verifies cancellation and task cleanup. The provider-switch case clicks Codex → Claude → ChatGPT → API, asserting that each switch disables AI questions and preserves all four independent model preferences. It writes a screenshot after each transition. These checks do not establish successful real sign-in, billing eligibility, provider inference, CLI isolation or token storage; those have separate tests and live validation boundaries.
+
+Model-refresh cases pass completed synthetic tasks through the real UI update
+method. They verify selection of a returned lightweight default, preservation of
+a valid manual model, a successful empty catalog, and a failed refresh retaining
+the earlier choices. Error text comes from the sanitized connection status; the
+fixture exception's untrusted text must never appear. The resulting form and
+wrapped status are rendered at minimum size, with no network or authentication.
