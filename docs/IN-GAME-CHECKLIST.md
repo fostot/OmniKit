@@ -14,6 +14,11 @@ establish them. None is marked passed until observed.
   another app focused, and conflicting desktop shortcuts.
 - Search community/guild/free company; open game windows and loaded plugin UIs.
   Equip a saved job set and confirm an ambiguous job search asks for a choice.
+- In Launcher settings test width 320/640/1200, text size 0.75/1/1.5, result count
+  3/7/12 and both position limits. Check empty, typed, cleared and no-match queries
+  at narrow viewports and UI scale 1/1.5/2. The input and gear must stay visible;
+  keyboard/scroll navigation must still reach results beyond the row limit.
+  Reset must restore the five defaults and survive reload.
 - Enable soft interaction and its HUD. Face two nearby NPCs, rotate/zoom the
   camera, check stable selection, range and blocked line of sight. Toggle HUD off.
   Start NPC dialogue, a vendor, quest/choice menu, retainer interaction and a
@@ -68,11 +73,32 @@ establish them. None is marked passed until observed.
   blocked action, disabled feature and unknown targets. Holding the key must not
   repeat; a blocked matched rule must not open dialogue instead. See
   [mapping and limits](QUEST-EMOTES.md).
+- In Quest Items, inspect locked Next Action as one icon and unlocked mode with
+  its heading/drag area. Compare the preview to the actual Interact resolver for
+  ordinary, mapped item/emote and blocked candidates. Clicking submits once;
+  holding, locking, dragging and tooltips must never cause repeated/extra actions.
+  Check empty/single/eight/more-than-eight item pages, button sizes 24/40/56,
+  saved positions and viewport edges at 320/480px widths and UI scale 1/1.5/2.
+  Headings, corner locks, panels and tooltips must not overlap or clip.
+- Check the manual bar with usable KeyItems and native-tracked ordinary quest
+  items. Untracked potions and ground-targeted actions must not appear. With no
+  selected target, clicking must stay blocked. Change target, stack identity,
+  territory or login state before a queued click; stale requests must fail.
+  A routine identical snapshot refresh must not invalidate a valid click. Each
+  accepted click permits one native attempt without auto-targeting or retries.
+  Text entry must still block actions while clicking a bar must not block itself.
 - Switch all eight companions: Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember and
   Prism. Check Moonblob as the default, six aura colors, rolling/floating,
   blinking and explicit mouth preview, including both facing directions.
   Draw a roaming area and confirm the complete companion and magic stay inside.
   Verify click-to-talk, resize, animation off, magic off and companion off.
+- Preview all nine seasonal themes on the eight companions. Check Auto against
+  supported native festival state, no festival, unknown IDs and conflicting
+  events; it must not infer an event from the PC month. Official date fallback
+  applies only when native data is unavailable, and manual selection remains
+  available. Test seasonal off and optional companion rotation at 30/300/3600
+  seconds, including pause/carry/nap states. Rotation must retain the saved
+  manual companion choice and make no model request.
 - Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
   Bodies must retain their identity, source aspect and stable scale; no separate
   body pieces should jiggle or detach. Compare idle with movement and reactions.
@@ -92,6 +118,8 @@ establish them. None is marked passed until observed.
   pushing. Check carry/fall/land/push previews. Move/resize/close the supporting
   window; the companion must follow or recover safely. Disable each frame option
   and the master switch. It must not move, resize or edit any foreign frame.
+  Include a thin HUD strip: walking past its edge must fall, not remain attached
+  to an invisible full-screen canvas.
 - Expand Home & personality. Show/hide the house and drag it near each screen
   edge and outside the drawn area; the roaming area must remain unchanged and
   the entrance must face inward. Normal free roaming must remain in the drawn
@@ -100,10 +128,14 @@ establish them. None is marked passed until observed.
   manual pickup still works without animated hand effects. Test local comments
   on/off and 30/120/600-second intervals with AI disabled. For Wink, test blinking
   on/off and 1/3/10-second intervals while idle and floating; animation off freezes
-  the blink. Comments must not trigger AI requests, microphone capture or speech.
+  the blink. Compare Fourier-smoothed blink off/on without changing Wink's body
+  shape or movement. Pick up near different object edges and confirm the object
+  eases under the centered hand; hand scaling must not shift it. Comments must
+  not trigger AI requests, microphone capture or speech.
 - Test naps for all eight companions: about 45 seconds awake and 20 asleep by default,
   plus awake interval 15/300 and sleep duration 5/120. A nap trip can leave the
-  drawn area at about twice normal speed, enter the house, curl up, breathe,
+  drawn area at about twice normal speed, enter through the front doorway rather
+  than the roof/side, curl up, breathe,
   wake and return. Check sleep symbols on/off and all screen edges. Pause during
   approach and sleep; position must freeze. Disable naps, hide or move the house
   during approach/entry/sleep; the companion must exit and return without a
@@ -128,9 +160,13 @@ establish them. None is marked passed until observed.
   cancellation and unload. No login secret, raw CLI diagnostic or credential file may appear in
   the UI, logs, database, JSON exports or release artifacts.
 - Export/import JSON, reject malformed files, preserve settings after rejection,
-  reload the plugin, and check schema-7 preferences persist. Check v1–v6 migration
-  preserves chords, appearance and existing consent while selecting in-game web
-  navigation. Imports must not grant new AI consent. Exports must exclude secrets.
+  reload the plugin, and check all 19 new schema-8 fields persist. Check v1–v7
+  atomic migration preserves chords, appearance and existing consent while
+  selecting in-game web navigation. Imports must not grant new AI consent.
+  Exports must exclude secrets.
+  Invalid new field ranges or a failed database write must leave the prior
+  snapshot intact. New house/hand styles, grounded hops and rings are not source-13
+  acceptance items; they remain pending.
 - Open wiki and Community Finder actions in OmniKit's browser; no system-browser
   fallback should appear on failure. Check website-only mode, the controls icon,
   back/forward/reload/address/home, the always-visible close X, hide/reopen,

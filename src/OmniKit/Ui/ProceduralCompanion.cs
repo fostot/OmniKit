@@ -19,9 +19,10 @@ internal static class ProceduralCompanion
     };
 
     public static void Draw(ImDrawListPtr draw, Vector2 position, Vector2 size, Configuration config,
-        CompanionPose pose, float timeSeconds, bool hovered = false)
+        CompanionPose pose, float timeSeconds, bool hovered = false, string? avatarOverride = null)
     {
-        if (!IsProcedural(config.Avatar) || size.X <= 0 || size.Y <= 0) return;
+        var avatar = avatarOverride ?? config.Avatar;
+        if (!IsProcedural(avatar) || size.X <= 0 || size.Y <= 0) return;
         var animated = config.AnimationsEnabled;
         var t = animated && float.IsFinite(timeSeconds) ? timeSeconds : 0;
         if (!animated) { pose = CompanionPose.Idle; hovered = false; }
@@ -45,7 +46,7 @@ internal static class ProceduralCompanion
         var color = Palette(config.CompanionPalette);
         var ink = new Vector4(.065f, .085f, .11f, 1);
         var talk = pose == CompanionPose.Talk && animated;
-        switch (config.Avatar)
+        switch (avatar)
         {
             case "Moonblob":
             case "Mochi":
@@ -56,7 +57,7 @@ internal static class ProceduralCompanion
             {
                 // Missing optional art still gets one complete, contained body.
                 // Only the rolling companion rotates its face in this fallback.
-                var roll = config.Avatar != "Moonblob" ? 0 : pose switch
+                var roll = avatar != "Moonblob" ? 0 : pose switch
                 {
                     CompanionPose.Walk => t * 1.7f,
                     CompanionPose.Carry => MathF.Sin(t * 2.8f) * .14f,

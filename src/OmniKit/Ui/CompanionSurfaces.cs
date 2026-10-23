@@ -32,6 +32,8 @@ internal sealed unsafe class CompanionSurfaces
                 || name.Contains("##OmniKitCompanionComment", StringComparison.Ordinal)
                 || name.Contains("##OmniKitCompanionHouse", StringComparison.Ordinal)
                 || name.Contains("##OmniKitVisibleTarget", StringComparison.Ordinal)
+                || name.Contains("##OmniKitNextAction", StringComparison.Ordinal)
+                || name.Contains("##OmniKitQuestItems", StringComparison.Ordinal)
                 || name.Contains("##OmniKitInteract", StringComparison.Ordinal)) continue;
             var minimum = window.Pos;
             var maximum = window.Pos + window.Size;
@@ -47,8 +49,11 @@ internal sealed unsafe class CompanionSurfaces
             }
             var header = (window.Flags & ImGuiWindowFlags.NoTitleBar) != 0 ? Math.Min(12, maximum.Y - minimum.Y)
                 : Math.Clamp(window.InnerRect.Min.Y - window.Pos.Y, 12, 45);
+            var canContain = (window.Flags & ImGuiWindowFlags.NoMouseInputs) == 0
+                && (window.Flags & (ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground))
+                    != (ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground);
             Add(new CompanionSurface(0x8000000000000000ul | window.ID, minimum, maximum,
-                header, 10000 + i), viewportPosition, viewportSize);
+                header, 10000 + i, canContain), viewportPosition, viewportSize);
         }
         return surfaces;
     }
@@ -97,10 +102,25 @@ internal sealed unsafe class CompanionSurfaces
             var position = viewportPosition + new Vector2(unit->X, unit->Y);
             var size = new Vector2(unit->GetScaledWidth(true), unit->GetScaledHeight(true));
             var header = unit->WindowHeaderCollisionNode;
-            var headerHeight = header == null ? Math.Min(12, size.Y) : Math.Clamp(header->Height * unit->Scale, 10, 45);
+            var canContain = NativeCanContain(unit);
+            var headerHeight = canContain ? Math.Clamp(header->Height * unit->Scale, 10, 45) : Math.Min(12, size.Y);
             Add(new CompanionSurface(((ulong)(nuint)unit << 16) ^ unit->Id, position, position + size,
-                headerHeight, (int)unit->DepthLayer * 512 + unit->DrawOrderIndex), viewportPosition, viewportSize);
+                headerHeight, (int)unit->DepthLayer * 512 + unit->DrawOrderIndex, canContain), viewportPosition, viewportSize);
         }
+    }
+
+    internal static bool NativeCanContain(AtkUnitBase* unit)
+    {
+        if (unit == null) return false;
+        var name = unit->Name;
+        var terminator = name.IndexOf((byte)0);
+        if (terminator >= 0) name = name[..terminator];
+        // The quest tracker is an open HUD strip even when the client supplies
+        // a dummy collision header for dragging or HUD layout editing.
+        if (name.SequenceEqual("ToDoList"u8)) return false;
+        var header = unit->WindowHeaderCollisionNode;
+        return header != null && header->Width > 0 && header->Height > 0
+            && !header->IsDrawDisabled && (header->NodeFlags & NodeFlags.Visible) != 0;
     }
 
     private void Add(CompanionSurface surface, Vector2 viewportPosition, Vector2 viewportSize)

@@ -2,6 +2,12 @@ using System.Numerics;
 using System.Text.Json.Nodes;
 using OmniKit.Ui;
 
+if (args.Contains("--blink-only"))
+{
+    Console.WriteLine($"Fourier blink: {FourierBlinkChecks.Run()} focused checks passed.");
+    return;
+}
+
 var checks = 0;
 void Check(bool condition, string message)
 {
@@ -212,4 +218,5 @@ finally { temporary.Delete(true); }
 checks += RollChecks.Run();
 checks += FloatChecks.Run();
 checks += HeadingChecks.Run();
+checks += FourierBlinkChecks.Run();
 Console.WriteLine($"Companion motion/layout: {checks} checks passed.");

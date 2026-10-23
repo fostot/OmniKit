@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 7;
+    private const int SchemaVersion = 8;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -178,6 +178,7 @@ public sealed class LocalStore
             if (schemaVersion < 5) fields = fields.Except(VersionFiveFields);
             if (schemaVersion < 6) fields = fields.Except(VersionSixFields);
             if (schemaVersion < 7) fields = fields.Except(VersionSevenFields);
+            if (schemaVersion < 8) fields = fields.Except(VersionEightFields);
             RequireFields(settingsElement, fields);
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -268,6 +269,28 @@ public sealed class LocalStore
             settings.CompanionNapDuration = 20f;
             settings.CompanionNapZsEnabled = true;
         }
+        if (settings.Version < 8)
+        {
+            settings.NextActionEnabled = true;
+            settings.LauncherWidth = 640f;
+            settings.LauncherTextScale = 1f;
+            settings.LauncherResultCount = 7;
+            settings.LauncherCenterX = .5f;
+            settings.LauncherTop = .20f;
+            settings.NextActionLocked = true;
+            settings.NextActionX = .5f;
+            settings.NextActionY = .76f;
+            settings.QuestItemsBarEnabled = true;
+            settings.QuestItemsBarLocked = true;
+            settings.QuestItemsBarX = .5f;
+            settings.QuestItemsBarY = .84f;
+            settings.QuestItemsButtonSize = 40f;
+            settings.CompanionFourierBlinkEnabled = false;
+            settings.CompanionSeasonalEnabled = true;
+            settings.CompanionSeasonalTheme = "Auto";
+            settings.CompanionAutoRotateEnabled = false;
+            settings.CompanionRotationInterval = 300f;
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -276,6 +299,9 @@ public sealed class LocalStore
 
     private static readonly string[] VersionThreeFields =
         [nameof(Settings.CompanionOutfit), nameof(Settings.CompanionPalette), nameof(Settings.CompanionMagicEnabled)];
+
+    private static readonly string[] VersionEightFields =
+        [nameof(Settings.NextActionEnabled), nameof(Settings.NextActionLocked), nameof(Settings.NextActionX), nameof(Settings.NextActionY), nameof(Settings.QuestItemsBarEnabled), nameof(Settings.QuestItemsBarLocked), nameof(Settings.QuestItemsBarX), nameof(Settings.QuestItemsBarY), nameof(Settings.QuestItemsButtonSize), nameof(Settings.CompanionFourierBlinkEnabled), nameof(Settings.CompanionSeasonalEnabled), nameof(Settings.CompanionSeasonalTheme), nameof(Settings.CompanionAutoRotateEnabled), nameof(Settings.CompanionRotationInterval), nameof(Settings.LauncherWidth), nameof(Settings.LauncherTextScale), nameof(Settings.LauncherResultCount), nameof(Settings.LauncherCenterX), nameof(Settings.LauncherTop)];
 
     private static readonly string[] VersionFiveFields =
         [nameof(Settings.InteractionHudOutline), nameof(Settings.InteractionHudEffect)];
@@ -322,6 +348,17 @@ public sealed class LocalStore
     {
         if (settings is null || settings.Version != SchemaVersion)
             throw new InvalidOperationException("Unsupported configuration version.");
+        if (!FiniteRange(settings.LauncherWidth, 320, 1200) || !FiniteRange(settings.LauncherTextScale, .75f, 1.5f) ||
+            settings.LauncherResultCount is < 3 or > 12 || !FiniteRange(settings.LauncherCenterX, .05f, .95f) ||
+            !FiniteRange(settings.LauncherTop, 0, .9f))
+            throw new InvalidOperationException("Launcher size, position or result count is outside the supported range.");
+        if (!FiniteRange(settings.NextActionX, 0, 1) || !FiniteRange(settings.NextActionY, 0, 1) ||
+            !FiniteRange(settings.QuestItemsBarX, 0, 1) || !FiniteRange(settings.QuestItemsBarY, 0, 1) ||
+            !FiniteRange(settings.QuestItemsButtonSize, 24, 56))
+            throw new InvalidOperationException("Action-bar position or button size is outside the supported range.");
+        if (!Configuration.SeasonalThemeNames.Contains(settings.CompanionSeasonalTheme) ||
+            !FiniteRange(settings.CompanionRotationInterval, 30, 3600))
+            throw new InvalidOperationException("Choose a supported seasonal look and companion rotation interval.");
         if (!Enum.IsDefined((Interaction.HudTextEffect)settings.InteractionHudEffect))
             throw new InvalidOperationException("Choose a supported HUD text effect.");
         if (!FiniteRange(settings.InteractionHudOutlineThickness, .5f, 4f))
@@ -413,6 +450,11 @@ public sealed class LocalStore
         target.Version = value.Version;
         target.SetupCompleted = value.SetupCompleted;
         target.LauncherEnabled = value.LauncherEnabled;
+        target.LauncherWidth = value.LauncherWidth;
+        target.LauncherTextScale = value.LauncherTextScale;
+        target.LauncherResultCount = value.LauncherResultCount;
+        target.LauncherCenterX = value.LauncherCenterX;
+        target.LauncherTop = value.LauncherTop;
         target.LauncherKey = (VirtualKey)value.LauncherKey;
         target.LauncherModifier = (ModifierKeys)value.LauncherModifier;
         target.SettingsKey = (VirtualKey)value.SettingsKey;
@@ -420,6 +462,20 @@ public sealed class LocalStore
         target.SoftInteractEnabled = value.SoftInteractEnabled;
         target.QuestItemUseEnabled = value.QuestItemUseEnabled;
         target.QuestEmoteUseEnabled = value.QuestEmoteUseEnabled;
+        target.NextActionEnabled = value.NextActionEnabled;
+        target.NextActionLocked = value.NextActionLocked;
+        target.NextActionX = value.NextActionX;
+        target.NextActionY = value.NextActionY;
+        target.QuestItemsBarEnabled = value.QuestItemsBarEnabled;
+        target.QuestItemsBarLocked = value.QuestItemsBarLocked;
+        target.QuestItemsBarX = value.QuestItemsBarX;
+        target.QuestItemsBarY = value.QuestItemsBarY;
+        target.QuestItemsButtonSize = value.QuestItemsButtonSize;
+        target.CompanionFourierBlinkEnabled = value.CompanionFourierBlinkEnabled;
+        target.CompanionSeasonalEnabled = value.CompanionSeasonalEnabled;
+        target.CompanionSeasonalTheme = value.CompanionSeasonalTheme;
+        target.CompanionAutoRotateEnabled = value.CompanionAutoRotateEnabled;
+        target.CompanionRotationInterval = value.CompanionRotationInterval;
         target.InteractionTargets = (Interaction.InteractionTargets)value.InteractionTargets;
         target.EnemyInteractMode = (Interaction.EnemyInteractMode)value.EnemyInteractMode;
         target.InteractionHudEnabled = value.InteractionHudEnabled;
@@ -499,6 +555,11 @@ public sealed class LocalStore
         public int Version;
         public bool SetupCompleted;
         public bool LauncherEnabled;
+        public float LauncherWidth = 640f;
+        public float LauncherTextScale = 1f;
+        public int LauncherResultCount = 7;
+        public float LauncherCenterX = .5f;
+        public float LauncherTop = .20f;
         public int LauncherKey;
         public int LauncherModifier;
         public int SettingsKey;
@@ -506,6 +567,20 @@ public sealed class LocalStore
         public bool SoftInteractEnabled;
         public bool QuestItemUseEnabled;
         public bool QuestEmoteUseEnabled;
+        public bool NextActionEnabled = true;
+        public bool NextActionLocked = true;
+        public float NextActionX = .5f;
+        public float NextActionY = .76f;
+        public bool QuestItemsBarEnabled = true;
+        public bool QuestItemsBarLocked = true;
+        public float QuestItemsBarX = .5f;
+        public float QuestItemsBarY = .84f;
+        public float QuestItemsButtonSize = 40f;
+        public bool CompanionFourierBlinkEnabled = false;
+        public bool CompanionSeasonalEnabled = true;
+        public string CompanionSeasonalTheme = "Auto";
+        public bool CompanionAutoRotateEnabled = false;
+        public float CompanionRotationInterval = 300f;
         public int InteractionTargets;
         public int EnemyInteractMode;
         public bool InteractionHudEnabled;
@@ -574,6 +649,11 @@ public sealed class LocalStore
             Version = value.Version,
             SetupCompleted = value.SetupCompleted,
             LauncherEnabled = value.LauncherEnabled,
+            LauncherWidth = value.LauncherWidth,
+            LauncherTextScale = value.LauncherTextScale,
+            LauncherResultCount = value.LauncherResultCount,
+            LauncherCenterX = value.LauncherCenterX,
+            LauncherTop = value.LauncherTop,
             LauncherKey = (int)value.LauncherKey,
             LauncherModifier = (int)value.LauncherModifier,
             SettingsKey = (int)value.SettingsKey,
@@ -581,6 +661,20 @@ public sealed class LocalStore
             SoftInteractEnabled = value.SoftInteractEnabled,
             QuestItemUseEnabled = value.QuestItemUseEnabled,
             QuestEmoteUseEnabled = value.QuestEmoteUseEnabled,
+            NextActionEnabled = value.NextActionEnabled,
+            NextActionLocked = value.NextActionLocked,
+            NextActionX = value.NextActionX,
+            NextActionY = value.NextActionY,
+            QuestItemsBarEnabled = value.QuestItemsBarEnabled,
+            QuestItemsBarLocked = value.QuestItemsBarLocked,
+            QuestItemsBarX = value.QuestItemsBarX,
+            QuestItemsBarY = value.QuestItemsBarY,
+            QuestItemsButtonSize = value.QuestItemsButtonSize,
+            CompanionFourierBlinkEnabled = value.CompanionFourierBlinkEnabled,
+            CompanionSeasonalEnabled = value.CompanionSeasonalEnabled,
+            CompanionSeasonalTheme = value.CompanionSeasonalTheme,
+            CompanionAutoRotateEnabled = value.CompanionAutoRotateEnabled,
+            CompanionRotationInterval = value.CompanionRotationInterval,
             InteractionTargets = (int)value.InteractionTargets,
             EnemyInteractMode = (int)value.EnemyInteractMode,
             InteractionHudEnabled = value.InteractionHudEnabled,

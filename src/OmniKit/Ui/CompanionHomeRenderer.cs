@@ -28,9 +28,16 @@ internal static class CompanionHomeRenderer
         else draw.AddImage(texture, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
 
         if (!showHouse) return bounds;
+        DrawHouseWalls(draw, houseTexture, house, houseMirrored);
+        return bounds;
+    }
+
+    public static void DrawHouseWalls(ImDrawListPtr draw, ImTextureID houseTexture, CompanionHomeRect house, bool houseMirrored)
+    {
         // The visitor goes behind the house walls but stays visible on its bed.
-        var doorMin = house.At(houseMirrored ? .12f : .43f, .55f);
-        var doorMax = house.At(houseMirrored ? .57f : .88f, .89f);
+        var opening = CompanionHomeGeometry.Opening(house, houseMirrored);
+        var doorMin = opening.Minimum;
+        var doorMax = opening.Maximum;
         Span<Vector4> clips =
         [
             new(house.Minimum.X, house.Minimum.Y, house.Maximum.X, doorMin.Y),
@@ -44,7 +51,6 @@ internal static class CompanionHomeRenderer
             DrawHouse(draw, houseTexture, house, houseMirrored);
             draw.PopClipRect();
         }
-        return bounds;
     }
 
     public static void DrawZs(ImDrawListPtr draw, CompanionHomeRect house, bool mirrored,

@@ -51,6 +51,7 @@ $runtimeFiles = @(
     'assets/ember-poses.png', 'assets/prism-poses.png', 'assets/wink-icon.png',
     'assets/companion-house.png', 'assets/companion-grab-hand.png',
     'assets/companion-naps-abstract.png', 'assets/companion-naps.frames.json',
+    'assets/seasonal-accessories.png', 'assets/seasonal-accessories.frames.json',
     'browser/OmniKit.Browser.exe', 'browser/OmniKit.Browser.dll', 'browser/OmniKit.Browser.deps.json',
     'browser/OmniKit.Browser.runtimeconfig.json', 'browser/OmniKit.Browser.build.json',
     'browser/Microsoft.Web.WebView2.Core.dll', 'browser/Microsoft.Web.WebView2.WinForms.dll', 'browser/WebView2Loader.dll',

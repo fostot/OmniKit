@@ -2,7 +2,8 @@ using System.Numerics;
 
 namespace OmniKit.Ui;
 
-internal readonly record struct CompanionSurface(ulong Id, Vector2 Minimum, Vector2 Maximum, float HeaderHeight, int Order)
+internal readonly record struct CompanionSurface(ulong Id, Vector2 Minimum, Vector2 Maximum, float HeaderHeight, int Order,
+    bool CanContain = true)
 {
     public Vector2 Size => Maximum - Minimum;
     public bool Contains(Vector2 point) => point.X >= Minimum.X && point.Y >= Minimum.Y && point.X <= Maximum.X && point.Y <= Maximum.Y;

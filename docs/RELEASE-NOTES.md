@@ -1,3 +1,50 @@
+# 0.1.0.0013: action icons, launcher layout and seasonal accessories
+
+Next Action previews the same guarded resolver used by Interact. Locked, it is
+one icon; unlocking shows the NEXT ACTION heading and drag area. A separate lock
+click never executes the action. The new Quest Items settings tab also controls
+a paged manual bar with up to eight visible buttons. It reads usable non-ground
+KeyItems and ordinary bag items explicitly listed by the current native quest
+tracker, not arbitrary potion inventory. A selected item is a manual choice,
+not proof that it matches the target. Each click rechecks the existing target,
+exact stack and native usability before at most one unqueued attempt.
+
+Verified Interact mappings remain limited to Tiller's Shovel in Rocks in a Hard
+Place, Fetid Dodo Flesh in Forbidden Island and `/soothe` in A Bridge Too Full.
+Their opt-ins remain separate. A blocked matched rule never falls through to
+another action; no generic quest solver, automatic target guessing or retries
+were added. See [items](QUEST-ITEMS.md) and [emotes](QUEST-EMOTES.md).
+
+Launcher settings now adjust width, text size, visible result count, horizontal
+position and distance from the top, with one reset button. The empty launcher
+stays input plus gear; typing expands it within the viewport. Results beyond the
+visible count remain reachable by scrolling or arrow keys.
+
+Nine shared accessory themes cover All Saints' Wake, Starlight, Heavensturn,
+Valentione, Little Ladies' Day, Hatching-tide, Make It Rain, Moonfire Faire and The
+Rising. Auto reads supported native festival state, with no month-based guessing.
+Only explicit official date windows may substitute when native data is unavailable;
+unknown/conflicting native states remain visible as status with manual selection
+available. Optional local companion rotation accepts 30–3600 seconds and preserves
+the saved manual companion. Wink gains an optional Fourier-smoothed blink.
+
+The pickup hand centers the carried companion or house beneath its grip. Nap
+entry uses the front doorway, and walking off supported thin HUD strips falls
+toward a lower support or the screen floor. These changes preserve the existing
+eight whole-body companions and their motion.
+
+Schema 8 adds 19 explicitly whitelisted fields and migrates versions 1–7 atomically,
+preserving prior preferences, chords and local AI consent. Import still cannot
+grant new AI transmission consent. The base remains `0.1.0`; this batch targets
+source count 13 and label `0.1.0.0013`, with its finalized source hash in the build.
+Earlier published artifacts remain unchanged. Isolated checks do not establish
+live inventory use, festival detection, input focus or motion inside FFXIV; those
+remain on the [acceptance checklist](IN-GAME-CHECKLIST.md).
+
+The larger per-companion appearance collection, selectable everyday/holiday homes,
+alternative hands, grounded hopping and rings are pending a later batch and are
+not included here.
+
 # 0.1.0.0011: independent homes, naps and browser controls
 
 The active companions are Moonblob (default), Wink, Nova, Mochi, Puff, Orbit,

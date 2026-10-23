@@ -13,7 +13,7 @@ namespace OmniKit.Interaction;
 /// <summary>
 /// A Bridge Too Full's two soothing targets only. Framework-thread callers keep
 /// fresh-press, combat/busy, distance, visibility and confirmed-target guards.
-/// Observation never executes an emote or queries its immediate usability.
+/// Observation never executes an emote; previews may query current usability.
 /// </summary>
 internal sealed unsafe class QuestEmoteService(Configuration config)
 {
@@ -22,6 +22,14 @@ internal sealed unsafe class QuestEmoteService(Configuration config)
     public bool CanOfferTarget(IGameObject target) => config.QuestEmoteUseEnabled
         && QuestEmotePolicy.MatchesTarget(target.BaseId)
         && QuestEmotePolicy.CanOffer(Capture(target, checkEmoteState: false));
+
+    public QuestActionPreview? Preview(IGameObject target)
+    {
+        if (!config.QuestEmoteUseEnabled || !QuestEmotePolicy.MatchesTarget(target.BaseId)) return null;
+        var emote = Services.Data.GetExcelSheet<Emote>().GetRowOrDefault(QuestEmotePolicy.EmoteId);
+        return QuestActionPreview.ForEmote(Capture(target), emote?.Icon ?? 0,
+            emote?.Name.ToString() ?? "Quest emote");
+    }
 
     public QuestEmoteUseResult TryUse(IGameObject target)
     {

@@ -8,13 +8,14 @@ using OmniKit.Ui;
 
 internal static class NativeRender
 {
-    public static void Run(string root, Action<bool, string> check)
+    public static void Run(string root, Action<bool, string> check, bool doorSequence = false, string sequenceName = "door-after")
     {
         var directory = Path.Combine(root, "assets");
         var output = Path.Combine(root, ".local", "visualharness", "companion-home");
+        if (doorSequence) output = Path.Combine(output, sequenceName);
         Directory.CreateDirectory(output);
         var library = new CompanionNapArtwork(directory);
-        var identities = Configuration.AvatarNames.Select(avatar => (avatar, "Default")).ToArray();
+        var identities = (doorSequence ? new[] { "Wink" } : Configuration.AvatarNames).Select(avatar => (avatar, "Default")).ToArray();
         var context = ImGui.CreateContext();
         try
         {
@@ -59,21 +60,27 @@ internal static class NativeRender
             foreach (var mirrored in new[] { false, true })
             {
                 var tile = new Vector2(MathF.Ceiling(size * 3.6f), MathF.Ceiling(size * 1.5f));
-                io.DisplaySize = new Vector2(tile.X * 4, (tile.Y + 32) * identities.Length + 22);
+                var columns = doorSequence ? 6 : 4;
+                io.DisplaySize = new Vector2(tile.X * columns, (tile.Y + 32) * identities.Length + 22);
                 ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList();
-                draw.AddText(new Vector2(8, 4), 0xFFFFFFFF, $"Production home painter / {size:0}px / {(mirrored ? "left" : "right")} door / Enter, Settle, Inhale, Exhale");
+                draw.AddText(new Vector2(8, 4), 0xFFFFFFFF, $"Production home painter / {size:0}px / {(mirrored ? "left" : "right")} door / {(doorSequence ? "Enter .05 / .35 / .75 / 1.25 / Sleep / Leave .70" : "Enter, Settle, Inhale, Exhale")}");
                 for (var row = 0; row < identities.Length; row++)
                 {
                     var (avatar, outfit) = identities[row];
                     if (!library.TryGet(avatar, outfit, out var sheet) || sheet == null) throw new InvalidOperationException("Missing reviewed nap row.");
                     draw.AddText(new Vector2(8, 23 + row * (tile.Y + 32)), 0xFFFFFFFF, avatar + " / " + outfit);
-                    for (var column = 0; column < 4; column++)
+                    for (var column = 0; column < columns; column++)
                     {
                         var minimum = new Vector2(column * tile.X, 43 + row * (tile.Y + 32));
                         var layout = new CompanionLayout(minimum, minimum + tile, new Vector2(size));
                         var house = CompanionHomeGeometry.Bounds(layout, minimum, tile, new Vector2(.5f, 1));
                         var state = column switch { 0 => CompanionHomeState.Entering, 1 => CompanionHomeState.Settling, _ => CompanionHomeState.Sleeping };
                         var time = column switch { 0 => .7f, 1 => .35f, 2 => 0, _ => 1.6f };
+                        if (doorSequence)
+                        {
+                            state = column < 4 ? CompanionHomeState.Entering : column == 4 ? CompanionHomeState.Sleeping : CompanionHomeState.Leaving;
+                            time = column switch { 0 => .05f, 1 => .35f, 2 => .75f, 3 => 1.25f, 4 => .5f, _ => .7f };
+                        }
                         var routine = Sample(layout, house, mirrored, state, time);
                         draw.PushClipRect(minimum, minimum + tile, true);
                         var houseTexture = new ImTextureID(textures["companion-house.png"]);
@@ -88,7 +95,7 @@ internal static class NativeRender
                     }
                 }
                 ImGui.Render();
-                renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"all-eight-{size:0}-{(mirrored ? "left" : "right")}.png"));
+                renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"{(doorSequence ? "door-sequence" : "all-eight")}-{size:0}-{(mirrored ? "left" : "right")}.png"));
             }
 
             io.DisplaySize = new Vector2(640, 420);

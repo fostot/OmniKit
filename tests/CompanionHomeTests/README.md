@@ -1,5 +1,7 @@
 # Companion home and nap checks
 
+The cosmetic rotation helper can be checked independently with `dotnet run --project tests/CompanionHomeTests -c Release -- --rotation-only`. Synthetic clocks cover deferred changes during carry/nap/preview, manual selection and interval resets, disabled restoration, bounded intervals, clock rollback, no catch-up bursts and all eight choices. It never writes preferences or calls the game.
+
 Run from the repository root:
 
 ```powershell

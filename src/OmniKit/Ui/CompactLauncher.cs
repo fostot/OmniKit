@@ -4,6 +4,11 @@ using OmniKit.Search;
 
 namespace OmniKit.Ui;
 
+internal readonly record struct LauncherOptions(float Width, float TextScale, int ResultCount, float CenterX, float Top)
+{
+    public static LauncherOptions Default => new(640, 1, 7, .5f, .20f);
+}
+
 /// <summary>The launcher has no idle content beyond its search bar and settings button.</summary>
 internal sealed class CompactLauncher
 {
@@ -15,26 +20,53 @@ internal sealed class CompactLauncher
 
     public void Draw(ref bool open, ref string query, IReadOnlyList<SearchEntry> entries,
         float scale, Action<SearchEntry> activate, Action settings, Action<string> companion,
-        Action<string> wiki, string status = "")
+        Action<string> wiki, string status = "", LauncherOptions? appearance = null)
     {
+        scale = Math.Clamp(float.IsFinite(scale) ? scale : 1, .5f, 3);
+        var options = appearance ?? LauncherOptions.Default;
+        var textScale = FiniteRange(options.TextScale, .75f, 1.5f, 1);
         var hasQuery = !string.IsNullOrWhiteSpace(query);
         var rows = hasQuery ? GetResults(entries, query, companion, wiki) : [];
         var viewport = ImGui.GetMainViewport();
-        var width = Math.Min(680 * scale, viewport.WorkSize.X - 24 * scale);
+        var gutter = 12 * scale;
+        var width = Math.Max(1, Math.Min(FiniteRange(options.Width, 320, 1200, 640) * scale, viewport.WorkSize.X - gutter * 2));
         var padding = 12 * scale;
-        var barHeight = ImGui.GetTextLineHeight() + 24 * scale;
-        var rowHeight = ImGui.GetTextLineHeight() * 2 + 14 * scale;
-        var top = Math.Min(viewport.WorkSize.Y * .23f, 120 * scale);
-        var availableHeight = Math.Max(barHeight + padding * 2, viewport.WorkSize.Y - top - 16 * scale);
-        var statusHeight = hasQuery && status.Length > 0 ? ImGui.GetTextLineHeightWithSpacing() + 4 * scale : 0;
-        var resultsHeight = hasQuery ? Math.Min(Math.Min(rows.Count, 7) * rowHeight, Math.Max(1, availableHeight - barHeight - padding * 3 - statusHeight)) : 0;
+        var framePaddingY = 12 * scale;
+        var baseLineHeight = ImGui.GetTextLineHeight();
+        var lineHeight = baseLineHeight * textScale;
+        var barHeight = lineHeight + framePaddingY * 2;
+        var rowHeight = lineHeight * 2 + 14 * scale;
+        var availableHeight = Math.Max(1, viewport.WorkSize.Y - gutter * 2);
+        var hasStatus = hasQuery && status.Length > 0;
+        var statusHeight = hasStatus ? lineHeight + 4 * scale : 0;
+        var showDescriptions = availableHeight - barHeight - padding * 2 - 12 * scale - statusHeight >= rowHeight;
+        if (hasQuery && !showDescriptions)
+        {
+            // Keep one complete readable result in a short viewport. Descriptions
+            // remain available in the existing hover tooltip.
+            padding = framePaddingY = 8 * scale;
+            var lineBudget = (availableHeight - (hasStatus ? 60 : 56) * scale) / (hasStatus ? 3 : 2);
+            textScale = Math.Min(textScale, Math.Max(1, lineBudget) / Math.Max(1, baseLineHeight));
+            lineHeight = baseLineHeight * textScale;
+            barHeight = lineHeight + framePaddingY * 2;
+            statusHeight = hasStatus ? lineHeight + 4 * scale : 0;
+            rowHeight = lineHeight + 12 * scale;
+        }
+        var availableResults = Math.Max(1, availableHeight - barHeight - padding * 2 - 12 * scale - statusHeight);
+        var visibleRows = Math.Min(Math.Min(rows.Count, Math.Clamp(options.ResultCount, 3, 12)),
+            Math.Max(1, (int)MathF.Floor(availableResults / rowHeight)));
+        var resultsHeight = hasQuery ? Math.Min(availableResults, visibleRows * rowHeight) : 0;
         var height = padding * 2 + barHeight + (hasQuery ? resultsHeight + 12 * scale + statusHeight : 0);
+        var position = viewport.WorkPos + new Vector2(
+            viewport.WorkSize.X * FiniteRange(options.CenterX, .05f, .95f, .5f) - width / 2,
+            viewport.WorkSize.Y * FiniteRange(options.Top, 0, .9f, .20f));
+        position = Vector2.Clamp(position, viewport.WorkPos + new Vector2(gutter),
+            Vector2.Max(viewport.WorkPos + new Vector2(gutter), viewport.WorkPos + viewport.WorkSize - new Vector2(width, height) - new Vector2(gutter)));
         ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.Always);
-        ImGui.SetNextWindowPos(viewport.WorkPos + new Vector2(viewport.WorkSize.X / 2, top),
-            ImGuiCond.Always, new Vector2(.5f, 0));
+        ImGui.SetNextWindowPos(position, ImGuiCond.Always);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(padding));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 12) * scale);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8 * scale, framePaddingY));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2 * scale);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 1);
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(.085f, .092f, .11f, .99f));
@@ -47,6 +79,7 @@ internal sealed class CompactLauncher
             { ImGui.End(); return; }
             try
             {
+                ImGui.SetWindowFontScale(textScale);
                 if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && ImGui.IsKeyPressed(ImGuiKey.Escape))
                 { open = false; ImGui.SetWindowFocus((string)null!); return; }
                 var origin = ImGui.GetCursorScreenPos();
@@ -63,7 +96,7 @@ internal sealed class CompactLauncher
                 SearchHasFocus = ImGui.IsItemActive();
                 var edited = ImGui.IsItemEdited();
                 if (edited) { selected = 0; resetScroll = true; }
-                if (ImGui.IsItemHovered()) Tooltip("Type a game window, plugin, job, or community. Tab opens your companion.", scale);
+                if (ImGui.IsItemHovered()) Tooltip("Type a game window, plugin, job, or community. Tab opens your companion.", scale, textScale);
                 if (SearchHasFocus && ImGui.IsKeyPressed(ImGuiKey.Tab)) { companion(query); open = false; }
                 ImGui.SetCursorScreenPos(origin + new Vector2(width - padding * 2 - iconWidth, 0));
                 if (ImGui.InvisibleButton("Settings", new Vector2(iconWidth, barHeight))) settings();
@@ -77,7 +110,7 @@ internal sealed class CompactLauncher
                     var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
                     draw.AddLine(center + direction * 7 * scale, center + direction * 11 * scale, gearColor, 3 * scale);
                 }
-                if (ImGui.IsItemHovered()) Tooltip("OmniKit settings", scale);
+                if (ImGui.IsItemHovered()) Tooltip("OmniKit settings", scale, textScale);
                 // Geometry was reserved before Begin. Newly typed content appears on the next frame.
                 if (!hasQuery || string.IsNullOrWhiteSpace(query)) return;
                 ImGui.SetCursorScreenPos(origin + new Vector2(0, barHeight + 6 * scale));
@@ -108,22 +141,26 @@ internal sealed class CompactLauncher
                     draw = ImGui.GetWindowDrawList();
                     var inset = new Vector2(10, 6) * scale;
                     draw.AddText(start + inset, ImGui.GetColorU32(ImGuiCol.Text), Fit(row.Title, rowWidth - 20 * scale));
-                    draw.AddText(start + inset + new Vector2(0, ImGui.GetTextLineHeight() + 3 * scale), ImGui.GetColorU32(ImGuiCol.TextDisabled),
-                        Fit(row.Source + " · " + row.Description, rowWidth - 20 * scale));
-                    if (ImGui.IsItemHovered()) Tooltip(row.Title + "\n" + row.Description, scale);
+                    if (showDescriptions)
+                        draw.AddText(start + inset + new Vector2(0, ImGui.GetTextLineHeight() + 3 * scale), ImGui.GetColorU32(ImGuiCol.TextDisabled),
+                            Fit(row.Source + " · " + row.Description, rowWidth - 20 * scale));
+                    if (ImGui.IsItemHovered()) Tooltip(row.Title + "\n" + row.Description, scale, textScale);
                     ImGui.PopID();
                 }
                 ImGui.EndChild();
                 if (statusHeight > 0)
                 {
                     ImGui.TextUnformatted(Fit(status, width - padding * 2));
-                    if (ImGui.IsItemHovered()) Tooltip(status, scale);
+                    if (ImGui.IsItemHovered()) Tooltip(status, scale, textScale);
                 }
             }
             finally { ImGui.End(); }
         }
         finally { ImGui.PopStyleColor(3); ImGui.PopStyleVar(5); }
     }
+
+    private static float FiniteRange(float value, float minimum, float maximum, float fallback)
+        => Math.Clamp(float.IsFinite(value) ? value : fallback, minimum, maximum);
 
     private static IReadOnlyList<SearchEntry> GetResults(IReadOnlyList<SearchEntry> entries, string query,
         Action<string> companion, Action<string> wiki)
@@ -141,7 +178,7 @@ internal sealed class CompactLauncher
         return text + "...";
     }
 
-    private static void Tooltip(string text, float scale)
+    private static void Tooltip(string text, float scale, float textScale)
     {
         var viewport = ImGui.GetMainViewport();
         var padding = ImGui.GetStyle().WindowPadding * 2;
@@ -154,6 +191,7 @@ internal sealed class CompactLauncher
         var maximum = Vector2.Max(minimum, viewport.WorkPos + viewport.WorkSize - size - new Vector2(8 * scale));
         ImGui.SetNextWindowPos(Vector2.Clamp(ImGui.GetIO().MousePos + new Vector2(12 * scale), minimum, maximum));
         ImGui.BeginTooltip();
+        ImGui.SetWindowFontScale(textScale);
         ImGui.PushTextWrapPos(ImGui.GetCursorPosX() + wrap);
         ImGui.TextUnformatted(shown);
         ImGui.PopTextWrapPos();

@@ -6,6 +6,8 @@ using OmniKit.Ui;
 
 var keyboardOnly = args.Contains("--keyboard");
 var tooltipsOnly = args.Contains("--tooltips");
+var appearanceOnly = args.Contains("--appearance");
+var baselineOnly = args.Contains("--baseline");
 var output = Path.GetFullPath(args.FirstOrDefault(argument => !argument.StartsWith("--", StringComparison.Ordinal)) ?? ".local/visualharness/launcher");
 var failures = new List<string>();
 var observedHeights = new Dictionary<string, int>();
@@ -20,8 +22,8 @@ var entries = new List<SearchEntry>
 for (var i = 0; i < 16; i++)
     entries.Add(Entry("long-" + i, $"Very long plugin action {i + 1:00}: a title that should fit without covering the scrollbar or overflowing the panel", "A deliberately lengthy description that must end with an ellipsis before the right edge of its row.", "long scroll"));
 
-if (!tooltipsOnly) VerifyKeyboard();
-foreach (var scale in keyboardOnly ? [] : new[] { 1f, 1.5f, 2f })
+if (!tooltipsOnly) { VerifyKeyboard(); VerifyKeyboard(new(320, 1.5f, 3, .95f, .9f), deep: true); }
+foreach (var scale in keyboardOnly || appearanceOnly ? [] : new[] { 1f, 1.5f, 2f })
 foreach (var viewport in new[] { new Vector2(1280, 720), new Vector2(640, 480) })
 {
     if (tooltipsOnly && (viewport.X != 640 || scale == 1)) continue;
@@ -34,6 +36,22 @@ foreach (var viewport in new[] { new Vector2(1280, 720), new Vector2(640, 480) }
     Render("cleared", "community", scale, viewport, clear: true);
     Render("status", "long", scale, viewport, status: "A long status message is shown here and must remain inside the launcher bounds.");
 }
+if (!keyboardOnly && !tooltipsOnly && !baselineOnly)
+foreach (var scale in new[] { 1f, 1.5f, 2f })
+foreach (var viewport in new[] { new Vector2(1280, 720), new Vector2(320, 360), new Vector2(480, 330) })
+foreach (var preset in new[]
+{
+    (Name: "small", Value: new LauncherOptions(320, .75f, 3, .05f, 0)),
+    (Name: "large", Value: new LauncherOptions(1200, 1.5f, 12, .95f, .9f)),
+})
+{
+    Render("blank-" + preset.Name, "", scale, viewport, appearance: preset.Value);
+    Render("results-" + preset.Name, "long", scale, viewport, appearance: preset.Value);
+    Render("cleared-" + preset.Name, "long", scale, viewport, clear: true, appearance: preset.Value);
+    if (preset.Name == "large") Render("status-" + preset.Name, "long", scale, viewport,
+        status: "A status stays readable inside the viewport.", appearance: preset.Value);
+}
+if (!keyboardOnly && !tooltipsOnly && !baselineOnly) renders += LauncherAppearanceChecks.Run(output, failures);
 if (failures.Count > 0)
 {
     foreach (var failure in failures) Console.WriteLine("FAIL: " + failure);
@@ -44,7 +62,7 @@ else if (renders > 0) Console.WriteLine($"PASS: {renders} actual launcher render
 SearchEntry Entry(string id, string title, string description, string keywords) =>
     new(id, title, description, keywords, "FFXIV", () => { });
 
-unsafe void VerifyKeyboard()
+unsafe void VerifyKeyboard(LauncherOptions? appearance = null, bool deep = false)
 {
     var context = ImGui.CreateContext();
     try
@@ -56,28 +74,35 @@ unsafe void VerifyKeyboard()
         io.Fonts.AddFontDefault(); io.Fonts.Build();
         _ = new SoftwareRenderer();
         var launcher = new CompactLauncher();
-        var query = "community";
+        var query = deep ? "long" : "community";
         var open = true;
         string? activated = null;
         launcher.Focus();
-        for (var frame = 0; frame < 8; frame++)
+        for (var frame = 0; frame < (deep ? 40 : 8); frame++)
         {
-            if (frame == 3) io.AddKeyEvent(ImGuiKey.DownArrow, true);
-            if (frame == 4) io.AddKeyEvent(ImGuiKey.DownArrow, false);
-            if (frame == 5) io.AddKeyEvent(ImGuiKey.Enter, true);
-            if (frame == 6) io.AddKeyEvent(ImGuiKey.Enter, false);
+            if (deep && frame is >= 3 and <= 32) io.AddKeyEvent(ImGuiKey.DownArrow, frame % 2 == 1);
+            if (!deep && frame == 3) io.AddKeyEvent(ImGuiKey.DownArrow, true);
+            if (!deep && frame == 4) io.AddKeyEvent(ImGuiKey.DownArrow, false);
+            if (frame == (deep ? 35 : 5)) io.AddKeyEvent(ImGuiKey.Enter, true);
+            if (frame == (deep ? 36 : 6)) io.AddKeyEvent(ImGuiKey.Enter, false);
             ImGui.NewFrame();
-            launcher.Draw(ref open, ref query, entries, 1, entry => activated = entry.Id, () => { }, _ => { }, _ => { });
+            launcher.Draw(ref open, ref query, entries, 1, entry => activated = entry.Id, () => { }, _ => { }, _ => { }, appearance: appearance);
             ImGui.Render();
         }
-        if (activated != SearchEngine.Find(entries, query)[1].Id)
-            failures.Add("Focused search: Down then Enter did not activate the second current result.");
-        else Console.WriteLine("PASS: focused search routes Down + Enter to the second current result.");
+        if (activated != SearchEngine.Find(entries, query)[deep ? 15 : 1].Id)
+            failures.Add(deep ? "Three visible rows prevented keyboard access to the sixteenth result."
+                : "Focused search: Down then Enter did not activate the second current result.");
+        else Console.WriteLine(deep ? "PASS: three-row launcher scrolls to and activates result sixteen."
+            : "PASS: focused search routes Down + Enter to the second current result.");
+        if (deep && !Enumerable.Range(0, ImGui.GetCurrentContext().Windows.Size)
+            .Any(i => ImGui.GetCurrentContext().Windows[i].Scroll.Y > 0))
+            failures.Add("Keyboard navigation did not scroll the selected offscreen row into view.");
     }
     finally { ImGui.DestroyContext(context); }
 }
 
-unsafe void Render(string name, string query, float scale, Vector2 viewport, bool scroll = false, bool clear = false, string status = "")
+unsafe void Render(string name, string query, float scale, Vector2 viewport, bool scroll = false, bool clear = false,
+    string status = "", LauncherOptions? appearance = null)
 {
     var context = ImGui.CreateContext();
     try
@@ -104,7 +129,7 @@ unsafe void Render(string name, string query, float scale, Vector2 viewport, boo
                 io.AddMouseWheelEvent(0, -3);
             }
             ImGui.NewFrame();
-            launcher.Draw(ref open, ref query, entries, scale, _ => { }, () => { }, _ => { }, _ => { }, status);
+            launcher.Draw(ref open, ref query, entries, scale, _ => { }, () => { }, _ => { }, _ => { }, status, appearance);
             ImGui.Render();
         }
         var id = $"{name}-{viewport.X}x{viewport.Y}-scale{scale:0.0}";
@@ -112,10 +137,15 @@ unsafe void Render(string name, string query, float scale, Vector2 viewport, boo
         var bounds = renderer.Save(ImGui.GetDrawData(), Path.Combine(output, id + ".png"));
         if (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= viewport.X - 2 || bounds.Bottom >= viewport.Y - 2)
             failures.Add(id + " reaches the viewport edge; inspect for clipping.");
-        var key = $"{viewport.X}-{viewport.Y}-{scale}";
+        var window = ImGuiP.FindWindowByName("###OmniKit.Launcher");
+        if (window.Pos.X < 2 || window.Pos.Y < 2 || window.Pos.X + window.Size.X > viewport.X - 2
+            || window.Pos.Y + window.Size.Y > viewport.Y - 2)
+            failures.Add(id + " window escapes the available viewport.");
+        if (window.ScrollMax.Y > 0) failures.Add(id + " outer window clips its input or status.");
+        var key = $"{viewport.X}-{viewport.Y}-{scale}-{appearance}";
         var height = bounds.Bottom - bounds.Top + 1;
-        if (name == "blank") observedHeights[key] = height;
-        else if (name is "whitespace" or "cleared")
+        if (name.StartsWith("blank", StringComparison.Ordinal)) observedHeights[key] = height;
+        else if (name == "whitespace" || name.StartsWith("cleared", StringComparison.Ordinal))
         {
             if (height != observedHeights[key]) failures.Add(id + " did not collapse to the blank search bar height.");
         }

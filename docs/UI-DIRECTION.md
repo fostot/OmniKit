@@ -7,13 +7,17 @@ instead of a native title bar.
 Alt + Space opens a compact launcher containing only the search field and a
 settings gear. An empty query shows no results, title, header, avatar, tabs or
 footer. Typing reveals the matching result list below the field; clearing the
-query collapses it again. The gear opens settings.
+query collapses it again. The gear opens settings. Launcher settings expose width
+(320–1200 logical pixels), text size (0.75–1.5×), visible rows (3–12), horizontal
+position and distance from the top, plus Reset launcher layout. Viewport clamping
+keeps the expanded list on screen; the row limit does not discard search results.
 
 The moon companion has a separate window, opened from settings. It contains
 welcome guidance, voice controls and optional AI chat. First-run guidance
 explains the local command matcher before offering optional AI.
 
-Settings use native tabs for Launcher, Interact, HUD, Companion, Data and About.
+Settings use native tabs for Launcher, Interact, HUD, Companion, Data, About and
+Quest Items.
 Companion groups Appearance, Voice and AI in a second tab bar. The initial
 settings size is 540 × 400 logical pixels, with a minimum of 480 × 330. Tab
 content scrolls independently and the footer reserves its own space for actionable status,
@@ -35,6 +39,16 @@ to a second action. The first emote mapping is `/soothe` in A Bridge Too Full;
 see [scope and sources](QUEST-EMOTES.md). The two item cases are Tiller's Shovel
 in Rocks in a Hard Place and Fetid Dodo Flesh in Forbidden Island; see
 [item scope](QUEST-ITEMS.md). These controls do not imply general quest automation.
+
+The Quest Items tab owns Next Action and the manual item bar. A locked Next Action
+is one icon with a separate corner lock. Unlocking reveals its NEXT ACTION heading
+and drag area; locking removes that editing chrome. The item bar follows the same
+pattern, pages when needed and shows up to eight items. A locked empty surface
+disappears. Disabled entries retain a readable reason on hover. Neither a lock
+click nor dragging may execute an action; a held button must not repeat. The two
+surfaces must keep separate bounds and readable headings at small viewports.
+The bar covers usable KeyItems and current native-tracked ordinary quest items,
+not arbitrary consumables. Its manual selection does not assert a target match.
 
 The interaction HUD is styled text without a window panel. It hides during NPC
 dialogue, active NPC/object interactions and cutscenes. Other paused actions hide
@@ -60,27 +74,41 @@ roaming area. Optional Frame interaction lets the user pick up a companion and
 place it on a supported visible frame's top or inside it. Its physics follow
 the frame, handle edges and recover safely when the frame disappears. A click
 opens its conversation; a drag does not. Mouth movement is an explicit preview, without
-synthesized speech or audio-driven lip sync.
+synthesized speech or audio-driven lip sync. Seasonal looks & rotation adds nine
+shared event accessory themes with Auto/manual selection. Auto follows supported
+native festival state; a missing or conflicting match shows status instead of
+guessing by month. Only verified, date-bounded official schedules can substitute
+when native data is unavailable. Optional rotation chooses a different companion
+at a 30–3600-second interval without overwriting the saved manual selection.
 The optional house has an independent normalized screen position, faces inward,
 and can be dragged outside the drawn roaming area without moving that area.
 Normal free roaming stays inside the drawn rectangle and routes around the house.
-Nap trips walk to the house at about twice normal speed, enter, settle, breathe
-asleep, wake and return continuously. All eight companions have matching nap art.
+Nap trips walk to the house at about twice normal speed, pass through the front
+doorway, settle, breathe asleep, wake and return continuously. All eight companions
+have matching nap art.
 The default is about 45 seconds awake and 20 asleep; awake interval accepts
 15–300 seconds and sleep duration 5–120. Naps and chimney sleep symbols have
 separate switches. Pausing animation freezes a trip; disabling naps or hiding or
 moving the house returns the companion continuously.
-Falling can land on supported frames below before reaching the screen floor.
+Walking off supported thin HUD strips falls toward supported frames below or the
+screen floor.
 Read-only frame observation includes compatible NoMouseInputs windows, but does
 not treat every full-screen canvas as a support.
 Optional open/closing/hold/release hand cues belong to pets and the house, with
-scale 0.2–1 and a smaller 0.4 default.
+scale 0.2–1 and a smaller 0.4 default. A picked-up object eases beneath the centered
+grip; changing hand size must not displace the carried object.
 Comments are occasional local text, never a background AI request. Wink's
-independent eyelid closes while the approved floating body stays stable.
+independent eyelid closes while the approved floating body stays stable. The
+optional Fourier-smoothed blink changes only Wink's blink curve and respects the
+existing blink/animation switches.
 
 Magic accents, animation and the companion can be disabled independently.
 Disabling animation leaves the companion still. The idle search field remains
 free of companion art.
+
+Source 13 does not include the larger per-avatar look collection, selectable
+everyday/holiday homes, alternative hands, grounded hops or rings. Those pending
+designs must not appear as working choices in this release's interface.
 
 The AI subtab must always allow returning to Appearance and Voice with actual
 mouse clicks. Native tab state and programmatic tab selection must agree.

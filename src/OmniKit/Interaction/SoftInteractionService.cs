@@ -39,6 +39,12 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     ];
 
     private Candidate? candidate;
+    private Candidate? previewCandidate;
+    private InteractionActionPreview? previewBase;
+    private InteractionActionPreview? nextAction;
+    private ActionRequest? requestedAction;
+    private long nextPreviewAt;
+    private (bool Items, bool Emotes, SoftTargetAction Action) previewOptions;
     private Vector2 viewportPosition;
     private Vector2 viewportSize;
     private bool uiCapturesInput;
@@ -90,6 +96,15 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     public GatheringGearService Gathering { get; } = new(config);
     public QuestItemService QuestItems { get; } = new(config);
     public QuestEmoteService QuestEmotes { get; } = new(config);
+    public QuestInventoryService Inventory { get; } = new();
+    public bool InventoryActionPaused { get; private set; } = true;
+    public InteractionActionPreview? NextAction => Volatile.Read(ref nextAction);
+    public bool RequestNextAction(InteractionActionPreview expected)
+        => candidate is { } selected && selected.Id == expected.TargetId && selected.Address == expected.Address
+            && ReferenceEquals(NextAction, expected) && expected.CanUse
+            && Interlocked.CompareExchange(ref requestedAction, new(selected, null, Environment.TickCount64), null) == null;
+    public bool RequestQuestItem(QuestInventoryEntry item)
+        => item.CanUse && Interlocked.CompareExchange(ref requestedAction, new(null, item, Environment.TickCount64), null) == null;
     public event Action? ConfigureHudRequested;
 
     public void Update(bool inputBlocked)
@@ -105,10 +120,55 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         var down = HotkeyChord.IsKeyDown(key);
         var pressed = interactionPress.Sample((int)key, (int)config.InteractModifier, down);
 
+        try
+        {
+            InventoryActionPaused = faulted || !Services.ClientState.IsLoggedIn
+                || Services.Conditions[ConditionFlag.BetweenAreas] || Services.Conditions[ConditionFlag.BetweenAreas51]
+                || GetActionPauseReason(inputBlocked, allowReleasedModifiers: true) != null;
+            Inventory.Update(config.QuestItemsBarEnabled && !faulted);
+            var click = Interlocked.Exchange(ref requestedAction, null);
+            if (click != null)
+            {
+                // A click is consumed once on the framework thread. Delayed or
+                // blocked clicks are discarded rather than retried later.
+                interactionPress.Pause();
+                if (Environment.TickCount64 - click.CreatedAt <= 250 && !faulted)
+                {
+                    if (click.Item is { } item)
+                    {
+                        if (Services.ClientState.IsLoggedIn && !Services.Conditions[ConditionFlag.BetweenAreas]
+                            && !Services.Conditions[ConditionFlag.BetweenAreas51]
+                            && GetActionPauseReason(inputBlocked, allowReleasedModifiers: true) == null)
+                            Inventory.TryUse(item);
+                    }
+                    else if (config.SoftInteractEnabled && click.Target is { } target
+                        && GetObservationUnavailableReason() == null && FindCandidate() == target
+                        && GetActionPauseReason(inputBlocked, allowReleasedModifiers: true,
+                            enemy: SoftTargetPolicy.IsEnemy(target.Category)) == null)
+                    {
+                        var current = Services.Objects.SearchById(target.Id);
+                        if (current != null && current.IsValid() && current.Address == target.Address
+                            && (SoftTargetPolicy.IsEnemy(target.Category)
+                                || !Gathering.TryPrepare(current, () => InteractIfStillEligible(target))))
+                            InteractIfStillEligible(target);
+                    }
+                }
+                return;
+            }
+        }
+        catch (Exception exception)
+        {
+            faulted = true;
+            InventoryActionPaused = true;
+            Volatile.Write(ref nextAction, null);
+            Services.Log.Error("Quest action controls stopped ({ErrorType}).", exception.GetType().Name);
+        }
+
         if (!config.SoftInteractEnabled || faulted)
         {
             Gathering.Dispose();
             candidate = null;
+            Volatile.Write(ref nextAction, null);
             observationInitialized = false;
             ActionPaused = true;
             interactionPress.Pause();
@@ -143,6 +203,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
 
             if (candidate is not { } selected)
             {
+                Volatile.Write(ref nextAction, null);
                 var unavailableAction = GetActionPauseReason(inputBlocked, allowReleasedModifiers: !down);
                 ActionPaused = unavailableAction != null;
                 if (ActionPaused) interactionPress.Pause();
@@ -158,6 +219,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
             if (pauseReason == null && action == SoftTargetAction.None)
                 pauseReason = "Choose what the interact key does to enemies in Interact settings.";
             ActionPaused = pauseReason != null;
+            RefreshNextAction(selected, action, pauseReason);
             if (ActionPaused)
             {
                 interactionPress.Pause();
@@ -214,8 +276,7 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
         viewportPosition = viewport.Pos;
         viewportSize = viewport.Size;
         lastDraw = Environment.TickCount64;
-        uiCapturesInput = ImGui.GetIO().WantCaptureKeyboard || ImGui.GetIO().WantTextInput
-            || ImGui.IsAnyItemActive() || hudPopupOpen || hudDragging;
+        CaptureUiInput();
 
         // Save a completed drag once, including when the candidate disappeared
         // before release. Do not write the configuration on every mouse movement.
@@ -302,6 +363,36 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
                 config.InteractionHudEffectSpeed, config.InteractionHudEffectAnimated, ImGui.GetTime(), config.InteractionHudOutlineThickness);
         }
         finally { draw.PopClipRect(); }
+    }
+
+    private void RefreshNextAction(Candidate selected, SoftTargetAction action, string? paused)
+    {
+        var now = Environment.TickCount64;
+        var options = (config.QuestItemUseEnabled, config.QuestEmoteUseEnabled, action);
+        if (previewCandidate != selected || previewOptions != options || now >= nextPreviewAt)
+        {
+            previewOptions = options;
+            previewCandidate = selected;
+            nextPreviewAt = now + 333;
+            var target = Services.Objects.SearchById(selected.Id);
+            var quest = target == null || !target.IsValid() || target.Address != selected.Address
+                ? null : QuestItems.Preview(target) ?? QuestEmotes.Preview(target);
+            previewBase = quest is { } required
+                ? new(selected.Id, selected.Address, required.Name, required.Kind == QuestActionKind.Emote ? "Emote" : "Use quest item",
+                    required.IconId, required.CanUse, required.Reason)
+                : new(selected.Id, selected.Address, selected.Name, action == SoftTargetAction.AttackEnemy ? "Target + attack"
+                    : action == SoftTargetAction.TargetEnemy ? "Target" : "Interact", 0,
+                    action != SoftTargetAction.None, string.Empty);
+        }
+        Volatile.Write(ref nextAction, previewBase == null ? null : previewBase with
+        { CanUse = previewBase.CanUse && paused == null, Reason = paused ?? previewBase.Reason });
+    }
+
+    public void CaptureUiInput(bool ownActionButton = false)
+    {
+        var io = ImGui.GetIO();
+        uiCapturesInput = io.WantTextInput || hudPopupOpen || hudDragging
+            || !ownActionButton && (io.WantCaptureKeyboard || ImGui.IsAnyItemActive());
     }
     private static bool IsWorldInteractionActive()
     {
@@ -719,10 +810,12 @@ internal sealed unsafe class SoftInteractionService(Configuration config) : IDis
     private void Clear(string reason)
     {
         candidate = null;
+        Volatile.Write(ref nextAction, null);
         Hint = reason;
         ActionPaused = true;
         interactionPress.Pause();
     }
 
     private sealed record Candidate(ulong Id, nint Address, string Name, InteractionTargets Category);
+    private sealed record ActionRequest(Candidate? Target, QuestInventoryEntry? Item, long CreatedAt);
 }

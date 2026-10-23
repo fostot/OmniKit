@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../src/OmniKit/Services.cs" Link="Services.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestActionPreview.cs" Link="QuestActionPreview.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestInventoryPolicy.cs" Link="QuestInventoryPolicy.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestInventoryService.cs" Link="QuestInventoryService.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestItemPolicy.cs" Link="QuestItemPolicy.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestItemService.cs" Link="QuestItemService.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestEmotePolicy.cs" Link="QuestEmotePolicy.cs" />
+    <Compile Include="../../../src/OmniKit/Interaction/QuestEmoteService.cs" Link="QuestEmoteService.cs" />
+    <Reference Include="Dalamud" HintPath="$(DalamudLibPath)/Dalamud.dll" />
+    <Reference Include="FFXIVClientStructs" HintPath="$(DalamudLibPath)/FFXIVClientStructs.dll" />
+    <Reference Include="InteropGenerator.Runtime" HintPath="$(DalamudLibPath)/InteropGenerator.Runtime.dll" />
+    <Reference Include="Lumina" HintPath="$(DalamudLibPath)/Lumina.dll" />
+    <Reference Include="Lumina.Excel" HintPath="$(DalamudLibPath)/Lumina.Excel.dll" />
+  </ItemGroup>
+</Project>

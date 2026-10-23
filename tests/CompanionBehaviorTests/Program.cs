@@ -21,6 +21,11 @@ AssemblyLoadContext.Default.Resolving += (context, name) =>
     return null;
 };
 var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(plugin);
+if (args.Contains("--fourier-blink-only"))
+{
+    FourierBlinkRender.Run(assembly, output);
+    return;
+}
 var instance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 var statics = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 var roaming = assembly.GetType("OmniKit.Ui.RoamingCompanion", true)!;
@@ -98,6 +103,8 @@ try
     Surfaces(true, new Vector2(20, 100));
     var observed = Surfaces(true, new Vector2(20, 100));
     Check(observed.Length == 1, "The actual ImGui reader includes a supported frame and excludes its own house overlay.");
+    Check((bool)observed[0].GetType().GetProperty("CanContain")!.GetValue(observed[0])!,
+        "An ordinary titled window retains intentional interior containment.");
     Check((Vector2)observed[0].GetType().GetProperty("Minimum")!.GetValue(observed[0])! == new Vector2(20, 100), "Surface coordinates match the actual frame.");
     observed = Surfaces(true, new Vector2(90, 130));
     Check((Vector2)observed[0].GetType().GetProperty("Minimum")!.GetValue(observed[0])! == new Vector2(90, 130), "Surface snapshots track a moved frame.");
@@ -110,9 +117,10 @@ try
         if(show)
         {
             var flags=ImGuiWindowFlags.NoDecoration|ImGuiWindowFlags.NoSavedSettings|ImGuiWindowFlags.NoMouseInputs|ImGuiWindowFlags.NoBackground;
-            void Frame(string name,Vector2 at,Vector2 size,bool ink,bool clipped=false)
+            void Frame(string name,Vector2 at,Vector2 size,bool ink,bool clipped=false,bool clickThrough=true)
             {
-                ImGui.SetNextWindowPos(at); ImGui.SetNextWindowSize(size); ImGui.Begin(name,flags);
+                ImGui.SetNextWindowPos(at); ImGui.SetNextWindowSize(size);
+                ImGui.Begin(name,clickThrough ? flags : flags & ~ImGuiWindowFlags.NoMouseInputs);
                 if(clipped) ImGui.GetWindowDrawList().PushClipRect(Vector2.Zero,Vector2.One,true);
                 if(ink) ImGui.GetWindowDrawList().AddRectFilled(at+new Vector2(4),at+size-new Vector2(4),0xFFDAA45C);
                 if(clipped) ImGui.GetWindowDrawList().PopClipRect();
@@ -123,6 +131,9 @@ try
             Frame("Synthetic empty input overlay",new Vector2(350,100),new Vector2(150,30),false);
             Frame("Synthetic fully clipped HUD",new Vector2(350,180),new Vector2(150,30),true,true);
             Frame("##OmniKitVisibleTargetControls",new Vector2(350,240),new Vector2(150,30),true);
+            Frame("##OmniKitNextAction",new Vector2(350,280),new Vector2(150,30),true);
+            Frame("##OmniKitQuestItems",new Vector2(350,320),new Vector2(150,30),true);
+            Frame("Synthetic interactive HUD strip",new Vector2(50,180),new Vector2(220,40),true,clickThrough:false);
             ImGui.SetNextWindowPos(Vector2.Zero); ImGui.SetNextWindowSize(new Vector2(640,440));
             ImGui.Begin("Synthetic fullscreen canvas",flags);
             ImGui.GetWindowDrawList().AddRectFilled(new Vector2(10),new Vector2(50),0xFFDAA45C);
@@ -134,11 +145,14 @@ try
     }
     HudSurfaces(true);
     observed=HudSurfaces(true);
-    Check(observed.Length==2,"Visible click-through HUD frames are supported; empty, clipped, own, child and fullscreen overlays are excluded.");
-    foreach(var entry in observed)
+    Check(observed.Length==3,"Visible HUD strips are supported; empty, clipped, own quest/target, child and fullscreen overlays are excluded.");
+    foreach(var entry in observed.Take(2))
         Check((Vector2)entry.GetType().GetProperty("Minimum")!.GetValue(entry)! == new Vector2(54,104)
             && (Vector2)entry.GetType().GetProperty("Maximum")!.GetValue(entry)! == new Vector2(266,136),
             "A transparent NoMouseInputs frame uses its actual visible ink bounds.");
+    foreach(var entry in observed)
+        Check(!(bool)entry.GetType().GetProperty("CanContain")!.GetValue(entry)!,
+            "Click-through and transparent titleless HUD strips cannot invent interior walls.");
     Check((int)observed[0].GetType().GetProperty("Order")!.GetValue(observed[0])!
         < (int)observed[1].GetType().GetProperty("Order")!.GetValue(observed[1])!,"Overlapping HUD frames preserve native ImGui stacking order.");
     renderer.Save(ImGui.GetDrawData(),Path.Combine(output,"click-through-surfaces.png"));
@@ -243,7 +257,7 @@ try
     foreach (var step in new[] { (true, 0f, 0), (true, .05f, 0), (true, .05f, 1), (true, .05f, 1), (true, .05f, 2), (false, .01f, 3) })
     {
         ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList();
-        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), step.Item2, step.Item1, null]);
+        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), step.Item2, step.Item1, null, new Vector2(320, 220)]);
         var expected = new Vector2(step.Item3 % 2, step.Item3 / 2) * .5f;
         Check(draw.VtxBuffer.Size == 4 && draw.VtxBuffer[0].Uv == expected, "Grab cues use open, closing, hold, then release atlas poses.");
         Check(Math.Abs(draw.VtxBuffer[1].Pos.X - draw.VtxBuffer[0].Pos.X - 96 * .4f) < .001f,
@@ -255,6 +269,25 @@ try
                     "Hand cues are clipped to the viewport even when the pointer is outside it.");
         ImGui.Render();
     }
+
+    var grabAnchor = assembly.GetType("OmniKit.Ui.CompanionGrabAnchor", true)!;
+    var gripInCell = grabAnchor.GetMethod("GripInCell", statics)!;
+    foreach (var bodySize in new[] { 48f, 96f, 192f })
+    foreach (var handScale in new[] { .2f, .4f, 1f })
+    foreach (var center in new[] { new Vector2(320, 220), new Vector2(96), new Vector2(544, 344) })
+    {
+        Set(config, "CompanionGrabHandScale", handScale);
+        Set(companion, "handWasDragging", true); Set(companion, "handTime", .3f);
+        ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList();
+        ImGui.GetIO().MousePos = new Vector2(-1000, 1000);
+        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(bodySize), 0f, true, null, center]);
+        var handSize = draw.VtxBuffer[2].Pos - draw.VtxBuffer[0].Pos;
+        var contact = draw.VtxBuffer[0].Pos + handSize * (Vector2)gripInCell.Invoke(null, [2])!;
+        Check(Vector2.Distance(contact, center) < .0001f,
+            "The actual held hand contacts the supplied body or house centre at every scale, regardless of mouse position.");
+        ImGui.Render();
+    }
+    Set(config, "CompanionGrabHandScale", .4f);
 
     var libraryType = assembly.GetType("OmniKit.Ui.CompanionAnimationLibrary", true)!;
     var library = Activator.CreateInstance(libraryType, Path.GetFullPath("assets"))!;
@@ -296,7 +329,7 @@ try
         Vector2 Q(string name) => (Vector2)quad.GetType().GetProperty(name)!.GetValue(quad)!;
         draw.AddImageQuad(new ImTextureID(2UL), Q("A"), Q("B"), Q("C"), Q("D"), Q("UvA"), Q("UvB"), Q("UvC"), Q("UvD"), 0xFFFFFFFF);
         drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), .016f, false,
-            bounds.Item1 + (bounds.Item2 - bounds.Item1) * new Vector2(.5f, .1f)]);
+            bounds.Item1 + (bounds.Item2 - bounds.Item1) * new Vector2(.5f, .1f), null]);
         var (vertices, triangles) = Snapshot(draw);
         samples.Add(new { rightSide, vertices, triangles }); ImGui.Render();
     }

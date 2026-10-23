@@ -1,7 +1,13 @@
 using System.Numerics;
 using OmniKit.Ui;
 
-var checks = 0;
+if (args.Contains("--grab-only"))
+{
+    Console.WriteLine($"Companion grab anchors: {GrabAnchorChecks.Run()} focused checks passed.");
+    return;
+}
+
+var checks = GrabAnchorChecks.Run();
 void Check(bool value, string why) { checks++; if (!value) throw new Exception(why); }
 var viewportMin = new Vector2(100, 50);
 var viewportMax = new Vector2(900, 650);
@@ -41,6 +47,34 @@ for (var i = 0; i < 900; i++)
         "Contained movement never clips outside the observed interior.");
 }
 Check(sawPush, "Reaching a contained edge produces a pushing reaction.");
+var hudStrip = surface with { Id = 30, HeaderHeight = 12, CanContain = false };
+foreach (var left in new[] { false, true })
+{
+    var visitor = new CompanionPhysics();
+    var release = new Vector2(425, 400); // Below the synthetic header and inside a sprite-sized region.
+    visitor.PickUp(release - size * .5f, release, left);
+    visitor.Drop(release, [hudStrip], viewportMin, viewportMax, size, options);
+    Check(visitor.Placement == CompanionPlacement.Perched, "Dropping anywhere on a HUD strip perches instead of inventing a container.");
+    var movedTowardEdge = true;
+    for (var tick = 0; tick < 300 && visitor.Placement == CompanionPlacement.Perched; tick++)
+    {
+        var previousX = visitor.Position.X;
+        visitor.Update([hudStrip], viewportMin, viewportMax, size, .05f, true, false, options);
+        movedTowardEdge &= left ? visitor.Position.X <= previousX : visitor.Position.X >= previousX;
+    }
+    Check(movedTowardEdge && visitor.Placement == CompanionPlacement.Falling,
+        "A HUD strip has no invisible wall or timed reversal on its " + (left ? "left" : "right") + " end.");
+    visitor.Update([hudStrip], viewportMin, viewportMax, size, .05f, true, false, options);
+    Check(visitor.Placement == CompanionPlacement.Falling, "The departing visitor does not catch the same HUD ledge again.");
+}
+var noHudPerch = new CompanionPhysics();
+noHudPerch.PickUp(new Vector2(377, 352), new Vector2(425, 400), false);
+noHudPerch.Drop(new Vector2(425, 400), [hudStrip], viewportMin, viewportMax, size, options with { Perch = false });
+Check(noHudPerch.Placement == CompanionPlacement.Falling,
+    "Disabling HUD perching cannot accidentally turn a non-container into an interior.");
+physics.Update([hudStrip with { Id = surface.Id }], viewportMin, viewportMax, size, .05f, true, false, options);
+Check(physics.Placement == CompanionPlacement.Falling, "A contained window that becomes an open HUD strip releases its visitor.");
+PickAndDrop(new Vector2(400, 400));
 surfaces[0] = surface with { Maximum = surface.Minimum + new Vector2(50) };
 Tick();
 Check(physics.Placement == CompanionPlacement.Falling, "Resizing a container below the sprite size safely detaches into a fall.");

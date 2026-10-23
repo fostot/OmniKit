@@ -23,14 +23,18 @@ internal static class CompanionHomeGeometry
     }
 
     public static Vector2 Outside(CompanionLayout layout, CompanionHomeRect home, bool facesLeft)
-        => new(facesLeft ? home.Minimum.X - layout.SpriteSize.X * 1.04f : home.Maximum.X + layout.SpriteSize.X * .04f,
-            home.Maximum.Y - layout.SpriteSize.Y);
+        => new(home.At(facesLeft ? .3365f : .6635f, 0).X - layout.SpriteSize.X * .5f, home.Maximum.Y + 4);
 
     public static Vector2 Door(CompanionHomeRect home, Vector2 sprite, bool facesLeft)
-        => home.At(facesLeft ? .31f : .69f, .87f) - sprite * new Vector2(.5f, .9f);
+        => home.At(facesLeft ? .3365f : .6635f, .872f) - sprite * new Vector2(.5f, .9f);
+
+    // Measured from the original cropped house image: source x600..1040.
+    // Keep the bed and roof masking heights used by the accepted nap painter.
+    public static CompanionHomeRect Opening(CompanionHomeRect home, bool facesLeft)
+        => new(home.At(facesLeft ? .133f : .46f, .55f), home.At(facesLeft ? .54f : .867f, .89f));
 
     public static Vector2 Corner(CompanionLayout layout, CompanionHomeRect home, bool facesLeft)
-        => new(Outside(layout, home, facesLeft).X, home.Minimum.Y - layout.SpriteSize.Y * 1.05f);
+        => new(facesLeft ? home.Minimum.X - layout.SpriteSize.X - 4 : home.Maximum.X + 4, home.Maximum.Y + 4);
 }
 
 internal enum CompanionHomeState { Roaming, Approaching, Entering, Settling, Sleeping, Waking, Leaving, Returning }
@@ -49,6 +53,7 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     private Vector2 viewportMinimum;
     private Vector2 viewportMaximum;
     private Vector2 leaveTarget;
+    private Vector2 leaveCorner;
     private float leaveScale;
     private bool lastFacesLeft;
     private bool cancellationPending;
@@ -97,7 +102,7 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
             if (UsesNapArt)
             {
                 var oldHouse = new CompanionHomeRect(lastHouseMinimum, lastHouseMaximum);
-                BeginLeaving(CompanionHomeGeometry.Outside(layout, oldHouse, lastFacesLeft));
+                BeginLeaving(layout, oldHouse, lastFacesLeft);
             }
             else SetState(CompanionHomeState.Returning);
         }
@@ -119,7 +124,7 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
         if (State == CompanionHomeState.Approaching)
         {
             var target = approachLeg == 0 ? corner : outside;
-            if (WalkTo(target, layout, house, dt))
+            if (WalkTo(target, layout, house, dt, forecourt: approachLeg == 1))
             {
                 if (approachLeg++ == 0) return;
                 entryStart = Position; FacingLeft = !facesLeft;
@@ -145,7 +150,7 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
         {
             if (stateTime >= 1)
             {
-                BeginLeaving(outside);
+                BeginLeaving(layout, house, facesLeft);
             }
         }
         else if (State == CompanionHomeState.Leaving)
@@ -155,8 +160,9 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
                 var t = Smooth(stateTime / 1.4f);
                 Position = Vector2.Lerp(entryStart, leaveTarget, t); ArtScale = float.Lerp(leaveScale, 1, t);
                 FacingLeft = facesLeft;
-                if (stateTime >= 1.4f) { approachLeg = 1; SetState(CompanionHomeState.Returning); }
+                if (stateTime >= 1.4f) { approachLeg = 1; stateTime = 0; }
             }
+            else if (WalkTo(leaveCorner, layout, house, dt, forecourt: true)) SetState(CompanionHomeState.Returning);
         }
         else if (State == CompanionHomeState.Returning)
         {
@@ -165,22 +171,38 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
             if (WalkTo(target, layout, house, dt)) Reset(interval);
         }
     }
-    private void BeginLeaving(Vector2 outside)
+    private void BeginLeaving(CompanionLayout layout, CompanionHomeRect house, bool facesLeft)
     {
         entryStart = Position; leaveScale = ArtScale;
-        leaveTarget = Vector2.Clamp(outside, viewportMinimum, Vector2.Max(viewportMinimum, viewportMaximum - spriteSize));
+        var lastPosition = Vector2.Max(viewportMinimum, viewportMaximum - spriteSize);
+        leaveTarget = Vector2.Clamp(CompanionHomeGeometry.Outside(layout, house, facesLeft), viewportMinimum, lastPosition);
+        leaveCorner = Vector2.Clamp(CompanionHomeGeometry.Corner(layout, house, facesLeft), viewportMinimum, lastPosition);
         approachLeg = 0; SetState(CompanionHomeState.Leaving);
     }
 
-    private bool WalkTo(Vector2 destination, CompanionLayout layout, CompanionHomeRect home, float dt)
+    private bool WalkTo(Vector2 destination, CompanionLayout layout, CompanionHomeRect home, float dt, bool forecourt = false)
     {
         CompanionSurface? obstacle = houseAvailable ? new CompanionSurface(0, home.Minimum, home.Maximum, 0, 0) : null;
         // The nap trip may leave the drawn area. Normal roaming never uses these bounds.
         var minimum = viewportMinimum;
         var maximum = viewportMaximum;
-        destination = CompanionObstacle.Destination(destination, layout.SpriteSize, minimum, maximum, obstacle);
-        var next = CompanionObstacle.Step(Position, destination, layout.SpriteSize, layout.SpriteSize.Y * .74f * dt,
-            minimum, maximum, obstacle);
+        Vector2 next;
+        if (forecourt)
+        {
+            // The final approach walks across the visible foreground threshold,
+            // before nap art or wall occlusion starts. At the screen bottom this
+            // lane shares the house's ground plane; never move the saved house.
+            destination = Vector2.Clamp(destination, minimum, Vector2.Max(minimum, maximum - layout.SpriteSize));
+            var distance = Vector2.Distance(Position, destination);
+            next = distance <= layout.SpriteSize.Y * .74f * dt ? destination
+                : Position + (destination - Position) / distance * (layout.SpriteSize.Y * .74f * dt);
+        }
+        else
+        {
+            destination = CompanionObstacle.Destination(destination, layout.SpriteSize, minimum, maximum, obstacle);
+            next = CompanionObstacle.Step(Position, destination, layout.SpriteSize, layout.SpriteSize.Y * .74f * dt,
+                minimum, maximum, obstacle);
+        }
         var delta = next - Position;
         FacingLeft = CompanionGait.FacingFor(delta, FacingLeft);
         Position = next;

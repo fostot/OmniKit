@@ -68,7 +68,8 @@ internal sealed class PluginUi : IDisposable
     private bool refreshModelsAfterConnection;
     private AiModelOption[] chatGptModels = [];
     private string connectionStatus = "";
-    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About"];
+    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About", "Quest Items"];
+    private static readonly int[] SectionOrder = [0, 1, 6, 2, 3, 4, 5];
     private static readonly Vector4 Gold = new(.48f, .78f, .74f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
     public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea;
@@ -126,6 +127,7 @@ internal sealed class PluginUi : IDisposable
 
     public void Update()
     {
+        roaming.Update();
         if (Interlocked.Exchange(ref capturedBrowserRequest, 0) != 0) TrackBrowserRequest(() => { });
         UpdateBrowserStatus();
         if (gearFeedback) status = GearsetActions.Status;
@@ -243,7 +245,8 @@ internal sealed class PluginUi : IDisposable
     private void DrawMain()
     {
         launcher.Draw(ref mainOpen, ref query, entries, ImGuiHelpers.GlobalScale, Activate,
-            () => { mainOpen = false; OpenSettings(); }, OpenCompanion, OpenWiki, gearFeedback ? status : "");
+            () => { mainOpen = false; OpenSettings(); }, OpenCompanion, OpenWiki, gearFeedback ? status : "",
+            new(config.LauncherWidth, config.LauncherTextScale, config.LauncherResultCount, config.LauncherCenterX, config.LauncherTop));
         SearchHasFocus = launcher.SearchHasFocus;
     }
 
@@ -398,6 +401,7 @@ internal sealed class PluginUi : IDisposable
                 hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
+                else if (new[] { "quest item", "item bar", "next action" }.Any(filter.Contains)) section = 6;
                 else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel", "emote", "soothe" }.Any(filter.Contains)) section = 1;
                 else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "effect", "intensity" }.Any(filter.Contains)) section = 2;
                 else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab" }.Any(filter.Contains))
@@ -409,7 +413,7 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.BeginTabBar("settings-tabs", ImGuiTabBarFlags.FittingPolicyScroll))
             {
                 var requestedSection = selectSettingsTab ? section : -1;
-                for (var i = 0; i < Sections.Length; i++)
+                foreach (var i in SectionOrder)
                 {
                     var flags = requestedSection == i ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
                     if (!UiText.BeginTabItem(Sections[i], flags)) continue;
@@ -424,6 +428,7 @@ internal sealed class PluginUi : IDisposable
                         case 3: DrawCompanion(); break;
                         case 4: DrawData(); break;
                         case 5: DrawAbout(); break;
+                        case 6: DrawQuestItems(); break;
                     }
                     ImGui.EndChild(); ImGui.EndTabItem();
                 }
@@ -437,6 +442,7 @@ internal sealed class PluginUi : IDisposable
     private void DrawShortcuts()
     {
         if (ImGui.Checkbox("Enable launcher shortcut", ref config.LauncherEnabled)) Save();
+        LauncherAppearanceUi.Draw(config, () => Save());
         var old = (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier);
         var changed = hotkeys.Draw("Search menu", ref config.LauncherKey, ref config.LauncherModifier);
         changed |= hotkeys.Draw("Open settings", ref config.SettingsKey, ref config.SettingsModifier);
@@ -454,6 +460,34 @@ internal sealed class PluginUi : IDisposable
         if (UiText.Button("Open Search")) OpenMain();
         UiText.Help("Shortcut help", "Click a binding, hold Ctrl/Alt/Shift if needed, press a key, then release all keys. Escape cancels. /omnikit and /omnikit settings always work. Change Alt + Space if another desktop launcher uses it.");
         UiText.Help("Search examples", "community · guild · free company\njob paladin · job miner · a saved gearset name\ninventory · crafting log · a plugin name");
+    }
+
+    private static string SeasonalLabel(string theme) => Enum.TryParse<SeasonalCompanionTheme>(theme, out var value)
+        ? SeasonalCompanionPolicy.Label(value) : "Auto";
+
+    private void DrawQuestItems()
+    {
+        if (ImGui.Checkbox("Show next action", ref config.NextActionEnabled)) Save();
+        if (config.NextActionEnabled)
+        {
+            if (ImGui.Checkbox("Lock next action", ref config.NextActionLocked)) Save();
+            UiText.Hint("Shows the item or emote Interact will attempt. Unlock to move; lock for the single icon.");
+        }
+        if (ImGui.Checkbox("Show quest items bar", ref config.QuestItemsBarEnabled)) Save();
+        if (config.QuestItemsBarEnabled)
+        {
+            if (ImGui.Checkbox("Lock item bar", ref config.QuestItemsBarLocked)) Save();
+            if (ImGui.SliderFloat("Button size", ref config.QuestItemsButtonSize, 24, 56, "%.0f", ImGuiSliderFlags.AlwaysClamp)) Save();
+            UiText.Hint("Usable key items and verified quest-linked bag items. Select a target before clicking an item.");
+            if (interaction.Inventory?.Status is { Length: > 0 } message) UiText.Status(message);
+        }
+        if (UiText.Button("Reset action-bar positions"))
+        {
+            config.NextActionX = config.QuestItemsBarX = .5f;
+            config.NextActionY = .76f; config.QuestItemsBarY = .84f;
+            Save();
+        }
+        UiText.Help("Item coverage", "An item on the bar is a manual choice, not proof it belongs to your current target. Interact only auto-uses the narrow verified quest mappings. Ground-targeted items are not supported. The arrows show more items when the bar has another page.");
     }
 
     private void DrawInteraction()
@@ -663,6 +697,21 @@ internal sealed class PluginUi : IDisposable
             }
             if (ImGui.Checkbox("Animate companion", ref config.AnimationsEnabled)) Save();
             if (ImGui.Checkbox("Magic accents", ref config.CompanionMagicEnabled)) Save();
+            if (UiText.CollapsingHeader("Seasonal looks & rotation"))
+            {
+                if (ImGui.Checkbox("Seasonal looks", ref config.CompanionSeasonalEnabled)) Save();
+                if (config.CompanionSeasonalEnabled && UiText.BeginCombo("Seasonal theme", SeasonalLabel(config.CompanionSeasonalTheme)))
+                {
+                    foreach (var theme in Configuration.SeasonalThemeNames)
+                        if (UiText.Selectable(SeasonalLabel(theme), config.CompanionSeasonalTheme == theme)) { config.CompanionSeasonalTheme = theme; Save(); }
+                    ImGui.EndCombo();
+                }
+                if (ImGui.Checkbox("Rotate companions", ref config.CompanionAutoRotateEnabled)) Save();
+                if (config.CompanionAutoRotateEnabled && ImGui.SliderFloat("Switch every", ref config.CompanionRotationInterval,
+                        30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+                UiText.Hint("Auto follows verified game festivals. Rotation picks another companion locally; your saved selection stays unchanged.");
+                if (roaming.SeasonalStatus is { Length: > 0 } seasonStatus) UiText.Status(seasonStatus);
+            }
             ImGui.BeginDisabled(!config.AnimationsEnabled);
             if (UiText.BeginCombo("Preview animation", roaming.PreviewPose.ToString()))
             {
@@ -710,6 +759,7 @@ internal sealed class PluginUi : IDisposable
                 if (config.Avatar == "Wink")
                 {
                     if (ImGui.Checkbox("Blink", ref config.CompanionBlinkEnabled)) Save();
+                    if (ImGui.Checkbox("Fourier-smoothed blink", ref config.CompanionFourierBlinkEnabled)) Save();
                     UiText.Hint("Wink's occasional blink. Animate companion must also be enabled.");
                     ImGui.BeginDisabled(!config.CompanionBlinkEnabled || !config.AnimationsEnabled);
                     if (ImGui.SliderFloat("Blink interval", ref config.CompanionBlinkInterval, 1, 10, "%.1f sec", ImGuiSliderFlags.AlwaysClamp)) Save();

@@ -18,6 +18,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ChatService chat;
     private readonly VoiceInput voice;
     private readonly PluginUi ui;
+    private readonly QuestActionHud actionHud;
     private readonly WebLinkInterceptor webLinks;
     private bool requestedWebCapture;
     private readonly ShortcutInput shortcuts = new();
@@ -35,6 +36,7 @@ public sealed class Plugin : IDalamudPlugin
         chat = new ChatService(Configuration, WebLinkInterceptor.Bypass);
         voice = new VoiceInput();
         ui = new PluginUi(Configuration, interaction, chat, voice, store, sources);
+        actionHud = new QuestActionHud(Configuration, interaction);
         webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);
         ui.BrowserInterceptionStatus = () => webLinks.IsEnabled && !ui.BrowserReady
             ? "Web link capture is ready; a link opens the browser on demand." : webLinks.Status;
@@ -86,6 +88,8 @@ public sealed class Plugin : IDalamudPlugin
         if (disposed) return;
         ui.Draw();
         interaction.DrawHud();
+        actionHud.Draw(Dalamud.Interface.Utility.ImGuiHelpers.GlobalScale);
+        interaction.CaptureUiInput(actionHud.OwnsActionInput);
     }
     public void Dispose()
     {

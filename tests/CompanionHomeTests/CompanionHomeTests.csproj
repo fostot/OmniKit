@@ -15,6 +15,7 @@
     <Compile Include="../../src/OmniKit/Interaction/HudTextEffect.cs" Link="HudTextEffect.cs" />
     <Compile Include="../../src/OmniKit/Assistant/AiConnectionKind.cs" Link="AiConnectionKind.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionRotation.cs" Link="CompanionRotation.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeRoutine.cs" Link="CompanionHomeRoutine.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionNapArtwork.cs" Link="CompanionNapArtwork.cs" />

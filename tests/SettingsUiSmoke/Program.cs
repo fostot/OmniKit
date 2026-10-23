@@ -42,6 +42,8 @@ if (args.Contains("--companions") || args.Contains("--companion-poses"))
 var cases = new[]
 {
     (Name: "launcher", Section: 0, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "quest-items", Section: 6, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "seasonal", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-types", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-quest-on", Section: 1, Tab: 0, Enabled: true, Scroll: true),
@@ -361,6 +363,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
             "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
             "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => "Home & personality",
+            "seasonal" => "Seasonal looks & rotation",
             "interact-enemy-help" => "Enemy behavior", "frame-help" => "Frame behavior", "voice-help" => "Voice shortcut help",
             "ai-cli-help" => "CLI privacy & limits", "data-import" => "Import settings", "data-plugins" => "Plugins & Umbra",
             "data-browser" => "In-game browser", "about-source" => "Source details", "about-credits" => "Credits",

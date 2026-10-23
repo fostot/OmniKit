@@ -11,6 +11,8 @@ internal sealed class CompanionPhysics
     private ulong surfaceId;
     private Vector2 lastSurfaceOrigin;
     private Vector2 grabOffset;
+    private Vector2 carryPointer;
+    private float carryTime;
     private Vector2 velocity;
     private float reactionTime;
     private CompanionPose reaction;
@@ -43,6 +45,8 @@ internal sealed class CompanionPhysics
     {
         Position = position;
         grabOffset = pointer - position;
+        carryPointer = pointer;
+        carryTime = 0;
         velocity = Vector2.Zero;
         direction = facingLeft ? -1 : 1;
         reactionTime = 0;
@@ -54,9 +58,17 @@ internal sealed class CompanionPhysics
     public void Carry(Vector2 pointer, Vector2 viewportMinimum, Vector2 viewportMaximum, Vector2 size, float elapsed)
     {
         if (!IsCarried || !Finite(pointer)) return;
-        var next = Clamp(pointer - grabOffset, viewportMinimum, viewportMaximum, size);
+        carryTime = Math.Min(CompanionGrabAnchor.CenteringSeconds,
+            carryTime + (float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0));
+        var next = Clamp(CompanionGrabAnchor.CarryTopAt(pointer, size, grabOffset, carryTime), viewportMinimum, viewportMaximum, size);
         if (elapsed > .001f && float.IsFinite(elapsed))
-            velocity.X = Math.Clamp((next.X - Position.X) / elapsed, -180, 180);
+        {
+            // Only pointer travel imparts momentum. The cosmetic centering
+            // transition must not throw a stationary, off-centre pickup sideways.
+            var dragged = Clamp(Position + pointer - carryPointer, viewportMinimum, viewportMaximum, size);
+            velocity.X = Math.Clamp((dragged.X - Position.X) / elapsed, -180, 180);
+        }
+        carryPointer = pointer;
         Position = next;
         ClipMinimum = viewportMinimum;
         ClipMaximum = viewportMaximum;
@@ -74,7 +86,8 @@ internal sealed class CompanionPhysics
         if (best is { } selected)
         {
             var topBand = Math.Clamp(selected.HeaderHeight, 10, Math.Max(10, selected.Size.Y));
-            if (options.Perch && pointer.Y <= selected.Minimum.Y + topBand && CanPerch(selected, size, viewportMinimum))
+            if (options.Perch && (!selected.CanContain || pointer.Y <= selected.Minimum.Y + topBand)
+                && CanPerch(selected, size, viewportMinimum))
             {
                 Attach(selected, CompanionPlacement.Perched);
                 Position = new Vector2(Math.Clamp(pointer.X - size.X * .5f, selected.Minimum.X - size.X * .5f,
@@ -85,7 +98,7 @@ internal sealed class CompanionPhysics
             }
             var innerMinimum = selected.Minimum + new Vector2(4, Math.Max(4, selected.HeaderHeight));
             var innerMaximum = selected.Maximum - new Vector2(4);
-            if (options.Contain && Fits(innerMinimum, innerMaximum, size))
+            if (options.Contain && selected.CanContain && Fits(innerMinimum, innerMaximum, size))
             {
                 Attach(selected, CompanionPlacement.Contained);
                 Position = Clamp(Position, innerMinimum, innerMaximum, size);
@@ -109,7 +122,7 @@ internal sealed class CompanionPhysics
         {
             foreach (var surface in surfaces) if (surface.Id == surfaceId) { attached = surface; break; }
             if (attached == null || Placement == CompanionPlacement.Perched && !options.Perch
-                || Placement == CompanionPlacement.Contained && !options.Contain)
+                || Placement == CompanionPlacement.Contained && (!options.Contain || !attached.Value.CanContain))
             {
                 if (options.Fall) BeginFall(); else BeginReturn();
             }
@@ -257,7 +270,7 @@ internal sealed class CompanionPhysics
         lastSurfaceOrigin = surface.Minimum;
         velocity = Vector2.Zero;
         perchWalkTime = 0;
-        perchTurnPending = placement == CompanionPlacement.Perched;
+        perchTurnPending = placement == CompanionPlacement.Perched && surface.CanContain;
     }
     private void BeginFall() { Placement = CompanionPlacement.Falling; surfaceId = 0; velocity.Y = 0; reactionTime = 0; Pose = CompanionPose.Fall; }
     private void BeginReturn() { Placement = CompanionPlacement.Returning; surfaceId = 0; velocity = Vector2.Zero; reactionTime = 0; Pose = CompanionPose.Walk; }

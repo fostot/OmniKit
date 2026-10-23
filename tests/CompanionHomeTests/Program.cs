@@ -3,9 +3,22 @@ using System.Text.Json;
 using OmniKit;
 using OmniKit.Ui;
 
-var checks = 0;
+if (args.Contains("--rotation-only"))
+{
+    Console.WriteLine($"Companion rotation: {RotationChecks.Run()} focused synthetic checks passed.");
+    return;
+}
+
+var checks = RotationChecks.Run();
 var failures = new List<string>();
 var root = Path.GetFullPath(args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? ".");
+if (args.Contains("--door-only") || args.Contains("--door-before"))
+{
+    NativeRender.Run(root, (passed, reason) => { if (!passed) throw new InvalidOperationException(reason); checks++; },
+        true, args.Contains("--door-before") ? "door-before" : "door-after");
+    Console.WriteLine($"Door sequence: {checks} native checks passed; production texture samples saved.");
+    return;
+}
 var defaults = new Configuration { Persist = _ => throw new InvalidOperationException("The synthetic harness cannot persist settings.") };
 var viewport = new Vector2(120, 80);
 var viewportSize = new Vector2(1280, 720);
@@ -123,6 +136,12 @@ void Cycle(Vector2 anchor, CompanionHomeRect home)
     var validPositions = true;
     var largestStep = 0f;
     var leftDrawnBox = false;
+    var doorwayAligned = true;
+    var foregroundOnly = true;
+    var opening = CompanionHomeGeometry.Opening(home, facesLeft);
+    var door = CompanionHomeGeometry.Door(home, layout.SpriteSize, facesLeft);
+    var threshold = Vector2.Clamp(CompanionHomeGeometry.Outside(layout, home, facesLeft), viewport,
+        viewport + viewportSize - layout.SpriteSize);
     for (var tick = 0; tick < 4000; tick++)
     {
         var before = started ? routine.Position : current;
@@ -133,12 +152,21 @@ void Cycle(Vector2 anchor, CompanionHomeRect home)
         validPositions &= Fits(routine.Position, layout.SpriteSize, viewport, viewport + viewportSize);
         largestStep = Math.Max(largestStep, Vector2.Distance(before, routine.Position));
         leftDrawnBox |= !Fits(routine.Position, layout.SpriteSize, layout.Minimum, layout.Maximum);
+        if (routine.UsesNapArt) doorwayAligned &= Math.Abs(routine.Position.X - door.X) < .01f;
+        var overlapsHouse = routine.Position.X < home.Maximum.X && routine.Position.X + layout.SpriteSize.X > home.Minimum.X &&
+            routine.Position.Y < home.Maximum.Y && routine.Position.Y + layout.SpriteSize.Y > home.Minimum.Y;
+        if (overlapsHouse && !routine.UsesNapArt)
+            foregroundOnly &= Math.Abs(routine.Position.Y - threshold.Y) < .01f;
         if (!routine.Active) { completed = true; break; }
     }
     Check(started && completed && Enum.GetValues<CompanionHomeState>().All(states.Contains), "Full bounded enter/settle/sleep/wake/leave/return cycle at " + anchor);
     Check(validPositions, "Nap positions remain within the viewport at " + anchor);
     Check(largestStep <= layout.SpriteSize.Y * .13f, "No single-frame nap teleport at " + anchor + "; largest step " + largestStep);
     Check(Vector2.Distance(routine.Position, current) < .1f, "Nap trip returns to its original roaming position at " + anchor);
+    Check(doorwayAligned, "Masked entry and exit move only along the verified doorway centre at " + anchor);
+    Check(foregroundOnly, "Whole companions cross the house footprint only in the visible front threshold lane at " + anchor);
+    Check(Math.Abs((opening.Minimum.X + opening.Maximum.X) * .5f - (door.X + layout.SpriteSize.X * .5f)) < .01f,
+        "The measured aperture and nap baseline have the same mirrored horizontal centre.");
     if (anchor.X == 1) Check(leftDrawnBox, "Only the nap trip leaves the roaming rectangle to reach a distant home.");
 }
 

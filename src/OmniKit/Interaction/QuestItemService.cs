@@ -21,6 +21,15 @@ internal sealed unsafe class QuestItemService(Configuration config)
     public bool CanOfferTarget(IGameObject target) => config.QuestItemUseEnabled
         && QuestItemPolicy.MatchesTarget(target.BaseId) && QuestItemPolicy.CanOffer(Capture(target, checkActionStatus: false));
 
+    public QuestActionPreview? Preview(IGameObject target)
+    {
+        if (!config.QuestItemUseEnabled || QuestItemPolicy.RuleForTarget(target.BaseId) is not { } rule)
+            return null;
+        var item = Services.Data.GetExcelSheet<EventItem>().GetRowOrDefault(rule.ItemId);
+        return QuestActionPreview.ForItem(Capture(target), item?.Icon ?? 0,
+            item?.Name.ToString() ?? "Quest item");
+    }
+
     public QuestItemUseResult TryUse(IGameObject target)
     {
         Status = string.Empty;
@@ -40,7 +49,7 @@ internal sealed unsafe class QuestItemService(Configuration config)
                 || manager == null) return false;
             var native = (NativeGameObject*)address;
             if (!native->GetIsTargetable()) return false;
-            return manager->UseAction(ActionType.EventItem, rule.ItemId, id, 0xFFFF);
+            return manager->UseAction(ActionType.EventItem, rule.ItemId, id, 0xFFFF, ActionManager.UseActionMode.Macro);
         });
         if (result == QuestItemUseResult.Blocked)
         {
