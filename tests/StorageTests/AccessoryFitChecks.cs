@@ -21,12 +21,12 @@ internal static class AccessoryFitChecks
         {
             CompanionHolidayBody = "Starlight", CompanionSeasonalTheme = "AllSaintsWake",
             CompanionHolidayBodiesEnabled = false, CompanionAccessoryFits = [fit], AiEnabled = true,
-            CompanionTransitionEffectsEnabled = false,
+            CompanionTransitionEffectsEnabled = false, CompanionCostume = "Starlight",
         };
         var json = store.Export(source);
         var imported = new Configuration();
         store.ImportInto(imported, json);
-        Check(imported.CompanionHolidayBody == "Starlight" && imported.CompanionSeasonalTheme == "AllSaintsWake" &&
+        Check(imported.CompanionHolidayBody == "Starlight" && imported.CompanionSeasonalTheme == "AllSaintsWake" && imported.CompanionCostume == "Starlight" &&
             !imported.CompanionHolidayBodiesEnabled && !imported.CompanionTransitionEffectsEnabled && imported.CompanionAccessoryFits.SequenceEqual(source.CompanionAccessoryFits),
             "Body selection and measured accessory fits round-trip independently of enable and accessory-theme preferences.");
         Check(!imported.AiEnabled, "Importing fit preferences cannot grant AI consent.");
@@ -94,7 +94,8 @@ internal static class AccessoryFitChecks
                 "Either transition preference round-trips through SQLite with local consent retained.");
         }
         var themes = Configuration.SeasonalThemeNames.Skip(1).ToArray();
-        var looks = new[] { "Default", "Look1", "Look2", "Look3", "Look4" }.Concat(themes.Select(theme => "Holiday" + theme)).ToArray();
+        var oldLooks = new[] { "Default", "Look1", "Look2", "Look3", "Look4" }.Concat(themes.Select(theme => "Holiday" + theme)).ToArray();
+        var looks = oldLooks.Concat(Configuration.CostumeNames.Skip(2).Select(theme => "Costume" + theme)).ToArray();
         foreach (var (key, values) in new[] { ("Avatar", Configuration.AvatarNames.ToArray()), ("Look", looks), ("Theme", themes) })
         {
             foreach (var value in values)
@@ -108,6 +109,8 @@ internal static class AccessoryFitChecks
         }
         Invalid(FitChange("Avatar", "wink"), "Noncanonical avatar casing");
         Invalid(FitChange("Look", "HolidayAuto"), "Noncanonical holiday look");
+        foreach (var invalid in new[] { "CostumeNone", "CostumeAuto", "CostumeValentione", "costumeStarlight", "Costumestarlight", "Costume" })
+            Invalid(FitChange("Look", invalid), "Unsupported costume fit key");
         Invalid(FitChange("Theme", "starlight"), "Noncanonical theme casing");
         foreach (var (field, minimum, maximum) in new[] { ("OffsetX", -1f, 1f), ("OffsetY", -1f, 1f), ("Scale", .25f, 3f), ("RotationDegrees", -180f, 180f) })
         {
@@ -139,18 +142,19 @@ internal static class AccessoryFitChecks
             Invalid(missing.ToJsonString(), "Missing schema ten field");
         }
 
-        // Exercise every distinct identity at once; 8 avatars x 14 looks x 9 themes is
-        // the complete current domain, and stays below the independent 1024-entry cap.
+        // Preserve the original 1008-entry stress fixture without relaxing the cap
+        // as the selectable roster and costume choices expand.
+        string[] originalAvatars = ["Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism"];
         var full = new Configuration
         {
-            CompanionAccessoryFits = (from avatar in Configuration.AvatarNames from look in looks from theme in themes
+            CompanionAccessoryFits = (from avatar in originalAvatars from look in oldLooks from theme in themes
                 select new CompanionAccessoryAdjustment(avatar, look, theme, -.12345678f, -.9876543f, 2.9999998f)).ToList(),
         };
         var fullJson = store.Export(full);
         var fullTarget = new Configuration(); store.ImportInto(fullTarget, fullJson);
         store.Save(fullTarget);
         Check(fullTarget.CompanionAccessoryFits.Count == 1008 && store.Load()!.CompanionAccessoryFits.SequenceEqual(full.CompanionAccessoryFits),
-            "The complete supported fit identity domain round-trips within the bounded JSON and SQLite contracts.");
+            "The original eight-avatar fit stress fixture round-trips within the unchanged JSON and SQLite caps.");
         var beforeRejectedSave = store.Export(store.Load()!);
         full.VoiceBindings = Enumerable.Range(0, 100).Select(index => new VoiceBinding("fixture " + index + new string('界', 60), new string('界', 300))).ToList();
         var oversizedRejected = false;
@@ -178,16 +182,17 @@ internal static class AccessoryFitChecks
         legacy["SchemaVersion"] = 9; legacy["Settings"]!["Version"] = 9;
         legacy["Settings"]!.AsObject().Remove("CompanionHolidayBody"); legacy["Settings"]!.AsObject().Remove("CompanionAccessoryFits");
         legacy["Settings"]!.AsObject().Remove("CompanionTransitionEffectsEnabled");
+        legacy["Settings"]!.AsObject().Remove("CompanionCostume");
         var legacyJson = legacy.ToJsonString();
         var fresh = new Configuration();
-        Check(fresh.Version == 11 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
+        Check(fresh.Version == 12 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionCostume == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
             "New configurations default to automatic body selection, no fit overrides and enabled transition effects.");
         var fallback = JsonSerializer.Deserialize<Configuration>(legacy["Settings"]!.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
         fallback.CompanionHolidayBody = "TheRising"; fallback.CompanionAccessoryFits = [fit];
         fallback.CompanionTransitionEffectsEnabled = false;
         var fallbackBefore = JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true });
         var migratedFallback = store.Upgrade(fallback);
-        Check(migratedFallback.Version == 11 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
+        Check(migratedFallback.Version == 12 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
             JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true }) == fallbackBefore,
             "Legacy fallback initializes new fields on a detached copy and leaves its source untouched.");
         var legacyImport = new Configuration(); store.ImportInto(legacyImport, legacyJson);
@@ -225,7 +230,7 @@ internal static class AccessoryFitChecks
         var legacyDirectory = LegacyDatabase("accessory-v9", legacyJson);
         var migrated = new LocalStore(legacyDirectory).Load()!;
         var row = ReadDatabase(legacyDirectory);
-        Check(row.Version == 11 && row.RowVersion == 11 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 11 &&
+        Check(row.Version == 12 && row.RowVersion == 12 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 12 &&
             migrated.AiEnabled && migrated.CompanionHolidayBody == "Auto" && migrated.CompanionAccessoryFits.Count == 0 && migrated.CompanionTransitionEffectsEnabled,
             "Schema nine database, row, and JSON migrate atomically with local consent retained.");
         var migratedSettings = JsonNode.Parse(store.Export(migrated))!["Settings"]!;
@@ -242,12 +247,13 @@ internal static class AccessoryFitChecks
 
         var legacyTen = JsonNode.Parse(json)!;
         legacyTen["SchemaVersion"] = 10; legacyTen["Settings"]!["Version"] = 10;
+        legacyTen["Settings"]!.AsObject().Remove("CompanionCostume");
         foreach (var oldFit in legacyTen["Settings"]!["CompanionAccessoryFits"]!.AsArray())
             oldFit!.AsObject().Remove("RotationDegrees");
         var legacyTenJson = legacyTen.ToJsonString();
         var unrotated = fit with { RotationDegrees = 0 };
         var tenImport = new Configuration(); store.ImportInto(tenImport, legacyTenJson);
-        Check(tenImport.Version == 11 && tenImport.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && !tenImport.AiEnabled,
+        Check(tenImport.Version == 12 && tenImport.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && !tenImport.AiEnabled,
             "Schema ten fits acquire zero rotation while retaining every previous fit value and never granting consent.");
         tenImport.AiEnabled = true; store.ImportInto(tenImport, legacyTenJson);
         Check(tenImport.AiEnabled, "Schema ten fit import retains existing same-provider consent.");
@@ -255,7 +261,7 @@ internal static class AccessoryFitChecks
         Invalid(mixedTen.ToJsonString(), "Schema eleven nested rotation in a schema ten document");
         var tenFallback = new Configuration { Version = 10, CompanionAccessoryFits = [fit], AiEnabled = true };
         var upgradedTen = store.Upgrade(tenFallback);
-        Check(upgradedTen.Version == 11 && upgradedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && upgradedTen.AiEnabled &&
+        Check(upgradedTen.Version == 12 && upgradedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && upgradedTen.AiEnabled &&
             tenFallback.Version == 10 && tenFallback.CompanionAccessoryFits.SequenceEqual(new[] { fit }) &&
             !ReferenceEquals(upgradedTen.CompanionAccessoryFits, tenFallback.CompanionAccessoryFits),
             "Legacy fallback initializes rotation on a detached fit collection and preserves the source and consent.");
@@ -264,7 +270,7 @@ internal static class AccessoryFitChecks
         var tenDirectory = LegacyDatabase("accessory-v10", legacyTenJson, schema: 10);
         var migratedTen = new LocalStore(tenDirectory).Load()!;
         var tenRow = ReadDatabase(tenDirectory);
-        Check(tenRow.Version == 11 && tenRow.RowVersion == 11 && JsonNode.Parse(tenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 11 &&
+        Check(tenRow.Version == 12 && tenRow.RowVersion == 12 && JsonNode.Parse(tenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12 &&
             migratedTen.AiEnabled && migratedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }),
             "Schema ten database, row and JSON migrate atomically with zero rotation and existing fits/consent retained.");
         var tenSettings = JsonNode.Parse(store.Export(migratedTen))!["Settings"]!;
@@ -279,6 +285,67 @@ internal static class AccessoryFitChecks
             try { _ = new LocalStore(directory); } catch (InvalidOperationException) { rejected = true; } catch (SqliteException) when (failWrite) { rejected = true; }
             Check(rejected && ReadDatabase(directory) == (10, 10, document),
                 "A failed rotation migration retains the original row, fits and both schema versions.");
+        }
+
+        foreach (var costume in Configuration.CostumeNames)
+        {
+            var preference = new Configuration { CompanionCostume = costume, AiEnabled = true, CompanionAccessoryFits = [fit] };
+            var document = store.Export(preference);
+            var copy = new Configuration(); store.ImportInto(copy, document);
+            Check(copy.CompanionCostume == costume && !copy.AiEnabled && copy.CompanionAccessoryFits.SequenceEqual(new[] { fit }),
+                "Every costume selection round-trips independently of prior fits and cannot grant consent.");
+            copy.AiEnabled = true; store.ImportInto(copy, document);
+            store.Save(copy);
+            Check(store.Load() is { AiEnabled: true } saved && saved.CompanionCostume == costume,
+                "Costume selection preserves existing consent through import and SQLite.");
+        }
+        foreach (var invalid in new JsonNode?[] { null, JsonValue.Create(""), JsonValue.Create("Random"), JsonValue.Create("starlight"),
+            JsonValue.Create("Valentione"), JsonValue.Create(" Auto"), JsonValue.Create(1), JsonValue.Create(true), new JsonArray() })
+            Invalid(Change("CompanionCostume", invalid), "Invalid costume choice/type");
+        var missingCostume = JsonNode.Parse(json)!; missingCostume["Settings"]!.AsObject().Remove("CompanionCostume");
+        Invalid(missingCostume.ToJsonString(), "Missing schema twelve costume choice");
+        Invalid(json.Replace("\"CompanionCostume\": \"Starlight\"", "\"CompanionCostume\": \"None\",\"CompanionCostume\": \"Starlight\"", StringComparison.Ordinal),
+            "Duplicate costume preference");
+        foreach (var avatar in new[] { "Nib", "Echo", "Fizz", "Glim", "Rune" })
+        {
+            var extras = new Configuration { Avatar = avatar, CompanionCostume = "MakeItRain", AiEnabled = true,
+                CompanionAccessoryFits = Configuration.CostumeNames.Skip(2).Select(theme =>
+                    new CompanionAccessoryAdjustment(avatar, "Costume" + theme, "Valentione", .2f, -.3f, 1.1f, -25f)).ToList() };
+            var document = store.Export(extras); var copy = new Configuration(); store.ImportInto(copy, document); store.Save(copy);
+            Check(copy.Avatar == avatar && copy.CompanionCostume == extras.CompanionCostume && !copy.AiEnabled &&
+                store.Load()!.CompanionAccessoryFits.SequenceEqual(extras.CompanionAccessoryFits),
+                "Each new identity persists all four costume-specific accessory fits without new consent.");
+        }
+        var legacyEleven = JsonNode.Parse(json)!;
+        legacyEleven["SchemaVersion"] = 11; legacyEleven["Settings"]!["Version"] = 11;
+        legacyEleven["Settings"]!.AsObject().Remove("CompanionCostume");
+        var elevenJson = legacyEleven.ToJsonString();
+        var elevenImport = new Configuration { CompanionCostume = "None" }; store.ImportInto(elevenImport, elevenJson);
+        Check(elevenImport.CompanionCostume == "Auto" && !elevenImport.AiEnabled && elevenImport.CompanionAccessoryFits.SequenceEqual(new[] { fit }),
+            "Schema eleven import defaults only the new costume choice and retains rotated fits without consent.");
+        var mixedEleven = legacyEleven.DeepClone(); mixedEleven["Settings"]!["CompanionCostume"] = "Auto";
+        Invalid(mixedEleven.ToJsonString(), "Schema twelve preference in a schema eleven document");
+        var oldFallback = new Configuration { Version = 11, CompanionCostume = "None", AiEnabled = true, CompanionAccessoryFits = [fit] };
+        var newFallback = store.Upgrade(oldFallback);
+        Check(newFallback.Version == 12 && newFallback.CompanionCostume == "Auto" && newFallback.AiEnabled &&
+            newFallback.CompanionAccessoryFits.SequenceEqual(new[] { fit }) && oldFallback.Version == 11 && oldFallback.CompanionCostume == "None",
+            "Legacy fallback changes the new costume default on a detached copy only.");
+        var elevenDirectory = LegacyDatabase("costume-v11", elevenJson, schema: 11);
+        var migratedEleven = new LocalStore(elevenDirectory).Load()!; var elevenRow = ReadDatabase(elevenDirectory);
+        Check(elevenRow.Version == 12 && elevenRow.RowVersion == 12 && migratedEleven.Version == 12 &&
+            migratedEleven.CompanionCostume == "Auto" && migratedEleven.AiEnabled,
+            "Schema eleven row, database and JSON upgrade atomically with existing consent.");
+        var elevenSettings = JsonNode.Parse(store.Export(migratedEleven))!["Settings"]!;
+        foreach (var field in legacyEleven["Settings"]!.AsObject())
+            if (field.Key != "Version") Check(JsonNode.DeepEquals(elevenSettings[field.Key], field.Value),
+                "Costume migration preserves every existing field including fits: " + field.Key);
+        var badEleven = legacyEleven.DeepClone(); badEleven["Settings"]!["CompanionAccessoryFits"]![0]!["Scale"] = 99;
+        foreach (var (name, document, failWrite) in new[] { ("costume-v11-invalid", badEleven.ToJsonString(), false), ("costume-v11-write-failure", elevenJson, true) })
+        {
+            var directory = LegacyDatabase(name, document, failWrite, 11);
+            var rejected = false;
+            try { _ = new LocalStore(directory); } catch (InvalidOperationException) { rejected = true; } catch (SqliteException) when (failWrite) { rejected = true; }
+            Check(rejected && ReadDatabase(directory) == (11, 11, document), "Failed costume migration preserves the complete original database.");
         }
         return checks;
     }

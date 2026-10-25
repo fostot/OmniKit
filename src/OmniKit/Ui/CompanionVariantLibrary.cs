@@ -98,17 +98,23 @@ internal sealed class CompanionVariantLibrary
 
     public CompanionVariantLook? Find(string avatar, string choice) => looks.FirstOrDefault(v => v.Avatar == avatar && v.Choice == choice);
 
-    internal static CompanionVariantFrame? ParseFrame(Frame? f, float scale, IReadOnlyDictionary<string, Vector2> sheets)
+    internal static CompanionVariantFrame? ParseFrame(Frame? f, float scale, IReadOnlyDictionary<string, Vector2> sheets,
+        float visualPadding = 0)
     {
-        if (f == null || !Scale(scale) || !sheets.TryGetValue(f.File, out var size) || !Numbers(f.Bounds, 4)
+        if (f == null || !float.IsFinite(visualPadding) || visualPadding is < 0 or > .6f
+            || !Scale(scale) || !sheets.TryGetValue(f.File, out var size) || !Numbers(f.Bounds, 4)
             || !Numbers(f.BodyBounds, 4) || !Numbers(f.Anchor, 2) || !Numbers(f.Grip, 2) || !Numbers(f.AccessoryAnchor, 2)
             || !float.IsFinite(f.SourceUnitScale) || f.SourceUnitScale is < .5f or > 2f) return null;
         var r = V4(f.Bounds); var body = V4(f.BodyBounds); var a = V2(f.Anchor); var grip = V2(f.Grip); var accessory = V2(f.AccessoryAnchor);
         var sourceScale = scale / f.SourceUnitScale;
         if (!Rect(r, size) || !Rect(body, size) || body.X < r.X || body.Y < r.Y || body.Z > r.Z || body.W > r.W
             || !Inside(a, r) || !Inside(grip, r) || !Inside(accessory, r)
-            || a.X - r.X > sourceScale * .5f || r.Z - a.X > sourceScale * .5f
-            || a.Y - r.Y > sourceScale * .9f || r.W - a.Y > sourceScale * .1f) return null;
+            // Optional painted headwear may occupy reserved visual padding. The
+            // measured character mass still fits its original logical body cell.
+            || a.X - body.X > sourceScale * .5f || body.Z - a.X > sourceScale * .5f
+            || a.Y - body.Y > sourceScale * .9f || body.W - a.Y > sourceScale * .1f
+            || a.X - r.X > sourceScale * (.5f + visualPadding) || r.Z - a.X > sourceScale * (.5f + visualPadding)
+            || a.Y - r.Y > sourceScale * (.9f + visualPadding) || r.W - a.Y > sourceScale * (.1f + visualPadding)) return null;
         var headWidth = f.AccessoryHeadWidth == 0 ? (body.Z - body.X) * .85f : f.AccessoryHeadWidth;
         if (!float.IsFinite(headWidth) || headWidth is < 8 or > 4096) return null;
         return new(f.File, size, r, body, a, grip, accessory, sourceScale, headWidth);

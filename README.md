@@ -1,9 +1,9 @@
 # OmniKit
 
-Your everyday toolkit for XIV by Zero, with Moonblob and seven other moon companions.
+Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0019`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0021`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -98,10 +98,11 @@ small corner rounding and a footer showing the built version and **by Zero**.
   but CLI generation is paused because a single inference cannot be enforced. Connections
   are selected explicitly. Replies cannot execute game commands. The local
   matcher does not need AI. See [AI connections](docs/AI-CONNECTIONS.md).
-- Eight illustrated whole-body companions: **Moonblob** (the default), **Wink**,
-  **Nova**, **Mochi**, **Puff**, **Orbit**, **Ember** and **Prism**. Each uses one
+- Thirteen illustrated whole-body companions: **Moonblob** (the default), **Wink**,
+  **Nova**, **Mochi**, **Puff**, **Orbit**, **Ember**, **Prism**, **Nib** the ink drop,
+  **Echo** the ghost, **Fizz** the soap bubble, **Glim** the star and **Rune** the rune stone. Each uses one
   complete body, with no separate limb rig. Moonblob rolls continuously; the
-  others float using stable body images. Four extra looks per companion add 32
+  others float using stable body images. Four extra looks for each original companion add 32
   everyday choices, with Random and an optional look timer. Ember flickers and
   curls, Mochi squashes, Puff billows, and Orbit's rings rotate and tilt around a
   steady core. Ring movement and speed have their own controls. Six aura palettes remain available:
@@ -116,19 +117,23 @@ small corner rounding and a footer showing the built version and **by Zero**.
   Only explicitly recorded official date windows can provide a fallback when
   native data is unavailable. A manual theme remains available. Optional rotation
   chooses another companion every 30–3600 seconds without replacing your saved
-  selection. Each companion has all nine painted holiday bodies, with optional
-  accessories fitted to its crown and width. Bodies, accessories and holiday
+  selection. The original eight retain nine painted holiday bodies. All thirteen
+  also have four complete painted costumes: witch, Starlight cap, top hat and
+  straw hat. Choose **Painted costume** (None, Auto or a named theme). Hats are
+  painted into every full pose; there are no separate hat pieces. Bows remain
+  optional editable accessories. Bodies, bows and holiday
   homes can be enabled separately. Automatic body changes wait while carried or napping; manual choices apply immediately. Wink also has an optional Fourier-smoothed blink.
 - **Companion → Appearance → Seasonal looks & rotation → Fit accessories** opens
-  a still, centered fitting stage. Choose a companion, body and accessory; drag to
-  position it and drag the corner or use Size to resize. **Save fits** writes the
+  a centered fitting stage with a still body and optional eye-only blinks. Choose
+  a companion, body and bow; drag to position it, use the corner or Size to resize,
+  and use Angle to rotate. **Save fits** writes the
   head-relative fit to the local database; **Cancel** discards unsaved edits.
   Fits follow the body through movement, mirroring and size changes. **Fit view**
   changes preview zoom only. The real companion pauses during fitting.
 - Selecting an everyday Look switches off holiday-body mode while preserving its
   saved holiday choice. **Body theme** independently selects a named holiday body
   or Auto. Manual changes also update a sleeping companion without restarting
-  its nap. All eight blink while resting or moving, with eye-only changes.
+  its nap. All thirteen blink while resting or moving, with eye-only changes.
   Type-specific magic and optional **Companion poof** accompany automatic avatar
   swaps; the poof also requires animation and magic accents.
 - Optional **Companion → Appearance → Frame interaction** lets you pick up the
@@ -151,11 +156,12 @@ small corner rounding and a footer showing the built version and **by Zero**.
   or Random, retaining the same hand throughout a pickup.
   Wink blinks while floating. Occasional comments are local
   text only, with no model request or microphone use.
-- All eight companions have entrance, settling and sleeping art. Normal
+- All thirteen companions have entrance, settling and sleeping art. Normal
   roaming stays inside the drawn area; nap trips can reach a house outside it at
   about twice the usual walking speed, enter through the front doorway, then
   return continuously. They shrink another 10% inside, step outward while small,
-  then grow in front of the house. Accessories hide on entry and return outside
+  then grow in front of the house. Painted hats switch to the same character's
+  bare pose on entry and return outside. Bows hide on entry and return outside
   only when enabled. Grounded trips use physical supports; unreachable routes
   stop at the actual position instead of teleporting. Naps default to about 45 seconds awake and 20 seconds
   asleep; awake interval (15–300 seconds),
@@ -171,8 +177,9 @@ The earlier rabbit and bear art and rigs were retired locally. Current source
 files and packages exclude them; older published releases and history remain
 unchanged. Wink is the plugin icon.
 
-This batch includes 112 body looks (8 originals, 32 everyday variants and 72
-holiday bodies), 13 homes and 5 hands. Isolated rendering checks remain separate
+This batch preserves the original 112 body looks and adds five new companions
+plus 52 complete painted costumes. The wardrobe contains 65 pose sets including
+the thirteen bare bedtime bodies. There are 13 homes and 5 hands. Isolated rendering checks remain separate
 from acceptance inside FFXIV.
 
 ## Umbra

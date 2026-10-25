@@ -28,6 +28,7 @@ internal static class EditorChecks
             {
                 var label = choice.Avatar + "-" + choice.Look + "-" + scale.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
                 var config = Activator.CreateInstance(configType)!;
+                configType.GetField("CompanionBlinkEnabled")!.SetValue(config, false);
                 var saves = 0; var failSave = false;
                 Action save = () => { if (failSave) throw new InvalidOperationException("Synthetic write failure"); saves++; };
                 var persist = Expression.Lambda(typeof(Action<>).MakeGenericType(configType),
@@ -36,7 +37,7 @@ internal static class EditorChecks
                 IList Fits() => (IList)configType.GetField("CompanionAccessoryFits")!.GetValue(config)!;
                 var editor = Activator.CreateInstance(editorType, [config, assets])!;
                 var open = editorType.GetMethod("Open")!; var drawMethod = editorType.GetMethod("Draw")!;
-                var theme = Enum.Parse(Type("Ui.SeasonalCompanionTheme"), "Starlight");
+                var theme = Enum.Parse(Type("Ui.SeasonalCompanionTheme"), "Valentione");
                 void Open() => open.Invoke(editor, [choice.Avatar, choice.Look, theme]);
                 bool State(string name) => (bool)editorType.GetProperty(name)!.GetValue(editor)!;
                 Open();

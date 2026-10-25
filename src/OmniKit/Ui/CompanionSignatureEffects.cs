@@ -26,12 +26,54 @@ internal static class CompanionSignatureEffects
             "Ember" => new Vector3(1, .57f, .22f), "Mochi" => new(1, .91f, .78f),
             "Puff" => new(.84f, .91f, 1), "Prism" => new(.83f, .68f, 1),
             "Nova" => new(.85f, .66f, 1), "Orbit" => new(.59f, .82f, 1),
+            "Nib" => new(.44f, .40f, .78f), "Echo" => new(.76f, .65f, 1),
+            "Fizz" => new(.55f, .92f, 1), "Glim" => new(1, .85f, .43f), "Rune" => new(.38f, .92f, .85f),
             "Wink" => new(.63f, .94f, .88f), _ => new Vector3(.61f, .88f, 1),
         };
         var c = new Canvas(draw, position, size, new(Vector3.Lerp(signatureColor,
             new(paletteColor.X, paletteColor.Y, paletteColor.Z), .32f), paletteColor.W), mirrored);
         switch (avatar)
         {
+            case "Nib":
+                for (var i = 0; i < 4; i++)
+                {
+                    var p = new Vector2(.14f + i * .24f, .96f + MathF.Sin(t * .6f + i) * .02f);
+                    c.Ellipse(p, new(.018f, .025f), .50f);
+                    c.Circle(p - new Vector2(.005f, .008f), .005f, .8f, true);
+                }
+                break;
+            case "Echo":
+                for (var i = 0; i < 2; i++)
+                {
+                    var x = i == 0 ? -.02f : 1.02f;
+                    var y = .65f + MathF.Sin(t * .45f + i) * .08f;
+                    c.Curve(new(x, y + .13f), new(x - .09f, y + .04f), new(x + .07f, y - .05f), new(x, y - .13f), .42f, .014f);
+                }
+                break;
+            case "Fizz":
+                for (var i = 0; i < 4; i++)
+                {
+                    var a = i * MathF.PI / 2 + t * .18f;
+                    var p = new Vector2(.5f + MathF.Cos(a) * .55f, .52f + MathF.Sin(a) * .42f);
+                    c.Ellipse(p, new(.022f), .55f);
+                    c.Circle(p - new Vector2(.006f), .006f, .8f, true);
+                }
+                break;
+            case "Glim":
+                for (var i = 0; i < 3; i++)
+                {
+                    var a = i * MathF.Tau / 3 + t * .12f;
+                    c.Star(new(.5f + MathF.Cos(a) * .54f, .5f + MathF.Sin(a) * .48f), .025f + .008f * MathF.Sin(t + i), .7f);
+                }
+                break;
+            case "Rune":
+                for (var i = 0; i < 3; i++)
+                {
+                    var p = new Vector2(.08f + i * .42f, .94f + MathF.Sin(t * .5f + i) * .02f);
+                    c.Diamond(p, new(.022f, .032f), .55f);
+                    c.Line(p + new Vector2(-.035f, .045f), p + new Vector2(.035f, .045f), .38f, .009f);
+                }
+                break;
             case "Nova":
                 // Two offset comet tails, a short ribbon, and a luminous tip.
                 for (var i = 0; i < 2; i++)
@@ -173,7 +215,8 @@ internal static class CompanionSignatureEffects
         }
     }
 
-    private static bool KnownAvatar(string avatar) => avatar is "Moonblob" or "Wink" or "Nova" or "Mochi" or "Puff" or "Orbit" or "Ember" or "Prism";
+    private static bool KnownAvatar(string avatar) => avatar is "Moonblob" or "Wink" or "Nova" or "Mochi" or "Puff" or "Orbit" or "Ember" or "Prism"
+        or "Nib" or "Echo" or "Fizz" or "Glim" or "Rune";
     private static bool Finite(Vector2 p) => float.IsFinite(p.X) && float.IsFinite(p.Y);
 
     private readonly struct Canvas(ImDrawListPtr draw, Vector2 position, Vector2 size, Vector4 color, bool mirrored)

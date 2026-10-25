@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DalamudLibPath>$(APPDATA)/XIVLauncher/addon/Hooks/dev</DalamudLibPath>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/OmniKit/Ui/CompanionWardrobeLibrary.cs" Link="CompanionWardrobeLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionVariantLibrary.cs" Link="CompanionVariantLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionAnimationLibrary.cs" Link="CompanionAnimationLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionBlinkLibrary.cs" Link="CompanionBlinkLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHolidayLibrary.cs" Link="CompanionHolidayLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/SeasonalCompanionPolicy.cs" Link="SeasonalCompanionPolicy.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionVariantRenderer.cs" Link="CompanionVariantRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionBlinkRenderer.cs" Link="CompanionBlinkRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/SeasonalCompanionRenderer.cs" Link="SeasonalCompanionRenderer.cs" />
+    <Compile Include="../SeasonalFitTests/Stubs.cs" Link="Stubs.cs" />
+    <Compile Include="../LauncherUiSmoke/SoftwareRenderer.cs" Link="SoftwareRenderer.cs" />
+    <Reference Include="Dalamud.Bindings.ImGui" HintPath="$(DalamudLibPath)/Dalamud.Bindings.ImGui.dll" />
+    <Reference Include="HexaGen.Runtime" HintPath="$(DalamudLibPath)/HexaGen.Runtime.dll" />
+    <Content Include="$(DalamudLibPath)/cimgui.dll" Link="cimgui.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

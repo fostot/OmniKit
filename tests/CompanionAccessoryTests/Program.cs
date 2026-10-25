@@ -19,6 +19,12 @@ AssemblyLoadContext.Default.Resolving += (context, name) =>
     return null;
 };
 var plugin = AssemblyLoadContext.Default.LoadFromAssemblyPath(pluginPath);
+if (args.Contains("--editor-blink"))
+{
+    var blinkChecks = EditorBlinkChecks.Run(plugin, Path.GetFullPath("assets"));
+    Console.WriteLine($"Actual DLL fitting-preview blink: {blinkChecks} checks passed. Public artwork only; no game/profile/network calls.");
+    return;
+}
 if (args.Contains("--blink-wiring"))
 {
     var blinkChecks = BlinkWiringChecks.Run(plugin, Path.GetFullPath("assets"));

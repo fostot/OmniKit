@@ -41,7 +41,8 @@ internal static class CompanionVariantRenderer
 
     /// <summary>Shared eyelid primitive. Only this measured eye region is painted; the caller owns its body transform.</summary>
     internal static void DrawEyeLid(ImDrawListPtr draw, ImTextureID closedTexture, Vector4 eye, Vector4 sample,
-        Vector2 sheetSize, Func<Vector2, Vector2> Point, float closure, uint tint, float featherPixels = 2)
+        Vector2 sheetSize, Func<Vector2, Vector2> Point, float closure, uint tint, float featherPixels = 2,
+        uint strokeColor = 0x00291B27)
     {
         if (!float.IsFinite(closure) || closure <= .001f) return;
         closure = Math.Clamp(closure, 0, 1);
@@ -80,7 +81,7 @@ internal static class CompanionVariantRenderer
             var x = -1f + i / 12f;
             draw.PathLineTo(Point(new(eye.X + x * eye.Z * .74f, eye.Y + eye.W * (.30f - .22f * (1 - x * x)))));
         }
-        draw.PathStroke(opacity << 24 | 0x00291B27, ImDrawFlags.None,
+        draw.PathStroke(opacity << 24 | (strokeColor & 0xFFFFFF), ImDrawFlags.None,
             Math.Max(.65f, Vector2.Distance(Point(new(eye.X, eye.Y)), Point(new(eye.X + 1, eye.Y))) * 3));
     }
 }

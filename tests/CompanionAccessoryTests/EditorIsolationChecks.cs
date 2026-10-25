@@ -70,6 +70,7 @@ internal static class EditorIsolationChecks
 
             // Exercise the real look resolver while the same synthetic home remains asleep.
             var configType = Type("Configuration"); var config = Activator.CreateInstance(configType)!;
+            configType.GetField("CompanionCostume")!.SetValue(config, "None");
             roamingType.GetFields(instance).Single(field => field.FieldType == configType).SetValue(roamer, config);
             Set(roamer, "assetDirectory", assets); Set(roamer, "displayAvatar", "Wink");
             var variants = Activator.CreateInstance(Type("Ui.CompanionVariantLibrary"), [assets])!;
@@ -90,8 +91,12 @@ internal static class EditorIsolationChecks
                 Set(seasonal, "snapshot", constructor.Invoke([Theme(name), Enum.Parse(Type("Ui.SeasonalEvidence"), "Manual"),
                     "Synthetic theme", emptyThemes, null]));
             }
-            object Request(string look, bool enabled, string body) => Activator.CreateInstance(requestType,
-                ["Wink", look, enabled, body, "Auto"])!;
+            object Request(string look, bool enabled, string body)
+            {
+                var request = Activator.CreateInstance(requestType, ["Wink", look, enabled, body, "Auto"])!;
+                requestType.GetProperty("CostumeSelection")!.SetValue(request, "None");
+                return request;
+            }
             string? CurrentChoice() => Get(roamer, "currentLook")?.GetType().GetProperty("Choice")!.GetValue(Get(roamer, "currentLook")) as string;
             void Resolve(string look, bool holiday, string body, string theme, bool canSwitch, bool expectedApply, bool expectedManual, string expectedChoice)
             {

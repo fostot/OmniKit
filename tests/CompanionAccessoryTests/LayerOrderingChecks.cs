@@ -20,7 +20,6 @@ internal static class LayerOrderingChecks
         var getQuad = rendererType.GetMethods().Single(method => method.Name == "TryGetQuad" &&
             method.GetParameters().Length == 4 && method.GetParameters()[2].ParameterType == fitType);
         var placement = Type("Ui.CompanionAccessoryPlacement").GetMethod("Apply")!;
-        var theme = Enum.Parse(Type("Ui.SeasonalCompanionTheme"), "AllSaintsWake");
         var context = ImGui.CreateContext();
         try
         {
@@ -28,14 +27,16 @@ internal static class LayerOrderingChecks
             io.IniFilename = null; io.LogFilename = null; io.Fonts.AddFontDefault(); io.Fonts.Build();
             foreach (var mirrored in new[] { false, true })
             foreach (var angle in new[] { -45f, 45f })
+            foreach (var name in new[] { "Heavensturn", "Valentione", "LittleLadies", "HatchingTide", "TheRising" })
             {
+                var theme = Enum.Parse(Type("Ui.SeasonalCompanionTheme"), name);
                 var fit = Activator.CreateInstance(fitType, [new Vector2(150, 110), 90f])!;
                 var a = new Vector2(mirrored ? 350 : 150, 150); var b = new Vector2(mirrored ? 150 : 350, 150);
                 var body = Activator.CreateInstance(bodyType, [new Vector4(50, 50, 250, 250), 250f, a, b, a + new Vector2(0, 200)])!;
                 object?[] arguments = [theme, body, fit, null];
-                Check((bool)getQuad.Invoke(renderer, arguments)!, "The real All Saints' Wake accessory supports the synthetic body transform.");
+                Check((bool)getQuad.Invoke(renderer, arguments)!, "The real bow supports the synthetic body transform: " + name);
                 var adjustment = Activator.CreateInstance(Type("CompanionAccessoryAdjustment"),
-                    ["Wink", "Default", "AllSaintsWake", .2f, -.1f, 1.2f, angle])!;
+                    ["Wink", "Default", name, .2f, -.1f, 1.2f, angle])!;
                 var quad = placement.Invoke(null, [arguments[3], body, fit, adjustment])!;
                 ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList(); draw.ChannelsSplit(2);
                 draw.ChannelsSetCurrent(1);
@@ -52,8 +53,8 @@ internal static class LayerOrderingChecks
                         for (var index = 0; index < command.ElemCount; index++)
                             bodyIndices.Add(draw.IdxBuffer[(int)command.IdxOffset + index] + (int)command.VtxOffset);
                 }
-                Check(commands.SequenceEqual(new ulong[] { 3, 2, 3, 4 }),
-                    "After merging, the runtime helper orders rear hat, existing body, front hat, then later foreground paint.");
+                Check(commands.SequenceEqual(new ulong[] { 2, 3, 4 }),
+                    "The complete bow renders once after the body and before later foreground paint, with no rear fragment.");
                 Check(bodyIndices.Count == 6 && bodyIndices.Distinct().Count() == 4,
                     "Channel reordering retains exactly the original body quad, with no duplicated body draw.");
                 Check(Equals(result, quad.GetType().GetProperty("Bounds")!.GetValue(quad)),

@@ -1,3 +1,38 @@
+# 0.1.0.0021: complete painted hats, five new companions and fitting blinks
+
+The split hat artwork in 0.1.0.0019 hid parts of the visible front brim. All four
+hats are now painted directly into complete companion poses. No separate hat
+pieces, polygon cuts or hidden front brims are rendered. The five original bows
+remain complete editable accessories.
+
+Adds Nib the ink drop, Echo the ghost, Fizz the soap bubble, Glim the star and Rune
+the rune stone. There are thirteen selectable companions. All thirteen have
+witch, Starlight cap, top hat and straw hat costumes, with eight complete poses
+per costume and a matching bare bedtime body. The wardrobe contains 65 pose
+sets, 520 frames and 125 measured eyes. Full sprite crops preserve every opaque
+body/brim pixel. Body-based scale reserves room for tall hats without shrinking
+the companion. Hats come off at home entry and return outside; Orbit keeps his
+themed moving rings. Existing original, everyday and holiday art stays intact.
+
+Companion → Appearance → Seasonal looks & rotation → Painted costume chooses
+None, Auto or a named theme. None returns to the saved everyday/holiday body;
+Auto uses the supported active event. Choosing an everyday or holiday body
+explicitly leaves costume mode. The new five hide unavailable legacy look menus.
+
+Fit accessories now edits only bows. Position, Size, Angle and Save fits remain;
+its body is stationary while an independent eye-only preview blinks when both
+animation and blinking are enabled. The real companion stays paused. Nib uses
+silver eyelid strokes against his dark ink; all previous eyelid colors remain.
+
+Schema 12 adds CompanionCostume and migrates previous preferences to Auto without
+losing fits, angles or consent. New identities and costume fit keys are supported
+within the existing 1024-fit and 256KiB limits. No personal database is published.
+
+Validation covers synthetic storage migration, the actual compiled plugin's
+roster/costume/nap/blink routes, native fitting/settings at minimum size, and all
+520 complete source crops. These offscreen checks remain separate from live
+FFXIV validation.
+
 # 0.1.0.0019: accessory rotation, hat depth and holiday rings
 
 Fit accessories now has an Angle slider beside Size. Drag to position, resize,

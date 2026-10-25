@@ -287,7 +287,8 @@ internal sealed class PluginUi : IDisposable
         if (config.AvatarEnabled)
         {
             var portraitSize = new Vector2(44) * s;
-            ProceduralCompanion.Draw(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
+            if (!roaming.DrawPortrait(ImGui.GetWindowDrawList(), origin, portraitSize, config.Avatar))
+                ProceduralCompanion.Draw(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
             ProceduralCompanion.DrawEffects(ImGui.GetWindowDrawList(), origin, portraitSize, config, CompanionPose.Idle, (float)ImGui.GetTime());
         }
         ImGui.SetCursorScreenPos(origin + new Vector2(config.AvatarEnabled ? 54 : 0, 1) * s);
@@ -732,11 +733,12 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.Checkbox("Magic accents", ref config.CompanionMagicEnabled)) Save();
             if (UiText.CollapsingHeader("Looks"))
             {
-                if (StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
+                if (roaming.HasEverydayLooks(config.Avatar) && StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
                     choice => roaming.LookLabel(config.Avatar, choice), persist: false))
-                { config.CompanionHolidayBodiesEnabled = false; Save(); }
-                if (config.CompanionHolidayBodiesEnabled) UiText.Hint("Holiday body active. Picking a look switches to everyday mode.");
-                if (config.CompanionVariant == "Random")
+                { config.CompanionHolidayBodiesEnabled = false; config.CompanionCostume = "None"; Save(); }
+                if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
+                    UiText.Hint("Holiday body active. Picking a look switches to everyday mode.");
+                if (roaming.HasEverydayLooks(config.Avatar) && config.CompanionVariant == "Random")
                 {
                     if (ImGui.Checkbox("Change look on a timer", ref config.CompanionLookAutoRotateEnabled)) Save();
                     if (config.CompanionLookAutoRotateEnabled && ImGui.SliderFloat("Look interval", ref config.CompanionLookInterval,
@@ -753,14 +755,20 @@ internal sealed class PluginUi : IDisposable
             }
             if (UiText.CollapsingHeader("Seasonal looks & rotation"))
             {
-                if (ImGui.Checkbox("Holiday bodies", ref config.CompanionHolidayBodiesEnabled)) Save();
-                if (config.CompanionHolidayBodiesEnabled)
-                    StyleChoice("Body theme", ref config.CompanionHolidayBody, Configuration.SeasonalThemeNames,
-                        choice => roaming.HolidayBodyLabel(config.Avatar, choice));
-                if (ImGui.Checkbox("Seasonal accessories", ref config.CompanionSeasonalEnabled)) Save();
+                StyleChoice("Painted costume", ref config.CompanionCostume, Configuration.CostumeNames,
+                    choice => choice is "None" or "Auto" ? choice : SeasonalLabel(choice));
+                UiText.Hint("Complete painted body and hat. None returns to your chosen body; Auto follows the current event.");
+                if (roaming.HasHolidayBodies(config.Avatar) && ImGui.Checkbox("Holiday bodies", ref config.CompanionHolidayBodiesEnabled))
+                { if (config.CompanionHolidayBodiesEnabled) config.CompanionCostume = "None"; Save(); }
+                if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
+                    if (StyleChoice("Body theme", ref config.CompanionHolidayBody, Configuration.SeasonalThemeNames,
+                        choice => roaming.HolidayBodyLabel(config.Avatar, choice), persist: false))
+                    { config.CompanionCostume = "None"; Save(); }
+                if (ImGui.Checkbox("Seasonal bows", ref config.CompanionSeasonalEnabled)) Save();
                 if (UiText.Button("Fit accessories")) OpenAccessoryEditor();
+                UiText.Hint("Position, resize and rotate bows. Hats are painted into the costume.");
                 if ((config.CompanionSeasonalEnabled || config.CompanionHolidayHomeEnabled)
-                    && UiText.BeginCombo("Accessory / home theme", SeasonalLabel(config.CompanionSeasonalTheme)))
+                    && UiText.BeginCombo("Bow / home theme", SeasonalLabel(config.CompanionSeasonalTheme)))
                 {
                     foreach (var theme in Configuration.SeasonalThemeNames)
                         if (UiText.Selectable(SeasonalLabel(theme), config.CompanionSeasonalTheme == theme)) { config.CompanionSeasonalTheme = theme; Save(); }
@@ -1256,6 +1264,11 @@ internal sealed class PluginUi : IDisposable
         "Orbit" => "Orbit · tiny planet",
         "Ember" => "Ember · star flame",
         "Prism" => "Prism · crystal spirit",
+        "Nib" => "Nib · ink drop",
+        "Echo" => "Echo · little ghost",
+        "Fizz" => "Fizz · soap bubble",
+        "Glim" => "Glim · soft star",
+        "Rune" => "Rune · rune stone",
         _ => avatar,
     };
 

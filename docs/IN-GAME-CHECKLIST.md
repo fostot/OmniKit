@@ -89,8 +89,8 @@ establish them. None is marked passed until observed.
   A routine identical snapshot refresh must not invalidate a valid click. Each
   accepted click permits one native attempt without auto-targeting or retries.
   Text entry must still block actions while clicking a bar must not block itself.
-- Switch all eight companions: Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember and
-  Prism. Check Moonblob as the default, six aura colors, rolling/floating,
+- Switch all thirteen companions: Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember,
+  Prism, Nib, Echo, Fizz, Glim and Rune. Check Moonblob as the default, six aura colors, rolling/floating,
   blinking and explicit mouth preview, including both facing directions.
   Draw a roaming area and confirm the complete companion and magic stay inside.
   Verify click-to-talk, resize, animation off, magic off and companion off.
@@ -151,14 +151,26 @@ establish them. None is marked passed until observed.
   eases under the centered hand; hand scaling must not shift it. Comments must
   not trigger AI requests, microphone capture or speech.
 - Open Fit accessories. The real companion, nap phase, physics and animation
-  clocks must freeze; the editor must show one still body in the center. At
+  clocks must freeze; the editor must show one still body in the center with
+  optional eye-only blinks. At
   minimum size and scales 1/1.5/2, open all three selectors and test accessory
   drag, horizontal/vertical corner resize, Size and Angle. The body must not rescale
   during dragging. Save multiple fits, change selectors, close/reopen, resize
   the game and mirror/roll the companion; placement must follow its head rather
   than screen coordinates. Cancel preserves saved fits; Reset is draft-only
   until Save. Fit view changes only preview zoom. Check extreme saved scales
-  and offsets, angles at -180/0/180 degrees, failed-save handling and JSON export/import. Verify existing fits migrate without movement. Check the four hats have rear brims behind the head and front detail over it, including mirrored/rolling poses and house entry/exit.
+  and offsets, angles at -180/0/180 degrees, failed-save handling and JSON export/import.
+  Verify existing fits migrate without movement. Only the five whole bows are
+  fitted; no separate hats or rear pieces may appear. With blinking enabled the
+  eyes blink while the body and saved fit remain still. Disable blink/animation
+  to freeze the eye preview too.
+- Select all four Painted costumes for every companion at 96/192 and both
+  facings. Inspect complete front brims, Santa cuffs and pom-poms in walking,
+  carry and nap poses. Tall hats must not shrink the body. Entry/sleep/waking
+  use the same character's bare artwork; the painted hat returns outside only.
+  Check None, Auto and named themes, event changes, and a manual costume change
+  while sleeping. Original everyday/holiday choices stay saved. Test all thirteen
+  in the avatar menu, including their portraits and rotation.
 - Pick an everyday look while a holiday body is active: it must leave holiday
   mode and show that look. Enable a named Body theme and verify the everyday
   selection remains saved. Change body/companion while sleeping: the appearance
@@ -172,7 +184,7 @@ establish them. None is marked passed until observed.
   disable Use holiday homes when testing a manual style. Check Random home/hand
   choice, all five hand designs, continuous grip contact and a retained hand from
   pickup through release. Clamp actual house artwork flush to each screen edge.
-- Test naps for all eight companions: about 45 seconds awake and 20 asleep by default,
+- Test naps for all thirteen companions: about 45 seconds awake and 20 asleep by default,
   plus awake interval 15/300 and sleep duration 5/120. A nap trip can leave the
   drawn area at about twice normal speed, enter through the front doorway rather
   than the roof/side, curl up, breathe,

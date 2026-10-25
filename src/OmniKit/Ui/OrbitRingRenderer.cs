@@ -13,9 +13,8 @@ internal sealed class OrbitRingRenderer
     private float lightPhase;
     public static SeasonalCompanionTheme? ThemeForLook(string? choice)
     {
-        const string prefix = "Holiday";
-        if (choice == null || !choice.StartsWith(prefix, StringComparison.Ordinal)) return null;
-        var name = choice[prefix.Length..];
+        if (choice == null || !(choice.StartsWith("Holiday", StringComparison.Ordinal) || choice.StartsWith("Costume", StringComparison.Ordinal))) return null;
+        var name = choice[7..];
         return Enum.TryParse<SeasonalCompanionTheme>(name, out var theme) && Enum.IsDefined(theme)
             && name == theme.ToString() ? theme : null;
     }

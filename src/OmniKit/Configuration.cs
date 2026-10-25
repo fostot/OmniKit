@@ -15,10 +15,11 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 11;
-    public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" });
+    public int Version { get; set; } = 12;
+    public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism", "Nib", "Echo", "Fizz", "Glim", "Rune" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
+    public static IReadOnlyList<string> CostumeNames { get; } = Array.AsReadOnly(new[] { "None", "Auto", "AllSaintsWake", "Starlight", "MakeItRain", "MoonfireFaire" });
     public bool SetupCompleted = false;
     public bool LauncherEnabled = true;
     public float LauncherWidth = 640f;
@@ -100,6 +101,7 @@ public sealed class Configuration : IPluginConfiguration
     public bool CompanionHolidayHomeEnabled = true;
     public bool CompanionHolidayBodiesEnabled = true;
     public string CompanionHolidayBody = "Auto";
+    public string CompanionCostume = "Auto";
     public List<CompanionAccessoryAdjustment> CompanionAccessoryFits = [];
     public bool CompanionTransitionEffectsEnabled = true;
     public string CompanionHandStyle = "Default";

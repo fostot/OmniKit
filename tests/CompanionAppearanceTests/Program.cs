@@ -12,6 +12,7 @@ var assets = Path.GetFullPath("assets");
 var variants = new CompanionVariantLibrary(assets);
 var holidays = new CompanionHolidayLibrary(assets);
 string[] avatars = ["Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism"];
+string[] effectAvatars = [.. avatars, "Nib", "Echo", "Fizz", "Glim", "Rune"];
 SeasonalCompanionTheme?[] themes = [null, .. Enum.GetValues<SeasonalCompanionTheme>().Cast<SeasonalCompanionTheme?>()];
 var checks = 0;
 void Check(bool value, string reason) { checks++; if (!value) throw new InvalidOperationException(reason); }
@@ -24,7 +25,8 @@ Check(!selection.Update(request, SeasonalCompanionTheme.Starlight, false).CanApp
 Check(selection.Update(request, SeasonalCompanionTheme.Starlight, true).CanApplyBody, "Automatic event change applies once the gate opens.");
 foreach (var changed in new[] {
     request with { Avatar = "Prism" }, request with { EverydayChoice = "Look4" }, request with { HolidayEnabled = false },
-    request with { HolidayBodySelection = "MoonfireFaire" }, request with { SeasonalThemeSelection = "Starlight" } })
+    request with { HolidayBodySelection = "MoonfireFaire" }, request with { SeasonalThemeSelection = "Starlight" },
+    request with { CostumeSelection = "Starlight" } })
 {
     var state = new CompanionAppearanceSelection(); state.Update(request, null, true);
     var choice = state.Update(changed, SeasonalCompanionTheme.AllSaintsWake, false);
@@ -79,7 +81,7 @@ try
             && v.Pos.X <= bounds.Maximum.X + .01f && v.Pos.Y <= bounds.Maximum.Y + .01f), "Every native effect vertex fits its declared reserved gutter.");
         ImGui.Render(); return vertices;
     }
-    foreach (var avatar in avatars) foreach (var theme in themes) foreach (var size in new[] { 96f, 192f }) foreach (var mirror in new[] { false, true })
+    foreach (var avatar in effectAvatars) foreach (var theme in themes) foreach (var size in new[] { 96f, 192f }) foreach (var mirror in new[] { false, true })
     {
         var atZero = Sample(avatar, theme, size, 0, true, mirrored: mirror);
         Check(atZero.Length > 0 && atZero.Length < 5000, "Effects have bounded native geometry.");
@@ -93,8 +95,8 @@ try
         Check(Sample(avatar, theme, size, 3, true, editor: true, mirrored: mirror).Length == 0, "Appearance editor bypass produces no vertices.");
         Check(Sample(avatar, theme, size, float.NaN, true, mirrored: mirror).SequenceEqual(atZero), "Invalid clock returns deterministic still art.");
     }
-    var signatures = avatars.Select(a => Sample(a, null, 96, 1, true)).ToArray();
-    Check(signatures.Select(v => string.Join(';', v.Select(p => p.P.ToString()))).Distinct().Count() == 8, "Eight companions have distinct geometry, not just palette changes.");
+    var signatures = effectAvatars.Select(a => Sample(a, null, 96, 1, true)).ToArray();
+    Check(signatures.Select(v => string.Join(';', v.Select(p => p.P.ToString()))).Distinct().Count() == 13, "Thirteen companions have distinct geometry, not just palette changes.");
     var holidayShapes = themes.Select(t => Sample("Moonblob", t, 96, 1, true)).ToArray();
     Check(holidayShapes.Select(v => string.Join(';', v.Select(p => p.P.ToString()))).Distinct().Count() == 10, "Nine holidays add distinct motifs to ordinary effects.");
     Check(Sample("unknown", null, 96, 0, true).Length == 0, "Unknown companion produces no fallback effects.");

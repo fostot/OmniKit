@@ -66,3 +66,5 @@ a valid manual model, a successful empty catalog, and a failed refresh retaining
 the earlier choices. Error text comes from the sanitized connection status; the
 fixture exception's untrusted text must never appear. The resulting form and
 wrapped status are rendered at minimum size, with no network or authentication.
+
+The focused `--case=wardrobe-costume-menu,wardrobe-avatar-menu,wardrobe-nib` set checks the six painted-costume choices and all thirteen companion choices at 480×330 logical pixels and scales 1, 1.5 and 2. Every dropdown option must become fully readable while scrolling, retain the native screen margin, and save the selected synthetic value. Nib's expanded sections omit unavailable everyday and holiday-body selectors. A separate invocation of the actual companion Header verifies one complete Nib portrait quad from the public wardrobe PNG, using a texture stub and rejecting other service access. These cases write nine settings previews and three portrait previews under the ignored output directory.

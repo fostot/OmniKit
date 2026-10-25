@@ -11,6 +11,9 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
     private CompanionHolidayLibrary? holidays;
     private CompanionAnimationLibrary? originals;
     private SeasonalCompanionRenderer? accessories;
+    private CompanionWardrobeLibrary? wardrobe;
+    private CompanionBlinkLibrary? blinks;
+    private float previewTime;
     private readonly OrbitRingRenderer rings = new();
     private string avatar = "Moonblob";
     private string look = "Default";
@@ -32,7 +35,8 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
         foreach (var fit in config.CompanionAccessoryFits) drafts[(fit.Avatar, fit.Look, fit.Theme)] = fit;
         avatar = Configuration.AvatarNames.Contains(selectedAvatar) ? selectedAvatar : config.Avatar;
         look = Choices.Contains(selectedLook) ? selectedLook : "Default";
-        theme = selectedTheme ?? SeasonalCompanionTheme.AllSaintsWake;
+        theme = selectedTheme is { } chosen && SeasonalCompanionRenderer.IsBow(chosen) ? chosen : SeasonalCompanionTheme.Heavensturn;
+        previewTime = 0;
         IsDirty = false; message = ""; dragging = resizing = false; stageEdge = 0; IsOpen = true;
     }
 
@@ -41,7 +45,8 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
     private CompanionAccessoryAdjustment Current => drafts.GetValueOrDefault(Key) ?? new(avatar, look, theme.ToString(), 0, 0, 1);
     private void Change(CompanionAccessoryAdjustment fit) { drafts[Key] = fit; IsDirty = true; message = ""; }
     internal static IReadOnlyList<string> Choices { get; } = new[] { "Default", "Look1", "Look2", "Look3", "Look4" }
-        .Concat(Configuration.SeasonalThemeNames.Skip(1).Select(t => "Holiday" + t)).ToArray();
+        .Concat(Configuration.SeasonalThemeNames.Skip(1).Select(t => "Holiday" + t))
+        .Concat(Configuration.CostumeNames.Skip(2).Select(t => "Costume" + t)).ToArray();
 
     public bool Save()
     {
@@ -79,20 +84,21 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
                 if (UiText.BeginCombo("##fit-avatar", avatar))
                 {
                     foreach (var value in Configuration.AvatarNames)
-                        if (UiText.Selectable(value, avatar == value)) { avatar = value; stageEdge = 0; dragging = resizing = false; }
+                        if (UiText.Selectable(value, avatar == value))
+                        { avatar = value; if (!AvailableLook(look)) look = "Default"; stageEdge = previewTime = 0; dragging = resizing = false; }
                     ImGui.EndCombo();
                 }
                 ImGui.TableNextColumn(); ImGui.TextUnformatted("Body"); ImGui.SetNextItemWidth(-1);
                 if (UiText.BeginCombo("##fit-body", LookLabel(look)))
                 {
-                    foreach (var value in Choices)
-                        if (UiText.Selectable(LookLabel(value), look == value)) { look = value; stageEdge = 0; dragging = resizing = false; }
+                    foreach (var value in Choices.Where(AvailableLook))
+                        if (UiText.Selectable(LookLabel(value), look == value)) { look = value; stageEdge = previewTime = 0; dragging = resizing = false; }
                     ImGui.EndCombo();
                 }
                 ImGui.TableNextColumn(); ImGui.TextUnformatted("Accessory"); ImGui.SetNextItemWidth(-1);
                 if (UiText.BeginCombo("##fit-accessory", SeasonalCompanionPolicy.Label(theme)))
                 {
-                    foreach (var value in Enum.GetValues<SeasonalCompanionTheme>())
+                    foreach (var value in Enum.GetValues<SeasonalCompanionTheme>().Where(SeasonalCompanionRenderer.IsBow))
                         if (UiText.Selectable(SeasonalCompanionPolicy.Label(value), theme == value)) { theme = value; stageEdge = 0; dragging = resizing = false; }
                     ImGui.EndCombo();
                 }
@@ -132,10 +138,18 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
         holidays ??= new CompanionHolidayLibrary(assetDirectory);
         originals ??= new CompanionAnimationLibrary(assetDirectory);
         accessories ??= new SeasonalCompanionRenderer(assetDirectory);
+        wardrobe ??= new CompanionWardrobeLibrary(assetDirectory);
+        blinks ??= new CompanionBlinkLibrary(assetDirectory);
     }
 
+    private bool AvailableLook(string value) => value == "Default" || value.StartsWith("Costume", StringComparison.Ordinal)
+        || value.StartsWith("Holiday", StringComparison.Ordinal) && holidays?.Looks.Any(l => l.Avatar == avatar) == true
+        || variants?.Find(avatar, value) != null;
+
     private string LookLabel(string value)
-        => value == "Default" ? "Original" : value.StartsWith("Holiday", StringComparison.Ordinal)
+        => value.StartsWith("Costume", StringComparison.Ordinal) && Enum.TryParse<SeasonalCompanionTheme>(value[7..], out var costume)
+            ? wardrobe?.FindCostume(avatar, costume)?.Label ?? SeasonalCompanionPolicy.Label(costume) + " costume"
+            : value == "Default" ? "Original" : value.StartsWith("Holiday", StringComparison.Ordinal)
             && Enum.TryParse<SeasonalCompanionTheme>(value[7..], out var holiday)
                 ? holidays?.FindHoliday(avatar, holiday)?.Label ?? SeasonalCompanionPolicy.Label(holiday) + " body"
                 : variants?.Find(avatar, value)?.Label ?? value;
@@ -144,7 +158,9 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
         out CompanionFrame frame, out SeasonalBodyTransform body, out SeasonalAccessoryFit fit)
     {
         source = null!; frame = default; body = default; fit = default;
-        var selected = look.StartsWith("Holiday", StringComparison.Ordinal)
+        var selected = look.StartsWith("Costume", StringComparison.Ordinal) && Enum.TryParse<SeasonalCompanionTheme>(look[7..], out var costume)
+            ? wardrobe?.FindCostume(avatar, costume) : look == "Default" && wardrobe?.FindDefault(avatar) is { } extra
+                ? extra : look.StartsWith("Holiday", StringComparison.Ordinal)
             && Enum.TryParse<SeasonalCompanionTheme>(look[7..], out var holiday)
                 ? holidays?.FindHoliday(avatar, holiday) : variants?.Find(avatar, look);
         if (selected != null) source = selected.Normal;
@@ -174,6 +190,7 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
         if (hovered && !ImGui.IsMouseDown(ImGuiMouseButton.Left)) UiText.Hint("Drag accessory to position it. Drag its corner to resize. Fit view changes only the preview zoom.");
         var adjustment = Current;
         var fraction = CompanionAccessoryPlacement.Padding(adjustment);
+        if (look.StartsWith("Costume", StringComparison.Ordinal)) fraction = Math.Max(fraction, CompanionWardrobeLibrary.VisualPaddingFraction);
         if (stageEdge <= 0 || stageCanvas != canvas)
         {
             stageCanvas = canvas;
@@ -202,6 +219,19 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
                 rings.Draw(draw, orbit.Center, orbit.Radius, Vector4.One, true, ringTheme, config.CompanionMagicEnabled);
             }
             else CompanionVariantRenderer.Draw(draw, texture.Handle, frame);
+            if (config.AnimationsEnabled && config.CompanionBlinkEnabled)
+            {
+                previewTime += Math.Clamp(ImGui.GetIO().DeltaTime, 0, .05f);
+                var closure = avatar == "Wink" && config.CompanionFourierBlinkEnabled
+                    ? FourierBlink.Amount(previewTime, config.CompanionBlinkInterval, true)
+                    : RoamingCompanion.BlinkAmount(previewTime, config.CompanionBlinkInterval, true);
+                var profile = blinks?.Find(source.File, source.Bounds) ?? wardrobe?.FindBlink(source.File, source.Bounds);
+                if (closure > .001f && profile != null)
+                {
+                    var closed = Services.Textures.GetFromFile(Path.Combine(assetDirectory, profile.ClosedFile)).GetWrapOrDefault();
+                    if (closed != null) CompanionBlinkRenderer.Draw(draw, closed.Handle, profile, body, closure, 0xFFFFFFFFu);
+                }
+            }
             if (accessoryTexture == null) return;
             accessories.DrawLayer(draw, accessoryTexture.Handle, quad, theme, true);
             var bounds = quad.Bounds;

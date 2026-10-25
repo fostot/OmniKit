@@ -2,7 +2,10 @@ namespace OmniKit.Ui;
 
 /// <summary>Only explicit settings belong here. Resolved event themes and timed avatar/look choices are separate inputs.</summary>
 internal readonly record struct CompanionAppearanceRequest(string Avatar, string EverydayChoice, bool HolidayEnabled,
-    string HolidayBodySelection, string SeasonalThemeSelection);
+    string HolidayBodySelection, string SeasonalThemeSelection)
+{
+    public string CostumeSelection { get; init; } = "Auto";
+}
 
 internal readonly record struct CompanionAppearanceDecision(bool CanApplyBody, bool ManualChange,
     SeasonalCompanionTheme? HolidayTheme);

@@ -17,6 +17,7 @@ internal static class CompanionBlinkRenderer
         }
         foreach (var eye in profile.Eyes)
             CompanionVariantRenderer.DrawEyeLid(draw, closedTexture, eye.Ellipse, eye.Sample,
-                profile.ClosedSheetSize, Point, closure, tint, 1);
+                profile.ClosedSheetSize, Point, closure, tint, 1,
+                profile.Avatar == "Nib" ? 0x00F3E8E2u : 0x00291B27u);
     }
 }

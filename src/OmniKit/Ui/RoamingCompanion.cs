@@ -40,6 +40,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private CompanionBlinkLibrary? blinks;
     private CompanionVariantSelection? variantSelection;
     private CompanionHolidayLibrary? holidayBodies;
+    private CompanionWardrobeLibrary? wardrobe;
     private bool lookSelectionInitialized;
     private CompanionVariantLook? currentLook;
     private CompanionVariantLook? cachedLook;
@@ -89,6 +90,26 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     public SeasonalCompanionTheme? AccessoryTheme => seasonal?.CurrentTheme;
     public CompanionPose PreviewPose { get; set; } = CompanionPose.Automatic;
     public string SeasonalStatus => seasonal?.Status ?? string.Empty;
+    public bool HasEverydayLooks(string avatar) { EnsureVariants(); return variants?.Looks.Any(l => l.Avatar == avatar) == true; }
+    public bool HasHolidayBodies(string avatar)
+    { holidayBodies ??= new CompanionHolidayLibrary(assetDirectory); return holidayBodies.Looks.Any(l => l.Avatar == avatar); }
+    public bool DrawPortrait(ImDrawListPtr draw, Vector2 position, Vector2 size, string avatar)
+    {
+        wardrobe ??= new CompanionWardrobeLibrary(assetDirectory);
+        var costume = ResolveCostume(config.CompanionCostume, seasonal?.CurrentTheme);
+        var look = costume is { } theme ? wardrobe.FindCostume(avatar, theme) : null;
+        look ??= wardrobe.FindDefault(avatar);
+        if (look == null) return false;
+        var source = look.Normal;
+        var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, source.File)).GetWrapOrDefault();
+        if (texture == null) return false;
+        var shape = new Vector2(source.Bounds.Z - source.Bounds.X, source.Bounds.W - source.Bounds.Y);
+        var painted = shape * Math.Min(size.X / shape.X, size.Y / shape.Y);
+        var at = position + (size - painted) * .5f;
+        draw.AddImage(texture.Handle, at, at + painted, new Vector2(source.Bounds.X, source.Bounds.Y) / source.SheetSize,
+            new Vector2(source.Bounds.Z, source.Bounds.W) / source.SheetSize);
+        return true;
+    }
     public string LookLabel(string avatar, string choice)
     {
         if (choice is "Default" or "Random") return choice;
@@ -174,7 +195,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             && !homeRoutine.Active && !pointerPressed && !houseDragging && !hoverPausedLastFrame && PreviewPose == CompanionPose.Automatic;
         Update();
         var appearance = appearanceSelection.Update(new(config.Avatar, config.CompanionVariant,
-            config.CompanionHolidayBodiesEnabled, config.CompanionHolidayBody, config.CompanionSeasonalTheme),
+            config.CompanionHolidayBodiesEnabled, config.CompanionHolidayBody, config.CompanionSeasonalTheme)
+            { CostumeSelection = config.CompanionCostume },
             seasonal.CurrentTheme, canSwitch);
         var requestedAvatar = rotation.Update(config.Avatar, config.CompanionAutoRotateEnabled, config.CompanionRotationInterval,
             Environment.TickCount64, appearance.CanApplyBody);
@@ -184,6 +206,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 && config.AnimationsEnabled && config.CompanionMagicEnabled, elapsed);
         var applyBody = appearance.CanApplyBody && transition.CanApplyAppearance;
         var bodyAvatar = applyBody ? transition.AvatarToApply : displayAvatar;
+        wardrobe ??= new CompanionWardrobeLibrary(assetDirectory);
+        if (Configuration.AvatarNames.Skip(8).Contains(bodyAvatar) && wardrobe.FindDefault(bodyAvatar) == null) bodyAvatar = "Moonblob";
         EnsureVariants();
         var baseLook = variantSelection?.Resolve(bodyAvatar, config.CompanionVariant, config.CompanionLookAutoRotateEnabled,
             config.CompanionLookInterval, Environment.TickCount64 / 1000d, applyBody);
@@ -204,7 +228,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             config.CompanionSize, scale, aspect);
         seasonalArtwork ??= new SeasonalCompanionRenderer(assetDirectory);
         seasonalVisible = false;
-        if (layout.IsVisible && config.CompanionSeasonalEnabled && seasonal?.CurrentTheme != null && seasonalArtwork.IsAvailable)
+        if (layout.IsVisible && config.CompanionSeasonalEnabled && seasonal?.CurrentTheme is { } accessoryTheme
+            && SeasonalCompanionRenderer.IsBow(accessoryTheme) && seasonalArtwork.IsAvailable)
         {
             var fraction = accessoryPadding = CompanionAccessoryPlacement.Padding(CompanionAccessoryPlacement.Find(config,
                 displayAvatar, CurrentLookId, seasonal.CurrentTheme.Value.ToString()));
@@ -215,6 +240,13 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             var padding = sprite * fraction;
             seasonalVisible = fit > 0;
             layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding, SpriteSize = sprite };
+        }
+        if (CurrentLookId.StartsWith("Costume", StringComparison.Ordinal))
+        {
+            var padding = layout.SpriteSize * CompanionWardrobeLibrary.VisualPaddingFraction;
+            var room = layout.Maximum - layout.Minimum;
+            padding = Vector2.Min(padding, Vector2.Max(Vector2.Zero, (room - layout.SpriteSize) * .5f));
+            layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding };
         }
         if (layout != lastLayout) gait.Rebase();
         lastLayout = layout;
@@ -269,7 +301,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var current = physics.Active ? physics.Position : motion.Position;
         var currentFacing = physics.Active ? physics.FacingLeft : motion.FacingLeft;
         homeRoutine.Update(elapsed, config.CompanionHomeEnabled && config.CompanionNapsEnabled
-            && napArtwork.TryGet(displayAvatar, config.CompanionOutfit, out _),
+            && (currentLook != null || napArtwork.TryGet(displayAvatar, config.CompanionOutfit, out _)),
             !config.AnimationsEnabled || PreviewPose != CompanionPose.Automatic || hoverPausedLastFrame || pointerPressed
                 || housePressed || houseDragging || !napEligible && !homeRoutine.Active,
             current, currentFacing, layout, home, houseMirrored, config.CompanionNapInterval,
@@ -319,6 +351,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var hitEnd = position + layout.SpriteSize * .82f;
         var visualPadding = !seasonalVisible ? Vector2.Zero
             : layout.SpriteSize * accessoryPadding;
+        if (CurrentLookId.StartsWith("Costume", StringComparison.Ordinal))
+            visualPadding = Vector2.Max(visualPadding, layout.SpriteSize * CompanionWardrobeLibrary.VisualPaddingFraction);
         var clipMinimum = physics.Active ? physics.ClipMinimum : homeRoutine.Active ? viewport.Pos : layout.Minimum - visualPadding;
         var clipMaximum = physics.Active ? physics.ClipMaximum : homeRoutine.Active ? viewport.Pos + viewport.Size : layout.Maximum + visualPadding;
         clipMinimum = Vector2.Max(clipMinimum, viewport.Pos); clipMaximum = Vector2.Min(clipMaximum, viewport.Pos + viewport.Size);
@@ -328,7 +362,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         try
         {
             if (!homeRoutine.UsesNapArt)
-                CompanionSignatureEffects.Draw(draw, displayAvatar, CompanionAppearanceSelection.ResolveHoliday(
+                CompanionSignatureEffects.Draw(draw, displayAvatar, OrbitRingRenderer.ThemeForLook(CurrentLookId) ?? CompanionAppearanceSelection.ResolveHoliday(
                     config.CompanionHolidayBodiesEnabled, config.CompanionHolidayBody, seasonal?.CurrentTheme),
                     position, layout.SpriteSize, ProceduralCompanion.Palette(config.CompanionPalette), animationTime,
                     config.CompanionMagicEnabled, config.AnimationsEnabled, mirrored: facingLeft);
@@ -555,6 +589,11 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     {
         if (lookSelectionInitialized && !canSwitch) return;
         lookSelectionInitialized = true;
+        wardrobe ??= new CompanionWardrobeLibrary(assetDirectory);
+        baseLook ??= wardrobe.FindDefault(displayAvatar);
+        var costume = ResolveCostume(config.CompanionCostume, seasonal?.CurrentTheme);
+        if (costume is { } costumeTheme && wardrobe.FindCostume(displayAvatar, costumeTheme) is { } painted)
+        { currentLook = painted; return; }
         var theme = CompanionAppearanceSelection.ResolveHoliday(config.CompanionHolidayBodiesEnabled,
             config.CompanionHolidayBody, seasonal?.CurrentTheme);
         if (theme is { } currentTheme)
@@ -563,6 +602,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             currentLook = holidayBodies.FindHoliday(displayAvatar, currentTheme) ?? baseLook;
         }
         else currentLook = baseLook;
+    }
+
+    internal static SeasonalCompanionTheme? ResolveCostume(string selection, SeasonalCompanionTheme? active)
+    {
+        var value = selection == "Auto" ? active : Enum.TryParse<SeasonalCompanionTheme>(selection, out var theme)
+            && selection == theme.ToString() ? theme : (SeasonalCompanionTheme?)null;
+        return value is SeasonalCompanionTheme.AllSaintsWake or SeasonalCompanionTheme.Starlight
+            or SeasonalCompanionTheme.MakeItRain or SeasonalCompanionTheme.MoonfireFaire ? value : null;
     }
 
     private bool TryDrawLook(ImDrawListPtr draw, Vector2 position, Vector2 size, bool mirrored, CompanionPose pose,
@@ -661,7 +708,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     {
         if (!config.AnimationsEnabled || !config.CompanionBlinkEnabled || closure <= .001f || IsEditingAccessories) return;
         blinks ??= new CompanionBlinkLibrary(assetDirectory);
-        var profile = blinks.Find(file, body.SourceRect);
+        var profile = blinks.Find(file, body.SourceRect) ?? wardrobe?.FindBlink(file, body.SourceRect);
         if (profile == null) return;
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, profile.ClosedFile)).GetWrapOrDefault();
         if (texture == null) return;
@@ -700,7 +747,10 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             _ => CompanionVariantPose.EnterBed
         };
         var index = homeRoutine.State switch { CompanionHomeState.Sleeping => 14, CompanionHomeState.Waking => 13, _ => 12 };
-        var source = currentLook?[pose] ?? variants!.OriginalOrbitCore[index];
+        var sleepingLook = currentLook;
+        if (CurrentLookId.StartsWith("Costume", StringComparison.Ordinal) && !homeRoutine.AccessoriesVisible)
+            sleepingLook = wardrobe?.FindBare(displayAvatar) ?? currentLook;
+        var source = sleepingLook?[pose] ?? variants!.OriginalOrbitCore[index];
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, source.File)).GetWrapOrDefault();
         var houseTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, homeStyleFrame?.File ?? "companion-house.png")).GetWrapOrDefault();
         if (texture == null || houseTexture == null) return false;

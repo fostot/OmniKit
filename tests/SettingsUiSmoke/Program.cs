@@ -42,6 +42,9 @@ if (args.Contains("--companions") || args.Contains("--companion-poses"))
 }
 var cases = new[]
 {
+    (Name: "wardrobe-costume-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "wardrobe-avatar-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "wardrobe-nib", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "launcher", Section: 0, Tab: 0, Enabled: false, Scroll: true),
     (Name: "quest-items", Section: 6, Tab: 0, Enabled: true, Scroll: true),
     (Name: "seasonal", Section: 3, Tab: 0, Enabled: true, Scroll: true),
@@ -165,7 +168,8 @@ Console.WriteLine($"PASS: {renders} actual compiled settings renders completed w
 unsafe void Render(string name, int section, int tab, bool enabled, float scale, bool scroll)
 {
     var config = Activator.CreateInstance(Type("OmniKit.Configuration"))!;
-    var appearance15 = name.StartsWith("appearance15-", StringComparison.Ordinal);
+    var wardrobeCase = name.StartsWith("wardrobe-", StringComparison.Ordinal);
+    var appearance15 = name.StartsWith("appearance15-", StringComparison.Ordinal) || wardrobeCase;
     Set(config, "Avatar", "Moonblob");
     if (appearance15)
     {
@@ -191,6 +195,12 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         }
         Set(config, "CompanionGroundedEnabled", name != "appearance15-grounded-off");
         Set(config, "CompanionAutoHopEnabled", name != "appearance15-hop-off");
+    }
+    if (wardrobeCase)
+    {
+        Set(config, "CompanionCostume", "None");
+        Set(config, "CompanionHolidayBodiesEnabled", false);
+        if (name == "wardrobe-nib") Set(config, "Avatar", "Nib");
     }
     var persistField = config.GetType().GetField("Persist", flags)!;
     persistField.SetValue(config, System.Linq.Expressions.Expression.Lambda(persistField.FieldType,
@@ -260,6 +270,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(ui, "hotkeys", Activator.CreateInstance(Type("OmniKit.Ui.HotkeyCapture"), nonPublic: true));
     var fixtureRoaming = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Ui.RoamingCompanion"));
     Set(fixtureRoaming, "assetDirectory", Path.GetFullPath("assets"));
+    if (wardrobeCase) fixtureRoaming.GetType().GetFields(flags).Single(field => field.FieldType == config.GetType()).SetValue(fixtureRoaming, config);
     Set(ui, "roaming", fixtureRoaming);
     var interactionType = Type("OmniKit.Interaction.SoftInteractionService");
     var interaction = RuntimeHelpers.GetUninitializedObject(interactionType);
@@ -416,9 +427,11 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "conversation-help" => "Connection choices",
             "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
         };
-        var appearanceHeader = !appearance15 ? null : name.Contains("looks-", StringComparison.Ordinal) ? "Looks"
+        var appearanceHeader = name == "wardrobe-costume-menu" ? "Seasonal looks & rotation"
+            : name == "wardrobe-nib" ? "Looks" : !appearance15 ? null : name.Contains("looks-", StringComparison.Ordinal) ? "Looks"
             : name.Contains("styles-", StringComparison.Ordinal) || name.Contains("style-menu", StringComparison.Ordinal) ? "Home & personality" : null;
-        var appearanceTarget = !appearance15 ? null : name == "appearance15-hand-style-menu" || name == "appearance15-styles-random" ? "Hand style"
+        var appearanceTarget = name == "wardrobe-costume-menu" ? "Painted costume" : name == "wardrobe-avatar-menu" ? "Companion"
+            : name == "wardrobe-nib" ? "Seasonal looks & rotation" : !appearance15 ? null : name == "appearance15-hand-style-menu" || name == "appearance15-styles-random" ? "Hand style"
             : appearanceHeader == "Home & personality" ? "Home style"
             : appearanceHeader == "Looks" ? "Look" : "Draw roaming area";
         bool PointAt(string label, bool click, bool scrollTo = true)
@@ -440,9 +453,16 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         }
         var clickedFrame = -1;
         var appearanceReady = -1; var appearanceScrolled = false;
+        var wardrobeChoices = new HashSet<string>(StringComparer.Ordinal);
+        var wardrobeExpected = name == "wardrobe-avatar-menu" ? new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism", "Nib", "Echo", "Fizz", "Glim", "Rune" }
+                .Select(avatar => (string)uiType.GetMethod("AvatarLabel", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [avatar])!).ToArray()
+            : name == "wardrobe-costume-menu" ? new[] { "None", "Auto", "All Saints' Wake", "Starlight Celebration", "Make It Rain", "Moonfire Faire" } : Array.Empty<string>();
         (int Left, int Top, int Right, int Bottom)? appearanceMenuBounds = null;
         var appearanceSelection = name switch
         {
+            "wardrobe-costume-menu" => (Field: "CompanionCostume", Value: "Starlight", Label: "Starlight Celebration"),
+            "wardrobe-avatar-menu" => (Field: "Avatar", Value: "Nib",
+                Label: (string)uiType.GetMethod("AvatarLabel", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, ["Nib"])!),
             "appearance15-looks-menu" => (Field: "CompanionVariant", Value: "Look1",
                 Label: (string)fixtureRoaming.GetType().GetMethod("LookLabel", flags)!.Invoke(fixtureRoaming, ["Moonblob", "Look1"])!),
             "appearance15-home-style-menu" => (Field: "CompanionHomeStyle", Value: "CrystalPod", Label: "Crystal pod"),
@@ -458,19 +478,32 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 { if (PointAt(appearanceHeader, true)) clickedFrame = frame; }
                 else if (appearanceHeader != null && frame == clickedFrame + 1) io.AddMouseButtonEvent(0, false);
                 else if (appearanceReady < 0 && (appearanceHeader == null || frame >= clickedFrame + 3))
-                { if (PointAt(appearanceTarget!, popupCase)) appearanceReady = frame; }
-                else if (popupCase && frame == appearanceReady + 1) io.AddMouseButtonEvent(0, false);
+                { if (PointAt(appearanceTarget!, popupCase || name == "wardrobe-nib")) appearanceReady = frame; }
+                else if ((popupCase || name == "wardrobe-nib") && frame == appearanceReady + 1) io.AddMouseButtonEvent(0, false);
                 else if (!popupCase && !appearanceScrolled && appearanceReady >= 0 && frame >= appearanceReady + 3)
                 {
                     // Settle the chosen row near the content top, so the
                     // disclosed controls below it are visible in the proof.
-                    var top = measured[appearanceTarget!].Min.Y;
+                    var target = name == "wardrobe-nib" ? "Painted costume" : appearanceTarget!;
+                    if (!measured.TryGetValue(target, out var targetItem)) continue;
+                    var top = targetItem.Min.Y;
                     if (Math.Abs(top - 150 * scale) <= 12 * scale) appearanceScrolled = true;
                     else
                     {
                         io.AddMousePosEvent(280 * scale, 250 * scale);
                         io.AddMouseWheelEvent(0, top < 150 * scale ? .25f : -.25f);
                     }
+                }
+            }
+            if (name == "wardrobe-avatar-menu" && appearanceReady >= 0 && frame > appearanceReady + 3 && frame < 74)
+            {
+                // Visit the native popup's scroll range, then bring the selected new identity into view.
+                var visibleChoice = wardrobeExpected.FirstOrDefault(label => measured.TryGetValue(label, out var item) && item.Visible);
+                if (visibleChoice != null && PointAt(visibleChoice, false, false))
+                {
+                    if (frame < 60) io.AddMouseWheelEvent(0, wardrobeChoices.Count < 13 ? -.25f : 0);
+                    else if (!measured.TryGetValue("Nib", out var nib) || !nib.Visible || nib.Max.Y - nib.Min.Y < ImGui.GetTextLineHeight())
+                        io.AddMouseWheelEvent(0, .25f);
                 }
             }
             if (appearance15 && popupCase && frame == 75 && !PointAt(appearanceSelection.Label, true, false))
@@ -543,6 +576,19 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
             finally { ImGui.PopStyleColor(15); ImGui.PopStyleVar(6); }
             ImGui.Render();
+            if (wardrobeCase && popupCase && frame < 75)
+                foreach (var label in wardrobeExpected)
+                    if (measured.TryGetValue(label, out var item) && item.Visible)
+                    {
+                        if (item.Max.Y - item.Min.Y >= ImGui.GetTextLineHeight()) wardrobeChoices.Add(label);
+                        // Native combo rows may be partially clipped while scrolling. Count a choice
+                        // only once its full text height is visible, and preserve ImGui's screen margin.
+                        if (item.Min.X < 2 || item.Min.Y < 2 || item.Max.X > io.DisplaySize.X - 2 || item.Max.Y > io.DisplaySize.Y - 2)
+                        {
+                            renderer.Save(ImGui.GetDrawData(), Path.Combine(output, name + "-gutter-failure.png"));
+                            throw new InvalidOperationException($"Wardrobe dropdown choice escaped the viewport gutter: {label}, {item.Min}..{item.Max}, frame {frame}, popup-ready {appearanceReady}.");
+                        }
+                    }
             if (appearance15 && popupCase && frame == 74)
             {
                 if (!ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
@@ -593,6 +639,19 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                     throw new InvalidOperationException("Selecting an everyday look must leave holiday-body mode.");
             }
         }
+        if (wardrobeCase)
+        {
+            if (popupCase && wardrobeChoices.Count != wardrobeExpected.Length)
+                throw new InvalidOperationException("Not all wardrobe choices became visible: " + string.Join(", ", wardrobeExpected.Except(wardrobeChoices)));
+            if (name == "wardrobe-nib")
+            {
+                if ((bool)fixtureRoaming.GetType().GetMethod("HasEverydayLooks")!.Invoke(fixtureRoaming, ["Nib"])!
+                    || (bool)fixtureRoaming.GetType().GetMethod("HasHolidayBodies")!.Invoke(fixtureRoaming, ["Nib"])!
+                    || measured.ContainsKey("Look") || measured.ContainsKey("Body theme")
+                    || !measured.ContainsKey("Painted costume"))
+                    throw new InvalidOperationException("Nib revealed an unavailable everyday/holiday selector or hid its painted costumes.");
+            }
+        }
         if(targetControl != null && clickedFrame<0) throw new InvalidOperationException("Control was not reachable: "+targetControl+" in "+name);
         if (browserCaptureCase)
         {
@@ -622,7 +681,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         {
             if (!appearance15 && !ImGui.IsPopupOpen(string.Empty, ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel))
                 throw new InvalidOperationException(id + " did not open a native dropdown.");
-            foreach (var (field, value) in new[] { ("Avatar", "Moonblob"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
+            foreach (var (field, value) in new[] { ("Avatar", name == "wardrobe-avatar-menu" ? "Nib" : "Moonblob"), ("CompanionOutfit", "Navigator"), ("CompanionPalette", "Moonlight") })
                 if (!Equals(config.GetType().GetField(field)!.GetValue(config), value))
                     throw new InvalidOperationException(id + " unexpectedly selected a different setting.");
             if (name.StartsWith("hud-effect-",StringComparison.Ordinal))
@@ -646,6 +705,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         }
         else if (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= io.DisplaySize.X - 2 || bounds.Bottom >= io.DisplaySize.Y - 2)
             throw new InvalidOperationException(id + " reaches the viewport edge.");
+        if (name == "wardrobe-avatar-menu") WardrobeHeaderChecks.Draw(assembly, ui, renderer, scale, output);
         renders++;
     }
     finally { ImGui.DestroyContext(context); }

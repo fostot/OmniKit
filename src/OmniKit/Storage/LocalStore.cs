@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 11;
+    private const int SchemaVersion = 12;
     private const int MaximumAccessoryFits = 1024;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
@@ -185,6 +185,7 @@ public sealed class LocalStore
             if (schemaVersion < 8) fields = fields.Except(VersionEightFields);
             if (schemaVersion < 9) fields = fields.Except(VersionNineFields);
             if (schemaVersion < 10) fields = fields.Except(VersionTenFields);
+            if (schemaVersion < 12) fields = fields.Except(VersionTwelveFields);
             RequireFields(settingsElement, fields);
             if (schemaVersion >= 10)
             {
@@ -332,6 +333,7 @@ public sealed class LocalStore
         if (settings.Version < 11)
             settings.CompanionAccessoryFits = settings.CompanionAccessoryFits?.Select(fit =>
                 fit is null ? null! : fit with { RotationDegrees = 0 }).ToList()!;
+        if (settings.Version < 12) settings.CompanionCostume = "Auto";
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -346,6 +348,8 @@ public sealed class LocalStore
 
     private static readonly string[] VersionTenFields =
         [nameof(Settings.CompanionHolidayBody), nameof(Settings.CompanionAccessoryFits), nameof(Settings.CompanionTransitionEffectsEnabled)];
+
+    private static readonly string[] VersionTwelveFields = [nameof(Settings.CompanionCostume)];
 
     private static readonly string[] VersionEightFields =
         [nameof(Settings.NextActionEnabled), nameof(Settings.NextActionLocked), nameof(Settings.NextActionX), nameof(Settings.NextActionY), nameof(Settings.QuestItemsBarEnabled), nameof(Settings.QuestItemsBarLocked), nameof(Settings.QuestItemsBarX), nameof(Settings.QuestItemsBarY), nameof(Settings.QuestItemsButtonSize), nameof(Settings.CompanionFourierBlinkEnabled), nameof(Settings.CompanionSeasonalEnabled), nameof(Settings.CompanionSeasonalTheme), nameof(Settings.CompanionAutoRotateEnabled), nameof(Settings.CompanionRotationInterval), nameof(Settings.LauncherWidth), nameof(Settings.LauncherTextScale), nameof(Settings.LauncherResultCount), nameof(Settings.LauncherCenterX), nameof(Settings.LauncherTop)];
@@ -408,6 +412,8 @@ public sealed class LocalStore
             throw new InvalidOperationException("Choose a supported seasonal look and companion rotation interval.");
         if (!Configuration.SeasonalThemeNames.Contains(settings.CompanionHolidayBody))
             throw new InvalidOperationException("Choose a supported holiday body.");
+        if (!Configuration.CostumeNames.Contains(settings.CompanionCostume))
+            throw new InvalidOperationException("Choose a supported companion costume.");
         if (settings.CompanionAccessoryFits is null || settings.CompanionAccessoryFits.Count > MaximumAccessoryFits)
             throw new InvalidOperationException("At most 1024 accessory fits are supported.");
         var fitKeys = new HashSet<(string Avatar, string Look, string Theme)>();
@@ -417,7 +423,9 @@ public sealed class LocalStore
                 !Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Theme) ||
                 !(fit.Look is "Default" or "Look1" or "Look2" or "Look3" or "Look4" ||
                     (fit.Look is not null && fit.Look.StartsWith("Holiday", StringComparison.Ordinal) &&
-                     Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Look[7..]))) ||
+                     Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Look[7..])) ||
+                    (fit.Look is not null && fit.Look.StartsWith("Costume", StringComparison.Ordinal) &&
+                     Configuration.CostumeNames.Skip(2).Contains(fit.Look[7..]))) ||
                 !FiniteRange(fit.OffsetX, -1f, 1f) || !FiniteRange(fit.OffsetY, -1f, 1f) ||
                 !FiniteRange(fit.Scale, .25f, 3f) || !FiniteRange(fit.RotationDegrees, -180f, 180f))
                 throw new InvalidOperationException("Accessory fits need supported avatar, look and theme keys with bounded offsets, scale and rotation.");
@@ -557,6 +565,7 @@ public sealed class LocalStore
         target.CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled;
         target.CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled;
         target.CompanionHolidayBody = value.CompanionHolidayBody;
+        target.CompanionCostume = value.CompanionCostume;
         target.CompanionAccessoryFits = accessoryFits;
         target.CompanionTransitionEffectsEnabled = value.CompanionTransitionEffectsEnabled;
         target.CompanionHandStyle = value.CompanionHandStyle;
@@ -677,6 +686,7 @@ public sealed class LocalStore
         public bool CompanionHolidayHomeEnabled = true;
         public bool CompanionHolidayBodiesEnabled = true;
         public string CompanionHolidayBody = "Auto";
+        public string CompanionCostume = "Auto";
         public List<CompanionAccessoryAdjustment> CompanionAccessoryFits = [];
         public bool CompanionTransitionEffectsEnabled = true;
         public string CompanionHandStyle = "Default";
@@ -786,6 +796,7 @@ public sealed class LocalStore
             CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled,
             CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled,
             CompanionHolidayBody = value.CompanionHolidayBody,
+            CompanionCostume = value.CompanionCostume,
             CompanionAccessoryFits = value.CompanionAccessoryFits?.Select(fit => fit is null ? null! : fit with { }).ToList()!,
             CompanionTransitionEffectsEnabled = value.CompanionTransitionEffectsEnabled,
             CompanionHandStyle = value.CompanionHandStyle,
