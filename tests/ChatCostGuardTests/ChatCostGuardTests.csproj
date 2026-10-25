@@ -7,6 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <Compile Include="../../src/OmniKit/Assistant/ChatSessionStore.cs" Link="ChatSessionStore.cs" />
     <Compile Include="../../src/OmniKit/Assistant/ChatService.cs" Link="ChatService.cs" />
     <Compile Include="../../src/OmniKit/Assistant/ChatGpt*.cs" Link="%(Filename)%(Extension)" />
     <Compile Include="../../src/OmniKit/Assistant/CliChatBackend.cs" Link="CliChatBackend.cs" />

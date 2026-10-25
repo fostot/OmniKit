@@ -3,6 +3,16 @@
 These checks require the actual game. A compiler or isolated state test cannot
 establish them. None is marked passed until observed.
 
+- Ask two related companion questions; verify the follow-up retains context.
+  Restart the client, reopen chat and confirm the last answer and follow-up context
+  return. New session must clear both locally without a request, including while
+  an answer is pending; a late result must never repopulate it. Changing provider
+  or account must not send the previous connection's history. Check memory-only
+  and failed-clear warnings with synthetic fixtures, never real credentials.
+- In the settings tree, Unlocks must align with Launcher, Interact and Quest
+  Items as siblings. Aetheryte belongs beneath Unlocks. Check narrow and wide
+  navigation at scales 1 and 2.
+
 - Open each of the four navigation folders in narrow and wide layouts. Exercise
   every inner tab, tree shortcut and search jump, including Appearance → AI →
   Appearance, Soft Interact HUD Text/Effects/Position, NomNom and expanded More

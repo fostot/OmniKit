@@ -91,6 +91,7 @@ internal sealed class PluginUi : IDisposable
     private long refreshedAt;
     private SearchEntry[] entries = [];
     private Task<string>? pendingAnswer;
+    private bool sessionAnswerRestored;
     private CancellationTokenSource? request;
     private Task<string>? pendingConnection;
     private Task<IReadOnlyList<AiModelOption>>? pendingModels;
@@ -188,11 +189,7 @@ internal sealed class PluginUi : IDisposable
         if (gearFeedback) status = GearsetActions.Status;
         if (IsOpen && Environment.TickCount64 - refreshedAt > 2000) Refresh();
         if (!config.VoiceEnabled && voice.IsListening) voice.Cancel();
-        if (pendingAnswer is { IsCompleted: true })
-        {
-            answer = pendingAnswer.IsCompletedSuccessfully ? pendingAnswer.Result : "The request could not finish. Please try again.";
-            pendingAnswer = null; request?.Dispose(); request = null;
-        }
+        UpdateAnswer();
         UpdateConnection();
         if (!voice.TryTakeResult(out var heard)) return;
         if (!config.VoiceEnabled || !ShortcutInput.GameAcceptsInput()) { status = "Voice result discarded because the game is not ready."; return; }
@@ -386,6 +383,11 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawAnswer(bool submit)
     {
+        if (!sessionAnswerRestored)
+        {
+            sessionAnswerRestored = true;
+            if (answer.Length == 0 && pendingAnswer == null) answer = chat?.LastSessionAnswer ?? "";
+        }
         if (!config.AiEnabled)
         {
             UiText.Line("AI off · local commands available", Muted);
@@ -395,19 +397,59 @@ internal sealed class PluginUi : IDisposable
         {
             var cliPaused = config.AiConnection is AiConnectionKind.CodexCli or AiConnectionKind.ClaudeCli;
             if (cliPaused) UiText.Status(CliChatBackend.SingleRequestLimitNotice);
-            var canAsk = pendingAnswer == null && !ConnectionBusy && !chat.IsBusy && !cliPaused && !string.IsNullOrWhiteSpace(question);
+            var canAsk = chat != null && pendingAnswer == null && !ConnectionBusy && !chat.IsBusy && !cliPaused && !string.IsNullOrWhiteSpace(question);
             ImGui.BeginDisabled(!canAsk);
             var clicked = UiText.Button("Ask companion");
             UiText.Hint("Sends this question once. No automatic retries, follow-up generation or background AI. Canceling does not guarantee that the provider stops billing.");
             if (canAsk && (clicked || submit))
-            { request = new CancellationTokenSource(); pendingAnswer = chat.AskAsync(question, request.Token); answer = "Thinking..."; }
+            { request = new CancellationTokenSource(); pendingAnswer = chat!.AskAsync(question, request.Token); answer = "Thinking..."; }
             ImGui.EndDisabled();
             if (pendingAnswer != null) { ImGui.SameLine(); if (UiText.Button("Cancel")) request?.Cancel(); }
         }
         ImGui.SameLine(); if (UiText.Button("Search wiki")) OpenWiki(question);
+        if (UiText.Button("New session")) NewChatSession();
+        UiText.Hint("Clears saved local chat context. Sends nothing. Recent context is bounded, but adds input tokens to questions.");
+        var sessionMessage = chat?.SessionStatus ?? "";
+        if (new[] { "could not", "memory", "preserved", "outside" }.Any(word => sessionMessage.Contains(word, StringComparison.OrdinalIgnoreCase)))
+            UiText.Status(sessionMessage);
         ImGui.BeginChild("answer", new Vector2(0, -FooterHeight));
         ImGui.TextWrapped(answer.Length == 0 ? "Ask about XIV, or search the wiki." : answer);
         ImGui.EndChild();
+    }
+
+    private void NewChatSession()
+    {
+        request?.Cancel();
+        if (chat?.NewSession() != true)
+        {
+            status = chat?.SessionStatus ?? "Chat session unavailable.";
+            return;
+        }
+        var previous = pendingAnswer;
+        var cancellation = request;
+        pendingAnswer = null;
+        request = null;
+        if (previous is { IsCompleted: false })
+            _ = previous.ContinueWith(completed => { if (completed.IsFaulted) _ = completed.Exception; cancellation?.Dispose(); },
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        else
+        {
+            if (previous?.IsFaulted == true) _ = previous.Exception;
+            cancellation?.Dispose();
+        }
+        question = "";
+        answer = "";
+        sessionAnswerRestored = true;
+        status = chat.SessionStatus;
+    }
+
+    private void UpdateAnswer()
+    {
+        if (pendingAnswer is not { IsCompleted: true }) return;
+        answer = pendingAnswer.IsCompletedSuccessfully ? pendingAnswer.Result : "The request could not finish. Please try again.";
+        pendingAnswer = null;
+        request?.Dispose();
+        request = null;
     }
 
     private void OpenWiki(string text)
@@ -628,6 +670,7 @@ internal sealed class PluginUi : IDisposable
 
     private static bool SettingsTreeBranch(string label, ImGuiTreeNodeFlags flags)
     {
+        var textOrigin = ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetTreeNodeToLabelSpacing(), 0);
         var open = ImGui.TreeNodeEx(label, flags);
         if (UiText.ItemMeasured != null)
         {
@@ -635,6 +678,7 @@ internal sealed class PluginUi : IDisposable
             var minimum = Vector2.Max(ImGui.GetItemRectMin(), draw.GetClipRectMin());
             var maximum = Vector2.Min(ImGui.GetItemRectMax(), draw.GetClipRectMax());
             UiText.ItemMeasured("tree:" + label, minimum, maximum, ImGui.IsItemVisible() && minimum.X < maximum.X && minimum.Y < maximum.Y);
+            UiText.ItemMeasured("tree-text:" + label, textOrigin, textOrigin + ImGui.CalcTextSize(label), ImGui.IsItemVisible());
         }
         return open;
     }
@@ -642,7 +686,17 @@ internal sealed class PluginUi : IDisposable
     private void SettingsTreeLeaf(string title, int target, bool closeOnSelection, int tab = 0, int appearance = 0)
     {
         var selected = section == target && (target != 3 || companionTab == tab && (tab != 0 || companionAppearanceSection == appearance));
-        var clicked = UiText.Selectable(FitLabel(title, ImGui.GetContentRegionAvail().X - 8 * ImGuiHelpers.GlobalScale) + "##settings-tree", selected);
+        var textOrigin = ImGui.GetCursorScreenPos() + new Vector2(ImGui.GetTreeNodeToLabelSpacing(), 0);
+        var label = FitLabel(title, ImGui.GetContentRegionAvail().X - ImGui.GetTreeNodeToLabelSpacing()) + "##settings-tree";
+        ImGui.TreeNodeEx(label, ImGuiTreeNodeFlags.Leaf | ImGuiTreeNodeFlags.NoTreePushOnOpen | ImGuiTreeNodeFlags.SpanAvailWidth
+            | (selected ? ImGuiTreeNodeFlags.Selected : ImGuiTreeNodeFlags.None));
+        var clicked = ImGui.IsItemClicked(ImGuiMouseButton.Left);
+        if (UiText.ItemMeasured != null)
+        {
+            var draw = ImGui.GetWindowDrawList();
+            UiText.ItemMeasured(label, Vector2.Max(ImGui.GetItemRectMin(), draw.GetClipRectMin()), Vector2.Min(ImGui.GetItemRectMax(), draw.GetClipRectMax()), ImGui.IsItemVisible());
+            UiText.ItemMeasured("tree-text:" + title, textOrigin, textOrigin + ImGui.CalcTextSize(title), ImGui.IsItemVisible());
+        }
         UiText.Hint(title);
         if (!clicked) return;
         hotkeys.Cancel();

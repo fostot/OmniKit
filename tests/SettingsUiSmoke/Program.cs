@@ -203,6 +203,13 @@ var cases = new[]
     (Name: "conversation-codex", Section: -1, Tab: 2, Enabled: true, Scroll: false),
     (Name: "conversation-claude", Section: -1, Tab: 2, Enabled: true, Scroll: false),
     (Name: "conversation-busy", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-restore", Section: -1, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "conversation-restore-once", Section: -1, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "conversation-new-local", Section: -1, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "conversation-new-busy", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-new-failed", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-new-voice", Section: -1, Tab: 2, Enabled: true, Scroll: false),
+    (Name: "conversation-session-warning", Section: -1, Tab: 0, Enabled: false, Scroll: false),
     (Name: "conversation-setup", Section: -1, Tab: 0, Enabled: false, Scroll: true),
     (Name: "launcher-help", Section: 0, Tab: 0, Enabled: false, Scroll: false),
     (Name: "launcher-examples", Section: 0, Tab: 0, Enabled: false, Scroll: false),
@@ -330,6 +337,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     if (section == -1)
     {
         Set(config, "Avatar", "Moonblob");
+        // Chat fixtures exercise controls, not the roaming artwork controller.
+        Set(config, "AvatarEnabled", false);
         Set(config, "SetupCompleted", name is not ("conversation-setup" or "conversation-help"));
         Set(config, "VoiceEnabled", name == "conversation-ai");
     }
@@ -604,6 +613,47 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         Set(ui, "operationConnection", config.GetType().GetField("AiConnection")!.GetValue(config));
     }
     Set(ui, "chat", chat);
+    var sessionCase = name.StartsWith("conversation-new-", StringComparison.Ordinal) || name.StartsWith("conversation-restore", StringComparison.Ordinal) || name == "conversation-session-warning";
+    object? fixtureSession = null;
+    var sessionBinding = "";
+    long sessionGeneration = 0;
+    const string restoredAnswer = "Successful synthetic answer restored from protected local storage.";
+    using var answerCancellation = new CancellationTokenSource();
+    var answerToken = answerCancellation.Token;
+    var lateAnswer = new TaskCompletionSource<string>();
+    if (sessionCase)
+    {
+        Set(config, "AiConnection", Enum.Parse(config.GetType().GetField("AiConnection")!.FieldType, "ApiKey"));
+        if (name != "conversation-new-failed")
+        {
+            System.Runtime.InteropServices.NativeLibrary.Load(Path.Combine(Path.GetDirectoryName(pluginPath)!, "e_sqlite3.dll"));
+            var sessionType = Type("OmniKit.Assistant.ChatSessionStore");
+            var directory = new DirectoryInfo(Path.Combine(output, "synthetic-chat-" + Guid.NewGuid().ToString("N")));
+            var firstSession = Activator.CreateInstance(sessionType, directory)!;
+            sessionBinding = (string)chat.GetType().GetMethod("SessionBinding", flags)!.Invoke(chat, null)!;
+            sessionType.GetMethod("Snapshot")!.Invoke(firstSession, [sessionBinding]);
+            var generation = (long)sessionType.GetProperty("Generation")!.GetValue(firstSession)!;
+            if (!(bool)sessionType.GetMethod("Complete")!.Invoke(firstSession, [generation, sessionBinding, "A synthetic saved question.", restoredAnswer])!)
+                throw new InvalidOperationException("Synthetic session setup did not accept its successful pair.");
+            fixtureSession = Activator.CreateInstance(sessionType, directory)!;
+            sessionGeneration = (long)sessionType.GetProperty("Generation")!.GetValue(fixtureSession)!;
+            Set(chat, "session", fixtureSession);
+            if (name == "conversation-session-warning")
+            {
+                Set(fixtureSession, "<Status>k__BackingField", "Chat context is available in memory but could not be saved to protected local storage.");
+                Set(ui, "status", "Existing unrelated UI status.");
+            }
+        }
+        if (name.StartsWith("conversation-new-", StringComparison.Ordinal)) Set(ui, "question", "A synthetic question already in the editor.");
+        if (name is "conversation-new-busy" or "conversation-new-failed" or "conversation-new-voice")
+        {
+            Set(chat, "busy", 1);
+            Set(ui, "pendingAnswer", lateAnswer.Task);
+            Set(ui, "request", answerCancellation);
+            Set(ui, "answer", name == "conversation-new-failed" ? "Keep this synthetic answer." : "Thinking...");
+        }
+        if (name == "conversation-new-voice") Set(config, "VoiceEnabled", true);
+    }
     var modelUpdateCase = name is "ai-model-discovery" or "ai-model-manual" or "ai-model-empty" or "ai-model-failure";
     if (modelUpdateCase)
     {
@@ -687,7 +737,9 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "sayings-select" => "##saying-fixture:00",
             "sayings-toggle" => "saying-enabled-fixture:00",
             "conversation-help" => "Connection choices",
-            "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
+            "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion",
+            "conversation-new-local" or "conversation-new-busy" or "conversation-new-failed" or "conversation-new-voice" => "New session",
+            _ => null,
         };
         string? appearanceHeader = null;
         var appearanceTarget = name is "wardrobe-costume-menu" or "wardrobe-nib" ? "Painted costume" : name == "wardrobe-avatar-menu" ? "Companion"
@@ -747,6 +799,10 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         var totalFrames = groupNavigationCase ? 220 : appearance15 ? 80 : providerSwitch ? 40 : navigationCase ? 180 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
         for (var frame = 0; frame < totalFrames; frame++)
         {
+            if (name == "conversation-restore-once" && frame == 4)
+                if (!(bool)fixtureSession!.GetType().GetMethod("Complete")!.Invoke(fixtureSession,
+                    [sessionGeneration, sessionBinding, "A synthetic later question.", "A newer synthetic answer that must not replace the visible one automatically."])!)
+                    throw new InvalidOperationException("The synthetic later session answer was not accepted.");
             if (name == "aetheryte-zone-change" && frame == 4) observedTerritory = 102;
             if (groupNavigationCase && groupStep < groupChoices.Length && frame >= 3)
             {
@@ -847,6 +903,14 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 else if (name == "job-switcher-help" && clickedFrame < 0)
                 { io.AddMousePosEvent(280 * scale, 250 * scale); io.AddMouseWheelEvent(0, -2); }
                 else if(frame==clickedFrame+1) io.AddMouseButtonEvent(0,false);
+                if (name is "conversation-new-busy" or "conversation-new-voice" && frame == clickedFrame + 3)
+                {
+                    if ((bool)fixtureSession!.GetType().GetMethod("Complete")!.Invoke(fixtureSession,
+                        [sessionGeneration, sessionBinding, "A stale synthetic question.", "A stale synthetic answer."])!)
+                        throw new InvalidOperationException("A cleared session accepted a stale request generation.");
+                    lateAnswer.TrySetResult("Late synthetic answer must not redisplay.");
+                    uiType.GetMethod("UpdateAnswer", flags)!.Invoke(ui, null);
+                }
                 if (name == "sayings-current-draft" && frame == clickedFrame + 2) Set(fixtureRoaming, "displayAvatar", "Mochi");
                 if (name is "sayings-add-save" or "sayings-edit" or "sayings-unicode-save" or "sayings-current-draft" && frame == clickedFrame + 3)
                 {
@@ -943,6 +1007,46 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             if (name == "ai-cli-cancel") uiType.GetMethod("UpdateConnection", flags)!.Invoke(ui, null);
         }
         observer.SetValue(null,null);
+        if (sessionCase)
+        {
+            if (!measured.TryGetValue("New session", out var newSessionButton) || !newSessionButton.Visible
+                || newSessionButton.Min.X < 8 * scale || newSessionButton.Max.X > io.DisplaySize.X - 8 * scale
+                || newSessionButton.Min.Y < 8 * scale || newSessionButton.Max.Y > io.DisplaySize.Y - 8 * scale)
+                throw new InvalidOperationException("New session is not reachable inside the viewport gutter.");
+            var shownAnswer = (string)uiType.GetField("answer", flags)!.GetValue(ui)!;
+            if (name.StartsWith("conversation-restore", StringComparison.Ordinal) && shownAnswer != restoredAnswer)
+                throw new InvalidOperationException("The last successful answer was not restored exactly once.");
+            if (name == "conversation-session-warning" && (string)uiType.GetField("status", flags)!.GetValue(ui)! != "Existing unrelated UI status.")
+                throw new InvalidOperationException("The session warning clobbered another UI status.");
+            if (name.StartsWith("conversation-new-", StringComparison.Ordinal))
+            {
+                if (name == "conversation-new-failed")
+                {
+                    if (shownAnswer != "Keep this synthetic answer." || uiType.GetField("pendingAnswer", flags)!.GetValue(ui) != lateAnswer.Task
+                        || (string)uiType.GetField("question", flags)!.GetValue(ui)! == "")
+                        throw new InvalidOperationException("Failed session reset erased the visible conversation or detached its pending request.");
+                }
+                else
+                {
+                    if (shownAnswer != "" || (string)uiType.GetField("question", flags)!.GetValue(ui)! != "" || uiType.GetField("pendingAnswer", flags)!.GetValue(ui) != null)
+                        throw new InvalidOperationException("New session did not clear and detach the displayed conversation.");
+                    var savedTurns = ((System.Collections.IEnumerable)fixtureSession!.GetType().GetMethod("Snapshot")!.Invoke(fixtureSession, [sessionBinding])!).Cast<object>().Count();
+                    if (savedTurns != 0) throw new InvalidOperationException("New session left saved conversation context.");
+                }
+                if (name is "conversation-new-busy" or "conversation-new-failed" or "conversation-new-voice")
+                    if (!answerToken.IsCancellationRequested || !(bool)chat.GetType().GetProperty("IsBusy")!.GetValue(chat)!)
+                        throw new InvalidOperationException("Reset did not cancel the request or incorrectly released the backend busy guard.");
+            }
+        }
+        if (name is "settings-tree-menu" or "settings-tree-wide-720" or "settings-tree-wide-960")
+        {
+            var siblingLabels = new[] { "Launcher", "Interact", "Quest Items", "Unlocks" };
+            var positions = siblingLabels.Select(label => measured.TryGetValue("tree-text:" + label, out var item) && item.Visible
+                ? item.Min.X : throw new InvalidOperationException("Tree sibling is not visible: " + label)).ToArray();
+            if (positions.Max() - positions.Min() > .5f * scale) throw new InvalidOperationException("Sibling tree labels are not aligned.");
+            if (!measured.TryGetValue("tree-text:Aetheryte", out var nested) || nested.Min.X <= positions[0] + 10 * scale)
+                throw new InvalidOperationException("Aetheryte lost its nested position under Unlocks.");
+        }
         if (groupNavigationCase && groupStep != groupChoices.Length) throw new InvalidOperationException("Grouped tabs were not all reachable.");
         if (navigationCase && treeStep != (name is "settings-tree-aetheryte" or "sayings-tree" ? 1 : 4))
         {

@@ -32,7 +32,7 @@ foreach (var kind in new[] { AiConnectionKind.ApiKey, AiConnectionKind.ChatGpt }
     fixture.Config.AiConnection = kind == AiConnectionKind.ApiKey ? AiConnectionKind.ChatGpt : AiConnectionKind.ApiKey;
     Check((await fixture.Service.AskAsync("provider switch duplicate", default)).Contains("still answering", StringComparison.Ordinal), "A changed provider does not bypass the service gate.");
     handler.Release.TrySetResult();
-    Check(await first == "Synthetic answer.", "The original provider completes the original question.");
+    Check((await first).Contains("connection changed", StringComparison.Ordinal), "A reply from an old connection is discarded after switching providers.");
     Check(!fixture.Service.IsBusy && fixture.Api.Count + fixture.ChatGpt.Count == 1, "Completion releases the gate without queued requests or fallback.");
     Check(await fixture.Service.AskAsync("a new explicit question", default) == "Synthetic answer.", "A new explicit submission can use the new selection.");
     Check(fixture.Api.Count == 1 && fixture.ChatGpt.Count == 1, "Each explicitly selected provider received exactly one POST.");
@@ -59,6 +59,7 @@ foreach (var kind in new[] { AiConnectionKind.ApiKey, AiConnectionKind.ChatGpt }
         var response = await fixture.Service.AskAsync("synthetic failure case", default);
         Check(fixture.Selected.Count == 1 && fixture.Api.Count + fixture.ChatGpt.Count == 1, "Failure or a requested tool never causes retry, fallback or a continuation: " + failure);
         Check(!fixture.Service.IsBusy && !response.Contains("PRIVATE_FIXTURE_DETAIL", StringComparison.Ordinal), "Failure releases the gate and hides raw provider details.");
+        Check(fixture.Service.LastSessionAnswer.Length == 0, "Failed replies never become saved conversation context.");
     }
 
     using (var fixture = new ServiceFixture(scratch, kind))
@@ -90,6 +91,50 @@ foreach (var kind in new[] { AiConnectionKind.ApiKey, AiConnectionKind.ChatGpt }
         await fixture.Service.AskAsync("question after unload", default);
         Check(fixture.Selected.Count == 1, "Unload cancels once and prevents later inference.");
     }
+}
+
+foreach (var kind in new[] { AiConnectionKind.ApiKey, AiConnectionKind.ChatGpt })
+{
+    using var fixture = new ServiceFixture(scratch, kind);
+    Check(await fixture.Service.AskAsync("synthetic first question", default) == "Synthetic answer.", "First session turn completes.");
+    Check(await fixture.Service.AskAsync("synthetic follow-up", default) == "Synthetic answer.", "Follow-up completes without another hidden request.");
+    using (var payload = JsonDocument.Parse(fixture.Selected.Requests.Last()))
+    {
+        var input = payload.RootElement.GetProperty("input");
+        Check(input.GetArrayLength() == 3 && input[0].GetProperty("role").GetString() == "user"
+            && input[1].GetProperty("role").GetString() == "assistant" && input[2].GetProperty("content").GetString() == "synthetic follow-up",
+            "Follow-up replays successful user/assistant turns with the current question last.");
+    }
+    fixture.Selected.Failure = "500";
+    await fixture.Service.AskAsync("synthetic failed follow-up must not be remembered", default);
+    fixture.Selected.Failure = "";
+    Check(fixture.Service.LastSessionAnswer == "Synthetic answer.", "A failed follow-up preserves the last successful answer.");
+    using (var resumed = new ChatService(fixture.Config))
+    {
+        var resumedHandler = new CountingHandler(kind == AiConnectionKind.ChatGpt);
+        ServiceFixture.ReplaceClient(kind == AiConnectionKind.ChatGpt ? resumed.ChatGpt : resumed, resumedHandler, null);
+        Check(resumed.LastSessionAnswer == "Synthetic answer.", "A new service restores the saved last answer without inference.");
+        Check(await resumed.AskAsync("synthetic after restart", default) == "Synthetic answer.", "Restarted service completes one new explicit question.");
+        using var payload = JsonDocument.Parse(resumedHandler.Requests.Single());
+        Check(payload.RootElement.GetProperty("input").GetArrayLength() == 5, "Restarted service sends its restored successful turns.");
+        Check(resumed.NewSession() && resumed.LastSessionAnswer.Length == 0 && resumedHandler.Count == 1, "New session clears saved context without inference.");
+        await resumed.AskAsync("synthetic fresh session", default);
+        using var fresh = JsonDocument.Parse(resumedHandler.Requests.Last());
+        Check(fresh.RootElement.GetProperty("input").GetArrayLength() == 1 && resumedHandler.Count == 2, "A fresh session sends only its new question.");
+    }
+    var countBeforeConflict = fixture.Selected.Count;
+    var conflict = await fixture.Service.AskAsync("synthetic conflicted request must not be sent", default);
+    Check(fixture.Selected.Count == countBeforeConflict && conflict.Contains("New session", StringComparison.Ordinal),
+        "A known external session change blocks inference before any stale history can be sent.");
+    using var resetFixture = new ServiceFixture(scratch, kind);
+    resetFixture.Selected.Hold = true;
+    var oldReply = resetFixture.Service.AskAsync("synthetic old in-flight question", default);
+    await resetFixture.Selected.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+    Check(resetFixture.Service.NewSession(), "Reset can clear the session while a request is in flight.");
+    resetFixture.Selected.Release.TrySetResult();
+    Check((await oldReply).Contains("previous session", StringComparison.Ordinal) && resetFixture.Service.LastSessionAnswer.Length == 0,
+        "A late completion cannot repopulate the cleared session.");
+    Check(resetFixture.Selected.Count == 1, "Reset never retries or generates a follow-up.");
 }
 
 using (var fixture = new ServiceFixture(scratch, AiConnectionKind.ChatGpt))
@@ -159,7 +204,7 @@ sealed class ServiceFixture : IDisposable
 
     // Test-only injection; every HTTP operation terminates in CountingHandler.
     // The product keeps its hardened, no-redirect HttpClient construction.
-    private static void ReplaceClient(object target, HttpMessageHandler handler, TimeSpan? timeout)
+    internal static void ReplaceClient(object target, HttpMessageHandler handler, TimeSpan? timeout)
     {
         var field = target.GetType().GetField("client", BindingFlags.Instance | BindingFlags.NonPublic)!;
         ((HttpClient)field.GetValue(target)!).Dispose();

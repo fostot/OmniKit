@@ -297,11 +297,16 @@ public sealed class ChatGptConnection : IDisposable
     private sealed class ModelCatalogException(string message) : Exception(message);
 
     public async Task<string> AskAsync(string instructions, string question, string model, CancellationToken ct)
+        => (await AskContextAsync(instructions, [new ChatTurn("user", question)], model, ct).ConfigureAwait(false)).Text;
+
+    internal async Task<ChatReply> AskContextAsync(string instructions, IReadOnlyList<ChatTurn> input, string model, CancellationToken ct)
     {
-        if (disposed || question.Length is 0 or > 4000 || instructions.Length > 16000 || !ValidModel(model))
-            return "Choose a ChatGPT model and ask a question of at most 4,000 characters.";
+        if (disposed || input.Count is 0 or > 17 || input[^1].Role != "user" || input[^1].Content.Length is 0 or > 4000
+            || input.Sum(turn => turn.Content.Length) > 28000 || input.Any(turn => turn.Role is not ("user" or "assistant"))
+            || instructions.Length > 16000 || !ValidModel(model))
+            return new("Choose a ChatGPT model and ask a question of at most 4,000 characters.", false);
         if (Interlocked.CompareExchange(ref generating, 1, 0) != 0)
-            return "ChatGPT is still answering the previous question.";
+            return new("ChatGPT is still answering the previous question.", false);
         var expectedAccount = accounts.FirstOrDefault(account => account.IsActive)?.Id;
         try
         {
@@ -311,16 +316,16 @@ public sealed class ChatGptConnection : IDisposable
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", access);
             request.Content = new StringContent(JsonSerializer.Serialize(new
             {
-                model, instructions, input = new[] { new { role = "user", content = question } },
+                model, instructions, input,
                 store = false, stream = true, tools = Array.Empty<object>(),
             }), Encoding.UTF8, "application/json");
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel.Token).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode) return HttpStatus(response.StatusCode);
-            return await ReadEventsAsync(response.Content, cancel.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode) return new(HttpStatus(response.StatusCode), false);
+            return new(await ReadEventsAsync(response.Content, cancel.Token).ConfigureAwait(false), true);
         }
-        catch (AccountChangedException) { return status = AccountChangedStatus; }
-        catch (OperationCanceledException) { return "The ChatGPT request was cancelled or timed out."; }
-        catch { return "ChatGPT could not complete the response. Check your account or try a shorter question."; }
+        catch (AccountChangedException) { return new(status = AccountChangedStatus, false); }
+        catch (OperationCanceledException) { return new("The ChatGPT request was cancelled or timed out.", false); }
+        catch { return new("ChatGPT could not complete the response. Check your account or try a shorter question.", false); }
         finally { Interlocked.Exchange(ref generating, 0); }
     }
 
@@ -513,6 +518,7 @@ public sealed class ChatGptConnection : IDisposable
             if (line.Length > 0) ConsumeLine();
             Dispatch();
             if (!completed || answer.Length == 0) throw new InvalidOperationException();
+            if (answer.Length > 0 && char.IsHighSurrogate(answer[^1])) answer.Length--;
             return answer.ToString() + (shortened ? "\n[Answer shortened.]" : "");
         }
     }

@@ -48,7 +48,7 @@ and the ID token's signature and claims. Refreshes are serialized and stored
 atomically. Signing out clears the selected account's local tokens; a status
 message distinguishes any unconfirmed remote revocation.
 
-OmniKit sends the question and companion instructions to the official Responses
+OmniKit sends the question, bounded local session context and companion instructions to the official Responses
 endpoint with storage disabled. A streamed reply is accepted only after a
 successful completion event. It does not read ChatGPT conversation history,
 upload game state or buy additional credits. No action tools are supplied. The
@@ -91,13 +91,44 @@ accepted only for a literal loopback address, for a local server. Redirects,
 embedded URL credentials, query strings and fragments are rejected.
 
 API billing is separate from a ChatGPT or Claude subscription. A compatible
-local server can work without a key. Only the submitted question and companion
-instructions are included in the API request; no game state is collected. One
+local server can work without a key. The submitted question, bounded successful
+session turns and companion instructions are included; no game state is collected. One
 Responses POST supplies an empty tool list and requests `max_output_tokens=1000`
 with storage disabled. Provider errors are shown without an automatic retry or
 fallback.
 
-## Local data
+## Saved chat session
+
+API and ChatGPT chat keep up to eight completed question/answer pairs, within
+24,000 characters of prior context. Oldest complete pairs drop off first; the
+current question can add up to 4,000 characters. No background summarization or
+extra model requests are used. Failed, canceled or incomplete replies do not
+become context. This is conversational text memory, not a full provider-side
+reasoning trace or an import of your ChatGPT history.
+
+The whole payload is encrypted using Windows DPAPI CurrentUser in separate
+`omnikit.db` tables. It survives plugin and game restarts under the same Windows
+account, and the last successful answer reappears when chat opens. Settings
+JSON never includes it. A storage warning means current context is memory-only;
+unreadable/future data is preserved until an explicit reset.
+
+**New session** clears saved local context, the visible answer and the question
+field. It sends no request, cancels/detaches pending UI work, and prevents an old
+completion from restoring cleared context. A failed disk clear is reported and
+does not claim success. This does not delete information already received by a
+provider or cancel charges already incurred.
+
+Changing connection type, API endpoint or selected ChatGPT account isolates
+context. Replacing/removing an API key also clears the session; a failed clear
+blocks further questions until resolved. Other game instances changing saved
+context cause a conflict notice rather than silently overwriting it.
+
+Each follow-up is still at most one inference request. Replayed context uses
+input tokens and can increase costs; a new session reduces the next input.
+Manual user/assistant history follows the [official OpenAI conversation-state
+guide](https://developers.openai.com/api/docs/guides/conversation-state).
+
+## Other local data
 
 Settings exports include the connection choice and model preferences, never
 API keys, OAuth registrations/tokens, CLI credentials, conversations or audio.

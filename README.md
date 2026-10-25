@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0033`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0035`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -283,6 +283,12 @@ without copying its credentials; CLI generation is currently paused. Each explic
 Ask permits at most one inference request. There is no automatic retry, fallback,
 continuation or queued duplicate. Companion comments are local, never model calls.
 This limits request count, not the provider's exact token usage or charge.
+Chat remembers up to eight completed question/answer pairs (24,000 characters)
+across plugin and game restarts. The last answer returns when you reopen chat.
+**New session** clears local saved context and starts fresh without an AI request.
+Saved context is encrypted for your Windows account and excluded from exports.
+Follow-ups resend this bounded context, so they can use more input tokens. See
+[chat sessions](docs/AI-CONNECTIONS.md#saved-chat-session).
 API mode supports an API key or a compatible local Responses server;
 provider API use may incur charges. Character instructions guide
 the assistant, but are not a guarantee against every off-topic answer or prompt
