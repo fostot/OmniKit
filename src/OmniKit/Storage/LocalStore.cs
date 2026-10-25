@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 13;
+    private const int SchemaVersion = 14;
     private const int MaximumAccessoryFits = 1024;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
@@ -187,6 +187,7 @@ public sealed class LocalStore
             if (schemaVersion < 10) fields = fields.Except(VersionTenFields);
             if (schemaVersion < 12) fields = fields.Except(VersionTwelveFields);
             if (schemaVersion < 13) fields = fields.Except(VersionThirteenFields);
+            if (schemaVersion < 14) fields = fields.Except(VersionFourteenFields);
             RequireFields(settingsElement, fields);
             if (schemaVersion >= 10)
             {
@@ -345,6 +346,14 @@ public sealed class LocalStore
             settings.CompanionHomeSize = Math.Clamp(pet * 1.3f, 48f, 384f);
             settings.CompanionHandSize = Math.Clamp(pet * hand, 8f, 192f);
         }
+        if (settings.Version < 14)
+        {
+            settings.CharacterJobSwitcherEnabled = false;
+            settings.NomNomEnabled = false;
+            settings.NomNomFoodId = 0;
+            settings.NomNomPreferHighQuality = false;
+            settings.NomNomKeepExpBuff = true;
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -362,6 +371,10 @@ public sealed class LocalStore
 
     private static readonly string[] VersionThirteenFields =
         [nameof(Settings.CompanionBodyMotionStrength), nameof(Settings.CompanionMotionReactions), nameof(Settings.CompanionSceneScale), nameof(Settings.CompanionHomeSize), nameof(Settings.CompanionHandSize)];
+
+    private static readonly string[] VersionFourteenFields =
+        [nameof(Settings.CharacterJobSwitcherEnabled), nameof(Settings.NomNomEnabled), nameof(Settings.NomNomFoodId),
+         nameof(Settings.NomNomPreferHighQuality), nameof(Settings.NomNomKeepExpBuff)];
 
     private static readonly string[] VersionTwelveFields = [nameof(Settings.CompanionCostume)];
 
@@ -413,6 +426,8 @@ public sealed class LocalStore
     {
         if (settings is null || settings.Version != SchemaVersion)
             throw new InvalidOperationException("Unsupported configuration version.");
+        if (settings.NomNomFoodId > 1_000_000)
+            throw new InvalidOperationException("Choose a base food item ID between 0 and 1000000; quality is stored separately.");
         if (!FiniteRange(settings.LauncherWidth, 320, 1200) || !FiniteRange(settings.LauncherTextScale, .75f, 1.5f) ||
             settings.LauncherResultCount is < 3 or > 12 || !FiniteRange(settings.LauncherCenterX, .05f, .95f) ||
             !FiniteRange(settings.LauncherTop, 0, .9f))
@@ -550,6 +565,11 @@ public sealed class LocalStore
         target.Version = value.Version;
         target.SetupCompleted = value.SetupCompleted;
         target.LauncherEnabled = value.LauncherEnabled;
+        target.CharacterJobSwitcherEnabled = value.CharacterJobSwitcherEnabled;
+        target.NomNomEnabled = value.NomNomEnabled;
+        target.NomNomFoodId = value.NomNomFoodId;
+        target.NomNomPreferHighQuality = value.NomNomPreferHighQuality;
+        target.NomNomKeepExpBuff = value.NomNomKeepExpBuff;
         target.LauncherWidth = value.LauncherWidth;
         target.LauncherTextScale = value.LauncherTextScale;
         target.LauncherResultCount = value.LauncherResultCount;
@@ -676,6 +696,11 @@ public sealed class LocalStore
         public int Version;
         public bool SetupCompleted;
         public bool LauncherEnabled;
+        public bool CharacterJobSwitcherEnabled;
+        public bool NomNomEnabled;
+        public uint NomNomFoodId;
+        public bool NomNomPreferHighQuality;
+        public bool NomNomKeepExpBuff = true;
         public float LauncherWidth = 640f;
         public float LauncherTextScale = 1f;
         public int LauncherResultCount = 7;
@@ -791,6 +816,11 @@ public sealed class LocalStore
             Version = value.Version,
             SetupCompleted = value.SetupCompleted,
             LauncherEnabled = value.LauncherEnabled,
+            CharacterJobSwitcherEnabled = value.CharacterJobSwitcherEnabled,
+            NomNomEnabled = value.NomNomEnabled,
+            NomNomFoodId = value.NomNomFoodId,
+            NomNomPreferHighQuality = value.NomNomPreferHighQuality,
+            NomNomKeepExpBuff = value.NomNomKeepExpBuff,
             LauncherWidth = value.LauncherWidth,
             LauncherTextScale = value.LauncherTextScale,
             LauncherResultCount = value.LauncherResultCount,

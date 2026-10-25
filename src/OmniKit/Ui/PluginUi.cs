@@ -10,6 +10,7 @@ using OmniKit.Interaction;
 using OmniKit.Search;
 using OmniKit.Storage;
 using OmniKit.Input;
+using OmniKit.Automation;
 
 namespace OmniKit.Ui;
 
@@ -69,8 +70,8 @@ internal sealed class PluginUi : IDisposable
     private bool refreshModelsAfterConnection;
     private AiModelOption[] chatGptModels = [];
     private string connectionStatus = "";
-    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About", "Quest Items"];
-    private static readonly int[] SectionOrder = [0, 1, 6, 2, 3, 4, 5];
+    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About", "Quest Items", "Automations"];
+    private static readonly int[] SectionOrder = [0, 1, 6, 7, 2, 3, 4, 5];
     private static readonly Vector4 Gold = new(.48f, .78f, .74f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
     public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea || accessoryEditor?.IsOpen == true;
@@ -78,6 +79,13 @@ internal sealed class PluginUi : IDisposable
     public bool BrowserCapturesInput => wiki.CapturesInput;
     public bool BrowserReady => wiki.IsReady;
     public Func<string>? BrowserInterceptionStatus { get; set; }
+    public Func<string>? JobSwitchStatus { get; set; }
+    public Func<string?>? JobSwitcherWarning { get; set; }
+    public Action? ConfirmOtherSwitchersDisabled { get; set; }
+    public Func<string, bool>? OpenJobSwitcherConflictConfiguration { get; set; }
+    public Func<IReadOnlyList<NomNomFoodOption>>? NomNomFoods { get; set; }
+    public Action? RefreshNomNomFoods { get; set; }
+    public Func<string>? NomNomStatus { get; set; }
     public bool TryQueueCapturedWebsite(string url)
     {
         if (!wiki.TryOpenUrl(url, requireReady: false)) return false;
@@ -408,6 +416,7 @@ internal sealed class PluginUi : IDisposable
                 hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
+                else if (filter == "eat" || new[] { "nom nom", "nomnom", "food", "exp buff", "automation" }.Any(filter.Contains)) section = 7;
                 else if (new[] { "quest item", "item bar", "next action" }.Any(filter.Contains)) section = 6;
                 else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel", "emote", "soothe" }.Any(filter.Contains)) section = 1;
                 else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "effect", "intensity" }.Any(filter.Contains)) section = 2;
@@ -443,6 +452,7 @@ internal sealed class PluginUi : IDisposable
                         case 4: DrawData(); break;
                         case 5: DrawAbout(); break;
                         case 6: DrawQuestItems(); break;
+                        case 7: DrawAutomations(); break;
                     }
                     ImGui.EndChild(); ImGui.EndTabItem();
                 }
@@ -451,6 +461,40 @@ internal sealed class PluginUi : IDisposable
             Footer(status);
         }
         finally { ImGui.End(); if (!settingsOpen) hotkeys.Cancel(); }
+    }
+
+    private void DrawAutomations()
+    {
+        if (ImGui.Checkbox("Nom Nom", ref config.NomNomEnabled)) Save();
+        UiText.Hint("Automatically eat your selected food after the food buff expires.");
+        var foods = NomNomFoods?.Invoke() ?? Array.Empty<NomNomFoodOption>();
+        var selected = foods.FirstOrDefault(food => food.ItemId == config.NomNomFoodId);
+        var preview = config.NomNomFoodId == 0 ? "Choose food..." : selected?.Name ?? "Selected food unavailable";
+        var width = ImGui.GetContentRegionAvail().X;
+        ImGui.SetNextItemWidth(-1);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(width, 0), new Vector2(width, 220 * ImGuiHelpers.GlobalScale));
+        if (UiText.BeginCombo("##nomnom-food", FitLabel(preview, width - 36 * ImGuiHelpers.GlobalScale)))
+        {
+            if (UiText.Selectable("Choose food...", config.NomNomFoodId == 0)) { config.NomNomFoodId = 0; Save(); }
+            foreach (var food in foods)
+            {
+                var quantity = $"{food.NormalCount} NQ / {food.HighQualityCount} HQ";
+                var label = FitLabel($"{food.Name} · {quantity}", width - 24 * ImGuiHelpers.GlobalScale) + "##food-" + food.ItemId;
+                if (UiText.Selectable(label, food.ItemId == config.NomNomFoodId)) { config.NomNomFoodId = food.ItemId; Save(); }
+                UiText.Hint($"{food.Name}\n{quantity}" + (food.GrantsExperience ? " · Grants +EXP" : " · No +EXP bonus"));
+            }
+            ImGui.EndCombo();
+        }
+        UiText.Hint(selected?.Name ?? "Food detected in your personal inventory bags. Choose a food before enabling Nom Nom.");
+        UiText.Line(selected == null ? foods.Count == 0 ? "No food detected in personal bags." : $"{foods.Count} foods in personal bags."
+            : $"{selected.NormalCount} NQ / {selected.HighQualityCount} HQ" + (selected.GrantsExperience ? " · +EXP" : " · No +EXP bonus"), Muted);
+        if (ImGui.Checkbox("Prefer HQ", ref config.NomNomPreferHighQuality)) Save();
+        UiText.Hint("Uses your preferred quality first, then the other quality if it is available.");
+        if (ImGui.Checkbox("Keep +EXP buff active", ref config.NomNomKeepExpBuff)) Save();
+        UiText.Hint("Pauses automatic eating when unchecked. The selected food must grant an experience bonus.");
+        if (UiText.Button("Refresh food")) RefreshNomNomFoods?.Invoke();
+        UiText.Status(NomNomStatus?.Invoke() ?? (config.NomNomEnabled ? "Choose food to begin." : "Nom Nom is off."));
+        UiText.Help("Nom Nom help", "Eats your chosen +EXP food from personal bags after the food buff expires. It waits while the game is busy. Choose food or uncheck Keep +EXP buff active to pause eating.");
     }
 
     private void DrawShortcuts()
@@ -474,6 +518,21 @@ internal sealed class PluginUi : IDisposable
         if (UiText.Button("Open Search")) OpenMain();
         UiText.Help("Shortcut help", "Click a binding, hold Ctrl/Alt/Shift if needed, press a key, then release all keys. Escape cancels. /omnikit and /omnikit settings always work. Change Alt + Space if another desktop launcher uses it.");
         UiText.Help("Search examples", "community · guild · free company\njob paladin · job miner · a saved gearset name\ninventory · crafting log · a plugin name");
+        ImGui.Spacing();
+        if (ImGui.Checkbox("Character window job switcher", ref config.CharacterJobSwitcherEnabled)) Save();
+        UiText.Help("Job switcher help", "Click a class or job in Character > Classes/Jobs to switch. OmniKit preserves your current equipment in a separate class-named gearset when needed. Missing target sets are created from owned weapons/tools and required soul crystals. Existing gearsets are never overwritten. Free gearset slots are required.");
+        if (config.CharacterJobSwitcherEnabled)
+        {
+            ImGui.TextWrapped(JobSwitchStatus?.Invoke() ?? "Ready when you return to the game.");
+            var warning = JobSwitcherWarning?.Invoke();
+            if (!string.IsNullOrWhiteSpace(warning))
+            {
+                ImGui.TextWrapped(warning);
+                if (UiText.Button("Open Simple Tweaks settings")) OpenJobSwitcherConflictConfiguration?.Invoke("SimpleTweaksPlugin");
+                if (UiText.Button("Open HaselTweaks settings")) OpenJobSwitcherConflictConfiguration?.Invoke("HaselTweaks");
+                if (UiText.Button("I disabled the other job switcher tweaks")) ConfirmOtherSwitchersDisabled?.Invoke();
+            }
+        }
     }
 
     private static string SeasonalLabel(string theme) => Enum.TryParse<SeasonalCompanionTheme>(theme, out var value)

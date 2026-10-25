@@ -64,6 +64,17 @@ var cases = new[]
     (Name: "wardrobe-avatar-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "wardrobe-nib", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "launcher", Section: 0, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "job-switcher-off", Section: 0, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "job-switcher-on", Section: 0, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "job-switcher-conflict", Section: 0, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "job-switcher-help", Section: 0, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-off", Section: 7, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "nomnom-on", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-empty", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-missing", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-menu", Section: 7, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "nomnom-help", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-error", Section: 7, Tab: 0, Enabled: true, Scroll: true),
     (Name: "quest-items", Section: 6, Tab: 0, Enabled: true, Scroll: true),
     (Name: "seasonal", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact", Section: 1, Tab: 0, Enabled: true, Scroll: false),
@@ -268,6 +279,41 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     var ui = RuntimeHelpers.GetUninitializedObject(uiType);
     foreach (var field in uiType.GetFields(flags).Where(field => field.FieldType == typeof(string))) field.SetValue(ui, "");
     Set(ui, "config", config);
+    if (name.StartsWith("job-switcher-", StringComparison.Ordinal))
+    {
+        Set(config, "CharacterJobSwitcherEnabled", enabled);
+        uiType.GetProperty("JobSwitchStatus", flags)!.SetValue(ui, (Func<string>)(() =>
+            "Current equipment is preserved. Waiting for the game to confirm the requested job and soul crystal before saving its new gearset."));
+        uiType.GetProperty("JobSwitcherWarning", flags)!.SetValue(ui, (Func<string?>)(() => name == "job-switcher-conflict"
+            ? "Simple Tweaks / HaselTweaks is loaded. Disable its Character Window Job Switcher / Character Class Switcher tweak before confirming below. OmniKit cannot inspect those tweak settings."
+            : null));
+    }
+    if (name.StartsWith("nomnom-", StringComparison.Ordinal))
+    {
+        Set(config, "NomNomEnabled", enabled);
+        Set(config, "NomNomFoodId", name is "nomnom-empty" or "nomnom-off" ? 0u : name == "nomnom-missing" ? 999u : 1001u);
+        Set(config, "NomNomPreferHighQuality", name == "nomnom-on");
+        var foodType = Type("OmniKit.Automation.NomNomFoodOption");
+        var foods = Array.CreateInstance(foodType, name == "nomnom-empty" ? 0 : 3);
+        if (foods.Length > 0)
+        {
+            foods.SetValue(Activator.CreateInstance(foodType, 1001u, "Synthetic food with a deliberately long name to verify the chooser stays within its visible gutter", 0u, 12, 4, true), 0);
+            foods.SetValue(Activator.CreateInstance(foodType, 1002u, "Fixture boiled egg", 0u, 7, 0, true), 1);
+            foods.SetValue(Activator.CreateInstance(foodType, 1003u, "Fixture special meal", 0u, 0, 2, false), 2);
+        }
+        var foodProperty = uiType.GetProperty("NomNomFoods", flags)!;
+        foodProperty.SetValue(ui, System.Linq.Expressions.Expression.Lambda(foodProperty.PropertyType,
+            System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Constant(foods),
+                foodProperty.PropertyType.GetMethod("Invoke")!.ReturnType)).Compile());
+        uiType.GetProperty("NomNomStatus", flags)!.SetValue(ui, (Func<string>)(() => name switch
+        {
+            "nomnom-off" => "Nom Nom is off.",
+            "nomnom-empty" => "No food detected in personal bags.",
+            "nomnom-missing" => "Selected food is not in your personal bags.",
+            "nomnom-error" => "The game rejected the food request. Synthetic detail remains readable on hover without expanding this compact settings pane or hiding its controls.",
+            _ => "Food buff active. Waiting until it needs refreshing."
+        }));
+    }
     Set(ui, "providerEndpoint", config.GetType().GetField("AiEndpoint")!.GetValue(config));
     Set(ui, "settingsOpen", true);
     if(name=="status-error") Set(ui,"status","Could not save settings. Synthetic failure details remain available here instead of being erased by a routine Saved message.");
@@ -460,6 +506,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "ai-account-menu" or "ai-account-tooltip" => "##chatgpt-account", "ai-model-menu" or "ai-model-tooltip" => "##chatgpt-model",
             "ai-endpoint" => "Other provider or local AI server", "ai-cli-cancel" => "Cancel connection",
             "launcher-help" => "Shortcut help", "launcher-examples" => "Search examples", "hud-help" => "HUD help",
+            "job-switcher-help" => "Job switcher help",
+            "nomnom-menu" => "##nomnom-food", "nomnom-help" => "Nom Nom help",
             "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
             "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
             "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => null,
@@ -576,6 +624,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             if(targetControl != null && frame>=3)
             {
                 if(clickedFrame<0 && PointAt(targetControl,true)) clickedFrame=frame;
+                else if (name == "job-switcher-help" && clickedFrame < 0)
+                { io.AddMousePosEvent(280 * scale, 250 * scale); io.AddMouseWheelEvent(0, -2); }
                 else if(frame==clickedFrame+1) io.AddMouseButtonEvent(0,false);
                 if(clickedFrame>=0 && frame>=clickedFrame+2 && name.EndsWith("-tooltip",StringComparison.Ordinal))
                     PointAt(name=="ai-account-tooltip" ? "##fixture-account-a" : "##fixture-model-a",false,false);
@@ -659,6 +709,25 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
         }
         observer.SetValue(null,null);
+        if (name.StartsWith("nomnom-", StringComparison.Ordinal))
+        {
+            foreach (var label in scroll ? new[] { "Refresh food", "Nom Nom help" }
+                         : name == "nomnom-menu" ? Array.Empty<string>() : new[] { "##nomnom-food" })
+                if (!measured.TryGetValue(label, out var item) || !item.Visible)
+                    throw new InvalidOperationException("Nom Nom control is not reachable: " + label);
+            if (name == "nomnom-menu")
+            {
+                foreach (var foodOptionId in new[] { "##food-1001", "##food-1002", "##food-1003" })
+                {
+                    var option = measured.FirstOrDefault(pair => pair.Key.EndsWith(foodOptionId, StringComparison.Ordinal));
+                    if (!option.Value.Visible || option.Value.Min.X < 8 * scale || option.Value.Max.X > io.DisplaySize.X - 8 * scale)
+                        throw new InvalidOperationException("Nom Nom food option escaped the visible gutter: " + foodOptionId);
+                }
+            }
+            var expectedFood = name is "nomnom-empty" or "nomnom-off" ? 0u : name == "nomnom-missing" ? 999u : 1001u;
+            if (!Equals(config.GetType().GetField("NomNomFoodId")!.GetValue(config), expectedFood))
+                throw new InvalidOperationException("Rendering Nom Nom changed the selected food.");
+        }
         if (appearance15)
         {
             if (appearanceReady < 0 || appearanceHeader != null && clickedFrame < 0)

@@ -19,4 +19,7 @@ internal sealed class Services
     [PluginService] internal static IDataManager Data { get; private set; } = null!;
     [PluginService] internal static ITextureProvider Textures { get; private set; } = null!;
     [PluginService] internal static IGameInteropProvider Interop { get; private set; } = null!;
+    [PluginService] internal static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
+    [PluginService] internal static IAddonEventManager AddonEventManager { get; private set; } = null!;
+    [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 }

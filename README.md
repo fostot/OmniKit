@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0026`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0027`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -30,8 +30,8 @@ optional AI chat. Both shortcuts are changeable. A desktop launcher can also own
 Alt + Space; change one shortcut if they overlap. Soft interaction, voice and AI
 start off until you enable them.
 
-Settings have seven tabs: **Launcher**, **Interact**, **HUD**, **Companion**, **Data**,
-**About** and **Quest Items**. About shows the complete version, author and
+Settings have eight tabs: **Launcher**, **Interact**, **HUD**, **Companion**, **Data**,
+**About**, **Quest Items** and **Automations**. About shows the complete version, author and
 copyable full source commit. Companion groups **Appearance**, **Voice** and **AI**;
 Appearance has **Look**, **Scene**, **Motion**, **Home** and **Seasonal** sections.
 Click a shortcut
@@ -46,6 +46,18 @@ small corner rounding and a footer showing the built version and **by Zero**.
   **Launcher** adjusts width, height, text size, visible result count and horizontal/top
   position, with a reset button. The empty launcher remains just input and gear;
   scrolling or arrow keys reach results beyond the visible count.
+- **Launcher → Character window job switcher** lets a click in Character →
+  Classes/Jobs switch jobs. Missing gearsets are created from an owned usable
+  weapon/tool and the required soul crystal, after preserving unsaved current
+  equipment in a separate class-named set. It starts off. Disable Simple Tweaks'
+  Character Window Job Switcher or HaselTweaks' Character Class Switcher before
+  enabling this replacement; the rest of those plugins can stay enabled. See
+  [behavior, safeguards and sources](docs/JOB-SWITCHER.md). Native game acceptance is pending.
+- **Automations → Nom Nom** detects food in your personal inventory bags. Choose
+  a food, enable Nom Nom and leave **Keep +EXP buff active** on to eat that food
+  after Well Fed expires. NQ is preferred unless you choose HQ; the other quality
+  is a fallback. It starts off with no food selected, never replaces an active
+  food buff and uses no AI. See [Nom Nom details](docs/NOM-NOM.md). Native consumption requires in-game acceptance.
 - Optional camera-directed interaction: look toward an eligible nearby object
   and press the configured chord. The optional text HUD names the candidate,
   hiding during active NPC/object interactions, cutscenes and other paused states.

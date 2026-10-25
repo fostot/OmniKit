@@ -14,6 +14,29 @@ establish them. None is marked passed until observed.
   another app focused, and conflicting desktop shortcuts.
 - Search community/guild/free company; open game windows and loaded plugin UIs.
   Equip a saved job set and confirm an ambiguous job search asks for a choice.
+- Confirm Character window job switching starts disabled. Disable only the
+  corresponding Simple Tweaks/HaselTweaks tweak, enable OmniKit's version and
+  acknowledge the conflict notice. Other tweaks must continue to work.
+  Click a current unsaved class, an existing target set, a missing base class,
+  a missing advanced job and a crafter/gatherer. Verify class-named snapshots,
+  main-hand and exact soul crystal, no overwritten sets, and controller release
+  versus held confirm. Shift-clicking crafters must retain desynthesis.
+  Try missing weapon/crystal, a locked job, a broken existing set and full gearset
+  slots: reject before changing gear. Test HQ main hands, dirty current sets and
+  linked glamour plates. During a pending change, manual gear/selection changes,
+  zoning, logout, combat or disabling the feature must stop without later retries.
+  Check local success/error feedback and any manual return-set instruction.
+- In Automations, confirm Nom Nom starts off with no selected food. Check food
+  detection and NQ/HQ counts using bags, then remove/re-add the selected food.
+  Choose an eligible +EXP food and enable both switches: with no Well Fed, one
+  usable request should consume the selected quality and produce the buff.
+  Leave an existing food buff active and change the selection: it must not eat
+  again or replace that buff. After expiry, it may consume one selected food.
+  Test each switch off, no selected food, empty bags, wrong/nonfood IDs in a local
+  import, combat, crafting, gathering, dialogue, cutscenes, zoning, text input,
+  alt-tab and a blocked/rejected item use. No rapid retry loop or item drain is
+  acceptable. Verify recovery follows the displayed instruction, and job
+  switching/soft interaction cannot issue competing actions while food is pending.
 - In Launcher settings test width 320/640/1200, height 24/64/120, text size 0.75/1/1.5, result count
   3/7/12 and both position limits. Check empty, typed, cleared and no-match queries
   at narrow viewports and UI scale 1/1.5/2. The input and gear must stay visible;

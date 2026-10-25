@@ -2,8 +2,10 @@ using Dalamud.Plugin;
 using Dalamud.Game.Command;
 using Dalamud.Plugin.Services;
 using OmniKit.Assistant;
+using OmniKit.Automation;
 using OmniKit.Integration;
 using OmniKit.Interaction;
+using OmniKit.Jobs;
 using OmniKit.Storage;
 using OmniKit.Ui;
 
@@ -20,6 +22,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PluginUi ui;
     private readonly QuestActionHud actionHud;
     private readonly WebLinkInterceptor webLinks;
+    private readonly JobSwitchService jobSwitches;
+    private readonly CharacterWindowJobSwitcher characterJobSwitcher;
+    private readonly NomNomService nomNom;
     private bool requestedWebCapture;
     private readonly ShortcutInput shortcuts = new();
     private bool disposed;
@@ -33,9 +38,25 @@ public sealed class Plugin : IDalamudPlugin
         Configuration.Save();
         sources = new SourceRegistry();
         interaction = new SoftInteractionService(Configuration);
+        jobSwitches = new JobSwitchService(Configuration);
+        jobSwitches.Feedback = (message, isError) =>
+        {
+            if (isError) Services.Chat.PrintError("[OmniKit] " + message);
+            else Services.Chat.Print("[OmniKit] " + message);
+        };
+        characterJobSwitcher = new CharacterWindowJobSwitcher(Configuration, jobSwitches);
+        nomNom = new NomNomService(Configuration);
+        jobSwitches.ExternalBusy = () => nomNom.Busy;
         chat = new ChatService(Configuration, WebLinkInterceptor.Bypass);
         voice = new VoiceInput();
         ui = new PluginUi(Configuration, interaction, chat, voice, store, sources);
+        ui.JobSwitchStatus = () => jobSwitches.Busy ? jobSwitches.Status : characterJobSwitcher.Status + " " + jobSwitches.Status;
+        ui.JobSwitcherWarning = () => characterJobSwitcher.ConflictWarning;
+        ui.ConfirmOtherSwitchersDisabled = characterJobSwitcher.ConfirmOtherSwitchersDisabled;
+        ui.OpenJobSwitcherConflictConfiguration = characterJobSwitcher.OpenConflictConfiguration;
+        ui.NomNomStatus = () => nomNom.Status;
+        ui.NomNomFoods = nomNom.GetFoodOptions;
+        ui.RefreshNomNomFoods = nomNom.RefreshFoods;
         actionHud = new QuestActionHud(Configuration, interaction);
         webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);
         ui.BrowserInterceptionStatus = () => webLinks.IsEnabled && !ui.BrowserReady
@@ -72,6 +93,8 @@ public sealed class Plugin : IDalamudPlugin
     private void Update(IFramework framework)
     {
         if (disposed) return;
+        characterJobSwitcher.Update();
+        jobSwitches.Update();
         if (requestedWebCapture != Configuration.BrowserInterceptLinks)
         {
             requestedWebCapture = Configuration.BrowserInterceptLinks;
@@ -79,9 +102,10 @@ public sealed class Plugin : IDalamudPlugin
         }
         ui.SuppressBindingKeys();
         var browserInput = ui.BrowserCapturesInput;
+        nomNom.Update(ui.IsOpen || browserInput || jobSwitches.Busy);
         shortcuts.Update(Configuration, ui.CapturesText || browserInput, ui.SearchHasFocus && !browserInput, ui.ToggleMain, OpenSettings, ui.CapturingBinding);
         ui.Update();
-        interaction.Update(ui.IsOpen || browserInput);
+        interaction.Update(ui.IsOpen || browserInput || jobSwitches.Busy || nomNom.Busy);
     }
     private void Draw()
     {
@@ -100,6 +124,9 @@ public sealed class Plugin : IDalamudPlugin
         builder.OpenMainUi -= OpenMain;
         builder.OpenConfigUi -= OpenSettings;
         Services.Commands.RemoveHandler("/omnikit");
+        characterJobSwitcher.Dispose();
+        nomNom.Dispose();
+        jobSwitches.Dispose();
         webLinks.Dispose();
         ui.Dispose(); voice.Dispose(); chat.Dispose();
         interaction.Dispose(); sources.Dispose();
