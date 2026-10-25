@@ -70,6 +70,8 @@ var cases = new[]
     (Name: "job-switcher-help", Section: 0, Tab: 0, Enabled: true, Scroll: true),
     (Name: "nomnom-off", Section: 7, Tab: 0, Enabled: false, Scroll: true),
     (Name: "nomnom-on", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-auto", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "nomnom-auto-menu", Section: 7, Tab: 0, Enabled: true, Scroll: false),
     (Name: "nomnom-empty", Section: 7, Tab: 0, Enabled: true, Scroll: true),
     (Name: "nomnom-missing", Section: 7, Tab: 0, Enabled: true, Scroll: true),
     (Name: "nomnom-menu", Section: 7, Tab: 0, Enabled: true, Scroll: false),
@@ -291,7 +293,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     if (name.StartsWith("nomnom-", StringComparison.Ordinal))
     {
         Set(config, "NomNomEnabled", enabled);
-        Set(config, "NomNomFoodId", name is "nomnom-empty" or "nomnom-off" ? 0u : name == "nomnom-missing" ? 999u : 1001u);
+        Set(config, "NomNomFoodId", name is "nomnom-empty" or "nomnom-off" or "nomnom-auto" or "nomnom-auto-menu" ? 0u : name == "nomnom-missing" ? 999u : 1001u);
         Set(config, "NomNomPreferHighQuality", name == "nomnom-on");
         var foodType = Type("OmniKit.Automation.NomNomFoodOption");
         var foods = Array.CreateInstance(foodType, name == "nomnom-empty" ? 0 : 3);
@@ -305,6 +307,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         foodProperty.SetValue(ui, System.Linq.Expressions.Expression.Lambda(foodProperty.PropertyType,
             System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Constant(foods),
                 foodProperty.PropertyType.GetMethod("Invoke")!.ReturnType)).Compile());
+        uiType.GetProperty("NomNomAutomaticFoodId", flags)!.SetValue(ui, (Func<uint>)(() => name == "nomnom-empty" ? 0u : 1001u));
         uiType.GetProperty("NomNomStatus", flags)!.SetValue(ui, (Func<string>)(() => name switch
         {
             "nomnom-off" => "Nom Nom is off.",
@@ -507,7 +510,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "ai-endpoint" => "Other provider or local AI server", "ai-cli-cancel" => "Cancel connection",
             "launcher-help" => "Shortcut help", "launcher-examples" => "Search examples", "hud-help" => "HUD help",
             "job-switcher-help" => "Job switcher help",
-            "nomnom-menu" => "##nomnom-food", "nomnom-help" => "Nom Nom help",
+            "nomnom-menu" or "nomnom-auto-menu" => "##nomnom-food", "nomnom-help" => "Nom Nom help",
             "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
             "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
             "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => null,
@@ -712,11 +715,13 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         if (name.StartsWith("nomnom-", StringComparison.Ordinal))
         {
             foreach (var label in scroll ? new[] { "Refresh food", "Nom Nom help" }
-                         : name == "nomnom-menu" ? Array.Empty<string>() : new[] { "##nomnom-food" })
+                         : name is "nomnom-menu" or "nomnom-auto-menu" ? Array.Empty<string>() : new[] { "##nomnom-food" })
                 if (!measured.TryGetValue(label, out var item) || !item.Visible)
                     throw new InvalidOperationException("Nom Nom control is not reachable: " + label);
-            if (name == "nomnom-menu")
+            if (name is "nomnom-menu" or "nomnom-auto-menu")
             {
+                if (!measured.TryGetValue("Automatic: best +EXP food", out var automaticOption) || !automaticOption.Visible)
+                    throw new InvalidOperationException("Automatic food choice is not reachable.");
                 foreach (var foodOptionId in new[] { "##food-1001", "##food-1002", "##food-1003" })
                 {
                     var option = measured.FirstOrDefault(pair => pair.Key.EndsWith(foodOptionId, StringComparison.Ordinal));
@@ -724,7 +729,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                         throw new InvalidOperationException("Nom Nom food option escaped the visible gutter: " + foodOptionId);
                 }
             }
-            var expectedFood = name is "nomnom-empty" or "nomnom-off" ? 0u : name == "nomnom-missing" ? 999u : 1001u;
+            var expectedFood = name is "nomnom-empty" or "nomnom-off" or "nomnom-auto" or "nomnom-auto-menu" ? 0u : name == "nomnom-missing" ? 999u : 1001u;
             if (!Equals(config.GetType().GetField("NomNomFoodId")!.GetValue(config), expectedFood))
                 throw new InvalidOperationException("Rendering Nom Nom changed the selected food.");
         }

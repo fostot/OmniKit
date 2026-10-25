@@ -18,6 +18,7 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
     private bool disposed;
     public bool Busy=>controller.Busy;
     public string Status=>controller.Status;
+    public uint AutomaticFoodId { get; private set; }
     public IReadOnlyList<NomNomFoodOption> GetFoodOptions()=>foods;
     public void RefreshFoods()=>nextScan=0;
     public void Update(bool inputBlocked=false)
@@ -32,12 +33,21 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
         if(!loggedIn) { foods=[]; candidates=[]; nextScan=0; }
         else if(now>=nextScan) { ScanFoods(); nextScan=now+1000; }
         var identity=loggedIn?new NomNomIdentity(native->ContentId,player!.GameObjectId,Services.ClientState.TerritoryType):default;
-        var selected=NomNomFoodPolicy.SelectCandidate(candidates,config.NomNomFoodId,config.NomNomPreferHighQuality);
-        var count=candidates.Where(item=>item.ItemId==config.NomNomFoodId).Sum(item=>item.Count);
         var wellFed=loggedIn && player!.StatusList.Any(status=>status.StatusId==48);
         var safe=loggedIn && !inputBlocked && CanAct();
         var manager=ActionManager.Instance();
-        var usable=safe && selected!=null && manager!=null && !manager->ActionQueued && manager->AnimationLock<=0
+        var ready=config.NomNomEnabled && config.NomNomKeepExpBuff && safe && !wellFed
+            && manager!=null && !manager->ActionQueued && manager->AnimationLock<=0;
+        var ranked=NomNomFoodPolicy.RankCandidates(candidates,config.NomNomFoodId,config.NomNomPreferHighQuality);
+        var selected=ranked.FirstOrDefault();
+        if(ready && config.NomNomFoodId==0)
+            foreach(var item in ranked)
+                if(manager->GetActionStatus(ActionType.Item,item.UseId,player!.GameObjectId)==0) { selected=item; break; }
+        AutomaticFoodId=(config.NomNomFoodId==0 ? selected : NomNomFoodPolicy.SelectCandidate(candidates,0,config.NomNomPreferHighQuality))?.ItemId ?? 0;
+        // Automatic stock spans eligible foods, so using the last item of one kind
+        // cannot silently re-arm a failed attempt against the next kind.
+        var count=candidates.Where(item=>config.NomNomFoodId==0 ? item.GrantsExperience : item.ItemId==config.NomNomFoodId).Sum(item=>item.Count);
+        var usable=ready && selected!=null
             && manager->GetActionStatus(ActionType.Item,selected.UseId,player!.GameObjectId)==0;
         controller.Update(new(config.NomNomEnabled,config.NomNomFoodId,config.NomNomPreferHighQuality,config.NomNomKeepExpBuff),
             new(identity,safe,wellFed,count,selected,usable),now,item=>TryEat(item,identity,inputBlocked));
@@ -58,7 +68,8 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
                     || !Services.Data.GetExcelSheet<Item>().TryGetRow(item->ItemId,out var row)) continue;
                 var hq=(item->Flags & InventoryItem.ItemFlags.HighQuality)!=0;
                 if(!FoodMetadata(row,hq,out var experience)) continue;
-                found.Add(new(row.RowId,NomNomFoodPolicy.UseId(row.RowId,hq),(int)type,slot,item->Quantity,hq,row.Name.ExtractText(),experience));
+                found.Add(new(row.RowId,NomNomFoodPolicy.UseId(row.RowId,hq),(int)type,slot,item->Quantity,hq,row.Name.ExtractText(),experience>0,
+                    experience,(int)row.LevelItem.RowId));
             }
         }
         candidates=found;
@@ -70,9 +81,9 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
                 group.Where(item=>item.HighQuality).Sum(item=>item.Count),group.Any(item=>item.GrantsExperience));
         }).OrderBy(item=>item.Name,StringComparer.CurrentCultureIgnoreCase).ToArray();
     }
-    private static bool FoodMetadata(Item row,bool hq,out bool experience)
+    private static bool FoodMetadata(Item row,bool hq,out int experience)
     {
-        experience=false;
+        experience=0;
         if(!row.ItemAction.IsValid || row.ItemAction.RowId==0) return false;
         var action=row.ItemAction.Value;
         // Food/drink actions use Well Fed in argument zero and the ItemFood row in argument one.
@@ -80,12 +91,13 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
         var data=hq?action.DataHQ:action.Data;
         if(!Services.Data.GetExcelSheet<ItemFood>().TryGetRow(data[1],out var food)
             || !NomNomFoodPolicy.IsSupportedFood(action.Action.RowId,data[0],true,action.Action.Value.TargetArea)) return false;
-        experience=food.EXPBonusPercent>0;
+        experience=food.EXPBonusPercent;
         return true;
     }
     private bool TryEat(NomNomCandidate selected,NomNomIdentity expected,bool inputBlocked)
     {
-        if(disposed || !config.NomNomEnabled || !config.NomNomKeepExpBuff || config.NomNomFoodId!=selected.ItemId || inputBlocked || !CanAct()) return false;
+        if(disposed || !config.NomNomEnabled || !config.NomNomKeepExpBuff
+            || (config.NomNomFoodId!=0 && config.NomNomFoodId!=selected.ItemId) || inputBlocked || !CanAct()) return false;
         var player=Services.Objects.LocalPlayer;
         var native=PlayerState.Instance();
         var inventory=InventoryManager.Instance();
@@ -100,7 +112,7 @@ internal sealed unsafe class NomNomService(Configuration config) : IDisposable
         if(item==null || item->IsSymbolic || item->ItemId!=selected.ItemId || item->Quantity!=selected.Count
             || ((item->Flags & InventoryItem.ItemFlags.HighQuality)!=0)!=selected.HighQuality
             || !Services.Data.GetExcelSheet<Item>().TryGetRow(item->ItemId,out var row)
-            || !FoodMetadata(row,selected.HighQuality,out var experience) || config.NomNomKeepExpBuff && !experience
+            || !FoodMetadata(row,selected.HighQuality,out var experience) || config.NomNomKeepExpBuff && experience<=0
             || manager->GetActionStatus(ActionType.Item,selected.UseId,player.GameObjectId)!=0) return false;
         var extra=((uint)selected.Container<<8)|selected.Slot;
         // Macro mode rejects queuing. Exact bag/slot and self-target are revalidated above.

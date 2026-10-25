@@ -24,7 +24,7 @@ public sealed class Configuration : IPluginConfiguration
     public bool LauncherEnabled = true;
     public bool CharacterJobSwitcherEnabled = false;
     public bool NomNomEnabled = false;
-    public uint NomNomFoodId = 0;
+    public uint NomNomFoodId = 0; // Automatic; nonzero values select one exact base item ID.
     public bool NomNomPreferHighQuality = false;
     public bool NomNomKeepExpBuff = true;
     public float LauncherWidth = 640f;

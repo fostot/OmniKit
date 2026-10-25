@@ -124,7 +124,7 @@ try
         "Nom Nom preserves exact base food selection and independent quality and experience preferences.");
     var foodDefaults = new Configuration();
     Check(!foodDefaults.NomNomEnabled && foodDefaults.NomNomFoodId == 0 && !foodDefaults.NomNomPreferHighQuality
-        && foodDefaults.NomNomKeepExpBuff, "Nom Nom defaults off with no selected food and experience upkeep on.");
+        && foodDefaults.NomNomKeepExpBuff, "Nom Nom defaults off with Automatic food selection and experience upkeep on.");
     loaded.InteractionDistance = 5;
     store.Save(loaded);
     Check(store.Load()!.InteractionDistance == 5, "A later save must atomically replace the prior snapshot.");
@@ -162,7 +162,7 @@ try
     Check(importedThirteen.Version == 14 && !importedThirteen.CharacterJobSwitcherEnabled,
         "Schema thirteen import defaults the job switcher off.");
     Check(!importedThirteen.NomNomEnabled && importedThirteen.NomNomFoodId == 0 && !importedThirteen.NomNomPreferHighQuality
-        && importedThirteen.NomNomKeepExpBuff, "Schema thirteen import defaults food automation off and selects no food.");
+        && importedThirteen.NomNomKeepExpBuff, "Schema thirteen import defaults food automation off with Automatic selected.");
     var oldFlagFallback = new Configuration { Version = 13, CharacterJobSwitcherEnabled = true,
         NomNomEnabled = true, NomNomFoodId = 100, NomNomPreferHighQuality = true, NomNomKeepExpBuff = false };
     var upgradedOldFallback = store.Upgrade(oldFlagFallback);

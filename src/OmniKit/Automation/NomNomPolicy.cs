@@ -1,7 +1,8 @@
 namespace OmniKit.Automation;
 
 internal sealed record NomNomFoodOption(uint ItemId,string Name,uint IconId,int NormalCount,int HighQualityCount,bool GrantsExperience);
-internal sealed record NomNomCandidate(uint ItemId,uint UseId,int Container,ushort Slot,int Count,bool HighQuality,string Name,bool GrantsExperience);
+internal sealed record NomNomCandidate(uint ItemId,uint UseId,int Container,ushort Slot,int Count,bool HighQuality,string Name,bool GrantsExperience,
+    int ExperienceBonus = 0,int ItemLevel = 0);
 internal readonly record struct NomNomSettings(bool Enabled,uint FoodId,bool PreferHighQuality,bool RequireExperience);
 internal readonly record struct NomNomIdentity(ulong Character,ulong Object,uint Territory);
 internal readonly record struct NomNomObservation(NomNomIdentity Identity,bool Safe,bool WellFed,int SelectedCount,
@@ -21,7 +22,7 @@ internal sealed class NomNomController
     private bool attempted;
     private bool cancelled;
     public bool Busy { get; private set; }
-    public string Status { get; private set; }="Choose food from your personal bags.";
+    public string Status { get; private set; }="Automatic food selection is ready.";
     public void Update(NomNomSettings selected,NomNomObservation o,long now,Func<NomNomCandidate,bool> use)
     {
         if(cancelled) return;
@@ -31,7 +32,6 @@ internal sealed class NomNomController
         }
         if(!selected.Enabled) { Busy=false; Status="Nom Nom is off."; return; }
         if(!selected.RequireExperience) { Busy=false; Status="EXP food maintenance is off."; return; }
-        if(selected.FoodId==0) { Busy=false; Status="Choose a food before enabling automatic eating."; return; }
         if(o.Identity.Character==0 || o.Identity.Object==0) { Busy=false; Status="Waiting for your character."; return; }
         if(o.WellFed)
         {
@@ -53,8 +53,9 @@ internal sealed class NomNomController
             { failedCount=o.SelectedCount; return; }
             failed=false; nextAttempt=Math.Max(nextAttempt,now+5000);
         }
-        if(o.Candidate==null || o.SelectedCount<=0) { Status="The selected food is not available in your personal bags."; return; }
-        if(o.Candidate.ItemId!=selected.FoodId) { Latch(o.SelectedCount,"The selected food changed. Choose it again."); return; }
+        if(o.Candidate==null || o.SelectedCount<=0)
+        { Status=selected.FoodId==0 ? "No eligible EXP food is available in your personal bags." : "The selected food is not available in your personal bags."; return; }
+        if(selected.FoodId!=0 && o.Candidate.ItemId!=selected.FoodId) { Latch(o.SelectedCount,"The selected food changed. Choose it again."); return; }
         if(!o.Candidate.GrantsExperience)
         { Status="The selected food has no EXP bonus. Choose another food."; return; }
         if(!o.Safe) { Status="Eating is paused while the game is busy or unfocused."; return; }
@@ -75,8 +76,18 @@ internal static class NomNomFoodPolicy
     internal static bool IsSupportedFood(uint actionId,uint statusId,bool validFoodRow,bool targetArea)
         => actionId is 844 or 845 && statusId==48 && validFoodRow && !targetArea;
     internal static NomNomCandidate? SelectCandidate(IEnumerable<NomNomCandidate> items,uint selected,bool preferHq)
-        => items.Where(item=>item.ItemId==selected && item.Count>0)
-            .OrderBy(item=>item.HighQuality==preferHq?0:1).ThenBy(item=>item.Container).ThenBy(item=>item.Slot).FirstOrDefault();
+        => RankCandidates(items,selected,preferHq).FirstOrDefault();
+    internal static IEnumerable<NomNomCandidate> RankCandidates(IEnumerable<NomNomCandidate> items,uint selected,bool preferHq)
+    {
+        var available=items.Where(item=>item.ItemId!=0 && item.Count>0);
+        if(selected==0)
+            return available.Where(item=>item.GrantsExperience)
+                .OrderByDescending(item=>item.ExperienceBonus).ThenByDescending(item=>item.ItemLevel)
+                .ThenBy(item=>item.HighQuality==preferHq?0:1).ThenBy(item=>item.ItemId)
+                .ThenBy(item=>item.Container).ThenBy(item=>item.Slot);
+        return available.Where(item=>item.ItemId==selected)
+            .OrderBy(item=>item.HighQuality==preferHq?0:1).ThenBy(item=>item.Container).ThenBy(item=>item.Slot);
+    }
     internal static uint UseId(uint baseId,bool hq)=>baseId+(hq?1_000_000u:0u);
 }
 

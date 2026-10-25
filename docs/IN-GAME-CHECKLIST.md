@@ -26,13 +26,17 @@ establish them. None is marked passed until observed.
   linked glamour plates. During a pending change, manual gear/selection changes,
   zoning, logout, combat or disabling the feature must stop without later retries.
   Check local success/error feedback and any manual return-set instruction.
-- In Automations, confirm Nom Nom starts off with no selected food. Check food
+- In Automations, confirm Nom Nom starts off with Automatic selected. Check food
   detection and NQ/HQ counts using bags, then remove/re-add the selected food.
   Choose an eligible +EXP food and enable both switches: with no Well Fed, one
   usable request should consume the selected quality and produce the buff.
   Leave an existing food buff active and change the selection: it must not eat
   again or replace that buff. After expiry, it may consume one selected food.
-  Test each switch off, no selected food, empty bags, wrong/nonfood IDs in a local
+  Compare Automatic's highest EXP/item-level/quality ranking with actual bags;
+  test an unusable top food and verify it skips to the best usable one. Pick a
+  manual food, reload and confirm it remains selected. Exhaust one kind without
+  confirmed Well Fed and verify the next kind is not repeatedly consumed.
+  Test each switch off, empty bags, wrong/nonfood IDs in a local
   import, combat, crafting, gathering, dialogue, cutscenes, zoning, text input,
   alt-tab and a blocked/rejected item use. No rapid retry loop or item drain is
   acceptable. Verify recovery follows the displayed instruction, and job

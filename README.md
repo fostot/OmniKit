@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0027`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0029`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -53,10 +53,12 @@ small corner rounding and a footer showing the built version and **by Zero**.
   Character Window Job Switcher or HaselTweaks' Character Class Switcher before
   enabling this replacement; the rest of those plugins can stay enabled. See
   [behavior, safeguards and sources](docs/JOB-SWITCHER.md). Native game acceptance is pending.
-- **Automations → Nom Nom** detects food in your personal inventory bags. Choose
-  a food, enable Nom Nom and leave **Keep +EXP buff active** on to eat that food
-  after Well Fed expires. NQ is preferred unless you choose HQ; the other quality
-  is a fallback. It starts off with no food selected, never replaces an active
+- **Automations → Nom Nom** detects food in your personal inventory bags.
+  **Automatic** is the default: highest EXP bonus, then highest item level, then
+  your quality preference. It skips unusable food. You can select a specific food
+  instead, with NQ/HQ preference and same-item quality fallback. Enable Nom Nom
+  and leave **Keep +EXP buff active** on to eat after Well Fed expires.
+  Nom Nom starts off, never replaces an active
   food buff and uses no AI. See [Nom Nom details](docs/NOM-NOM.md). Native consumption requires in-game acceptance.
 - Optional camera-directed interaction: look toward an eligible nearby object
   and press the configured chord. The optional text HUD names the candidate,

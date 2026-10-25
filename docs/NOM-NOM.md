@@ -1,19 +1,24 @@
 # Nom Nom
 
-Open **Automations**, choose a food from the inventory dropdown, enable **Nom Nom**
-and leave **Keep +EXP buff active** on. Both switches and a selected eligible food
-are required. New settings and migrated profiles start with Nom Nom off and no
-food selected.
+Open **Automations**, enable **Nom Nom** and leave **Keep +EXP buff active** on.
+**Automatic: best +EXP food** is the default choice. Both switches and an
+available eligible food are required. Nom Nom starts off; manually selected food
+IDs remain unchanged after updates. Stored food ID zero now means Automatic.
 
 The dropdown detects supported food and drinks in the four personal inventory
 bags, with separate NQ/HQ quantities. It refreshes while logged in; **Refresh food**
 requests another scan. Retainers, saddlebag and storage are not searched. Inventory
 observations stay in memory and are not exported, logged or sent to an AI provider.
 
-When the character has no Well Fed status, OmniKit checks that the selected food
-grants EXP and is currently usable. It prefers NQ unless **Prefer HQ** is checked,
-then falls back to the other quality of the same item. It never substitutes a
-different food. Any active Well Fed buff is left alone, even after changing the
+When the character has no Well Fed status, Automatic ranks owned eligible foods
+by EXP bonus percentage, then item level, then NQ/HQ preference. It skips food
+the game currently rejects. Stable item ID/bag/slot tie-breaks prevent random
+selection changes. This ranks EXP and item level, not job-specific combat stats
+or market value. The next resolved food is shown below the dropdown.
+
+Selecting a specific food limits consumption to that item. Manual mode prefers
+NQ unless **Prefer HQ** is checked, then falls back to the other quality of that
+same item. Any active Well Fed buff is left alone, even after changing the
 selected food. It refreshes after expiry rather than continually extending the
 duration. Unchecking **Keep +EXP buff active** pauses all eating.
 
@@ -22,7 +27,9 @@ native usability before requesting one self-targeted item action. It waits for
 Well Fed to appear. A rejection or missing confirmation pauses further attempts;
 toggle Nom Nom or change the selection to retry deliberately. A meaningful stock
 change can also re-enable checking. Its own delayed one-item decrease cannot
-re-arm a failed attempt.
+re-arm a failed attempt. In Automatic mode, the same guard spans all eligible food
+stock: exhausting one kind cannot trigger repeated eating of the next kind when
+the buff never appeared.
 
 Combat, casting, death, loading, dialogue, cutscenes, crafting, gathering,
 mounting, text input, lost focus and OmniKit configuration/input pause eating.

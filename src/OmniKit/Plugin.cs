@@ -56,6 +56,7 @@ public sealed class Plugin : IDalamudPlugin
         ui.OpenJobSwitcherConflictConfiguration = characterJobSwitcher.OpenConflictConfiguration;
         ui.NomNomStatus = () => nomNom.Status;
         ui.NomNomFoods = nomNom.GetFoodOptions;
+        ui.NomNomAutomaticFoodId = () => nomNom.AutomaticFoodId;
         ui.RefreshNomNomFoods = nomNom.RefreshFoods;
         actionHud = new QuestActionHud(Configuration, interaction);
         webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);

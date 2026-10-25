@@ -86,6 +86,7 @@ internal sealed class PluginUi : IDisposable
     public Func<IReadOnlyList<NomNomFoodOption>>? NomNomFoods { get; set; }
     public Action? RefreshNomNomFoods { get; set; }
     public Func<string>? NomNomStatus { get; set; }
+    public Func<uint>? NomNomAutomaticFoodId { get; set; }
     public bool TryQueueCapturedWebsite(string url)
     {
         if (!wiki.TryOpenUrl(url, requireReady: false)) return false;
@@ -468,14 +469,17 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.Checkbox("Nom Nom", ref config.NomNomEnabled)) Save();
         UiText.Hint("Automatically eat your selected food after the food buff expires.");
         var foods = NomNomFoods?.Invoke() ?? Array.Empty<NomNomFoodOption>();
-        var selected = foods.FirstOrDefault(food => food.ItemId == config.NomNomFoodId);
-        var preview = config.NomNomFoodId == 0 ? "Choose food..." : selected?.Name ?? "Selected food unavailable";
+        var automatic = config.NomNomFoodId == 0;
+        var selectedId = automatic ? NomNomAutomaticFoodId?.Invoke() ?? 0 : config.NomNomFoodId;
+        var selected = foods.FirstOrDefault(food => food.ItemId == selectedId);
+        const string automaticLabel = "Automatic: best +EXP food";
+        var preview = automatic ? automaticLabel : selected?.Name ?? "Selected food unavailable";
         var width = ImGui.GetContentRegionAvail().X;
         ImGui.SetNextItemWidth(-1);
         ImGui.SetNextWindowSizeConstraints(new Vector2(width, 0), new Vector2(width, 220 * ImGuiHelpers.GlobalScale));
         if (UiText.BeginCombo("##nomnom-food", FitLabel(preview, width - 36 * ImGuiHelpers.GlobalScale)))
         {
-            if (UiText.Selectable("Choose food...", config.NomNomFoodId == 0)) { config.NomNomFoodId = 0; Save(); }
+            if (UiText.Selectable(automaticLabel, automatic)) { config.NomNomFoodId = 0; Save(); }
             foreach (var food in foods)
             {
                 var quantity = $"{food.NormalCount} NQ / {food.HighQualityCount} HQ";
@@ -485,16 +489,17 @@ internal sealed class PluginUi : IDisposable
             }
             ImGui.EndCombo();
         }
-        UiText.Hint(selected?.Name ?? "Food detected in your personal inventory bags. Choose a food before enabling Nom Nom.");
-        UiText.Line(selected == null ? foods.Count == 0 ? "No food detected in personal bags." : $"{foods.Count} foods in personal bags."
-            : $"{selected.NormalCount} NQ / {selected.HighQualityCount} HQ" + (selected.GrantsExperience ? " · +EXP" : " · No +EXP bonus"), Muted);
+        UiText.Hint(selected?.Name ?? "Automatic chooses the best eligible +EXP food in your personal bags. Pick a specific food to use only that food.");
+        UiText.Line(selected == null ? foods.Count == 0 ? "No food detected in personal bags." : automatic ? "No eligible +EXP food detected." : $"{foods.Count} foods in personal bags."
+            : (automatic ? "Next: " + selected.Name + " · " : "") + $"{selected.NormalCount} NQ / {selected.HighQualityCount} HQ"
+                + (selected.GrantsExperience ? " · +EXP" : " · No +EXP bonus"), automatic && selected != null ? Gold : Muted);
         if (ImGui.Checkbox("Prefer HQ", ref config.NomNomPreferHighQuality)) Save();
-        UiText.Hint("Uses your preferred quality first, then the other quality if it is available.");
+        UiText.Hint("Automatic uses quality to break EXP/item-level ties. A specific food uses your preferred quality first, with the other quality as fallback.");
         if (ImGui.Checkbox("Keep +EXP buff active", ref config.NomNomKeepExpBuff)) Save();
         UiText.Hint("Pauses automatic eating when unchecked. The selected food must grant an experience bonus.");
         if (UiText.Button("Refresh food")) RefreshNomNomFoods?.Invoke();
-        UiText.Status(NomNomStatus?.Invoke() ?? (config.NomNomEnabled ? "Choose food to begin." : "Nom Nom is off."));
-        UiText.Help("Nom Nom help", "Eats your chosen +EXP food from personal bags after the food buff expires. It waits while the game is busy. Choose food or uncheck Keep +EXP buff active to pause eating.");
+        UiText.Status(NomNomStatus?.Invoke() ?? (config.NomNomEnabled ? "Waiting for eligible +EXP food." : "Nom Nom is off."));
+        UiText.Help("Nom Nom help", "Automatic ranks owned food by +EXP bonus, then item level, then your quality preference. It can use valuable food; choose a specific food to reserve the rest. Eats after Well Fed expires, when the game is ready. Uncheck Keep +EXP buff active to pause.");
     }
 
     private void DrawShortcuts()
