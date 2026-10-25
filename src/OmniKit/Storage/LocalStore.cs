@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 12;
+    private const int SchemaVersion = 13;
     private const int MaximumAccessoryFits = 1024;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
@@ -186,6 +186,7 @@ public sealed class LocalStore
             if (schemaVersion < 9) fields = fields.Except(VersionNineFields);
             if (schemaVersion < 10) fields = fields.Except(VersionTenFields);
             if (schemaVersion < 12) fields = fields.Except(VersionTwelveFields);
+            if (schemaVersion < 13) fields = fields.Except(VersionThirteenFields);
             RequireFields(settingsElement, fields);
             if (schemaVersion >= 10)
             {
@@ -334,6 +335,16 @@ public sealed class LocalStore
             settings.CompanionAccessoryFits = settings.CompanionAccessoryFits?.Select(fit =>
                 fit is null ? null! : fit with { RotationDegrees = 0 }).ToList()!;
         if (settings.Version < 12) settings.CompanionCostume = "Auto";
+        if (settings.Version < 13)
+        {
+            var pet = float.IsFinite(settings.CompanionSize) ? Math.Clamp(settings.CompanionSize, 48f, 192f) : 96f;
+            var hand = float.IsFinite(settings.CompanionGrabHandScale) ? Math.Clamp(settings.CompanionGrabHandScale, .2f, 1f) : .4f;
+            settings.CompanionBodyMotionStrength = 1f;
+            settings.CompanionMotionReactions = true;
+            settings.CompanionSceneScale = 1f;
+            settings.CompanionHomeSize = Math.Clamp(pet * 1.3f, 48f, 384f);
+            settings.CompanionHandSize = Math.Clamp(pet * hand, 8f, 192f);
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -348,6 +359,9 @@ public sealed class LocalStore
 
     private static readonly string[] VersionTenFields =
         [nameof(Settings.CompanionHolidayBody), nameof(Settings.CompanionAccessoryFits), nameof(Settings.CompanionTransitionEffectsEnabled)];
+
+    private static readonly string[] VersionThirteenFields =
+        [nameof(Settings.CompanionBodyMotionStrength), nameof(Settings.CompanionMotionReactions), nameof(Settings.CompanionSceneScale), nameof(Settings.CompanionHomeSize), nameof(Settings.CompanionHandSize)];
 
     private static readonly string[] VersionTwelveFields = [nameof(Settings.CompanionCostume)];
 
@@ -448,6 +462,11 @@ public sealed class LocalStore
             throw new InvalidOperationException("HUD effect intensity or speed is outside the supported range.");
         if (!FiniteRange(settings.CompanionCommentInterval, 30f, 600f) || !FiniteRange(settings.CompanionBlinkInterval, 1f, 10f))
             throw new InvalidOperationException("Companion comment or blink timing is outside the supported range.");
+        if (!FiniteRange(settings.CompanionBodyMotionStrength, 0f, 1.5f))
+            throw new InvalidOperationException("Companion body motion strength is outside the supported range.");
+        if (!FiniteRange(settings.CompanionSceneScale, .5f, 2f) ||
+            !FiniteRange(settings.CompanionHomeSize, 48f, 384f) || !FiniteRange(settings.CompanionHandSize, 8f, 192f))
+            throw new InvalidOperationException("Companion scene, home or hand size is outside the supported range.");
         if (!FiniteRange(settings.CompanionGrabHandScale, .20f, 1f) ||
             !FiniteRange(settings.CompanionNapInterval, 15f, 300f) || !FiniteRange(settings.CompanionNapDuration, 5f, 120f))
             throw new InvalidOperationException("Companion hand size or nap timing is outside the supported range.");
@@ -623,6 +642,11 @@ public sealed class LocalStore
         target.CompanionBoxRight = value.CompanionBoxRight;
         target.CompanionBoxBottom = value.CompanionBoxBottom;
         target.CompanionSize = value.CompanionSize;
+        target.CompanionBodyMotionStrength = value.CompanionBodyMotionStrength;
+        target.CompanionMotionReactions = value.CompanionMotionReactions;
+        target.CompanionSceneScale = value.CompanionSceneScale;
+        target.CompanionHomeSize = value.CompanionHomeSize;
+        target.CompanionHandSize = value.CompanionHandSize;
         target.WikiInGame = value.WikiInGame;
         target.BrowserInterceptLinks = value.BrowserInterceptLinks;
         target.WikiOverlayName = value.WikiOverlayName;
@@ -744,6 +768,11 @@ public sealed class LocalStore
         public float CompanionBoxRight = .95f;
         public float CompanionBoxBottom = .92f;
         public float CompanionSize = 96f;
+        public float CompanionBodyMotionStrength = 1f;
+        public bool CompanionMotionReactions = true;
+        public float CompanionSceneScale = 1f;
+        public float CompanionHomeSize = 124.8f;
+        public float CompanionHandSize = 38.4f;
         public bool WikiInGame = true;
         public bool BrowserInterceptLinks = false;
         public string WikiOverlayName = "omnikit";
@@ -854,6 +883,11 @@ public sealed class LocalStore
             CompanionBoxRight = value.CompanionBoxRight,
             CompanionBoxBottom = value.CompanionBoxBottom,
             CompanionSize = value.CompanionSize,
+            CompanionBodyMotionStrength = value.CompanionBodyMotionStrength,
+            CompanionMotionReactions = value.CompanionMotionReactions,
+            CompanionSceneScale = value.CompanionSceneScale,
+            CompanionHomeSize = value.CompanionHomeSize,
+            CompanionHandSize = value.CompanionHandSize,
             WikiInGame = value.WikiInGame,
             BrowserInterceptLinks = value.BrowserInterceptLinks,
             WikiOverlayName = value.WikiOverlayName,

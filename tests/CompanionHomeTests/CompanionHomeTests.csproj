@@ -18,6 +18,8 @@
     <Compile Include="../../src/OmniKit/Ui/CompanionRotation.cs" Link="CompanionRotation.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeRoutine.cs" Link="CompanionHomeRoutine.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHomePoseLibrary.cs" Link="CompanionHomePoseLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHomePoseScale.cs" Link="CompanionHomePoseScale.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionNapArtwork.cs" Link="CompanionNapArtwork.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeRenderer.cs" Link="CompanionHomeRenderer.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHomeStyleLibrary.cs" Link="CompanionHomeStyleLibrary.cs" />

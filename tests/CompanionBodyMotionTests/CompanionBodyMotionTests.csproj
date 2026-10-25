@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/OmniKit/Ui/CompanionBodyMotion.cs" Link="CompanionBodyMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionMotionProfiles.cs" Link="CompanionMotionProfiles.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionWardrobeLibrary.cs" Link="CompanionWardrobeLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionBlinkLibrary.cs" Link="CompanionBlinkLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionHolidayLibrary.cs" Link="CompanionHolidayLibrary.cs" />

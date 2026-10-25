@@ -28,6 +28,18 @@ internal sealed class CompanionPhysics
     private CompanionSurface hopTarget;
     private Vector2 hopSize;
     private bool returningHome;
+    private readonly List<HopFailure> hopFailures = [];
+    private HopExcursion? hopExcursion;
+    private float hopClock;
+    private Vector2 stableGoal;
+    private bool hasStableGoal;
+    private Vector2 routeSize;
+    private Vector2 routeViewportMinimum;
+    private Vector2 routeViewportMaximum;
+    private CompanionLayout? routeArea;
+    private readonly record struct HopExcursion(CompanionSurface Target, Vector2 Start, Vector2? Goal);
+    private readonly record struct HopFailure(CompanionSurface Target, Vector2 Position, float GoalDistance, int Count, float Until);
+
 
     public CompanionPlacement Placement { get; private set; }
     public bool Active => Placement != CompanionPlacement.None;
@@ -51,6 +63,7 @@ internal sealed class CompanionPhysics
         perchTurnPending = false;
         Pose = CompanionPose.Idle;
         returningHome = false;
+        ClearHopMemory();
         NavigationStatus = CompanionNavigationStatus.None;
     }
 
@@ -65,6 +78,7 @@ internal sealed class CompanionPhysics
     public void PickUp(Vector2 position, Vector2 pointer, bool facingLeft)
     {
         returningHome = false;
+        ClearHopMemory();
         Position = position;
         grabOffset = pointer - position;
         carryPointer = pointer;
@@ -163,6 +177,11 @@ internal sealed class CompanionPhysics
         ClipMinimum = viewportMinimum;
         ClipMaximum = viewportMaximum;
         var dt = float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
+        // The motion waypoint wanders inside the saved area. Its fixed center,
+        // not each tiny waypoint, is the meaningful destination for return progress.
+        var recoveryGoal = navigationGoal ?? (roamingArea is { IsVisible: true } recoveryArea
+            ? (recoveryArea.Minimum + recoveryArea.LastPosition) * .5f : returningHome ? homePosition : null);
+        UpdateHopMemory(surfaces, viewportMinimum, viewportMaximum, size, animate ? dt : 0, options.Grounded, recoveryGoal, roamingArea);
         CompanionSurface? attached = null;
         if (Placement is CompanionPlacement.Perched or CompanionPlacement.Contained)
         {
@@ -204,7 +223,7 @@ internal sealed class CompanionPhysics
         {
             var target = surfaces.FirstOrDefault(candidate => candidate.Id == hopTarget.Id);
             if (!options.Grounded || !options.AutoHop || !options.Fall || target.Id != hopTarget.Id
-                || target.Minimum != hopTarget.Minimum || target.Maximum != hopTarget.Maximum || hopSize != size
+                || !SameRouteSurface(target, hopTarget, size) || hopSize != size
                 || Clamp(hop.End, viewportMinimum, viewportMaximum, size) != hop.End)
                 BeginBallisticFall();
         }
@@ -402,7 +421,7 @@ internal sealed class CompanionPhysics
         CompanionSurface? best = null; CompanionHop bestHop = default;
         foreach (var target in surfaces)
         {
-            if (target.Id == surfaceId || target.Id == 0 || onlyTarget.HasValue && target.Id != onlyTarget
+            if (HopSuppressed(target, size) || target.Id == surfaceId || target.Id == 0 || onlyTarget.HasValue && target.Id != onlyTarget
                 || !options.Perch && target.Id != RoamingPlaneId) continue;
             if (!CompanionHop.TryCreate(Position, size, direction > 0, target, minimum, maximum, obstacle, out var planned)) continue;
             if (confinement is { } area && (Math.Min(planned.Start.X, planned.End.X) < area.Minimum.X
@@ -413,6 +432,7 @@ internal sealed class CompanionPhysics
             { best = target; bestHop = planned; }
         }
         if (best == null) return false;
+        hopExcursion = new(best.Value, Position, hasStableGoal ? stableGoal : null);
         hop = bestHop; hopTarget = best.Value; hopSize = size; hopTime = 0; velocity = hop.VelocityAt(0);
         surfaceId = 0; Placement = CompanionPlacement.Jumping; Pose = CompanionPose.Fall;
         return true;
@@ -451,7 +471,7 @@ internal sealed class CompanionPhysics
         foreach (var candidate in surfaces)
         {
             var rise = foot.Y - candidate.Minimum.Y;
-            if (candidate.Id == 0 || candidate.Id == support?.Id || rise <= 0 || rise > size.Y * CompanionHop.MaximumRise + .001f
+            if (HopSuppressed(candidate, size) || candidate.Id == 0 || candidate.Id == support?.Id || rise <= 0 || rise > size.Y * CompanionHop.MaximumRise + .001f
                 || candidate.Minimum.Y < destinationFoot.Y - .01f || !options.Perch && candidate.Id != RoamingPlaneId) continue;
             var leftApproach = candidate.Minimum.X - size.X * .85f;
             var rightApproach = candidate.Maximum.X - size.X * .15f;
@@ -469,6 +489,12 @@ internal sealed class CompanionPhysics
                 var score = Math.Abs(candidate.Minimum.Y - destinationFoot.Y) * 2 + Math.Abs(Position.X - targetX);
                 if (score < bestScore) { route = candidate; approach = targetX; bestScore = score; }
             }
+        }
+        if (route == null && destinationFoot.Y < foot.Y - .01f)
+        {
+            // Walking underneath an unreachable higher goal is not progress.
+            // Keep the actual support while a failed route cools down or changes.
+            Pose = CompanionPose.Idle; NavigationStatus = CompanionNavigationStatus.Blocked; return;
         }
         if (route is { } next && Math.Abs(Position.X - approach) <= size.X * .2f)
         {
@@ -498,6 +524,80 @@ internal sealed class CompanionPhysics
         if (Math.Abs(delta) > .0001f) direction = Math.Sign(delta);
         Pose = Math.Abs(delta) > .0001f ? CompanionPose.Walk : CompanionPose.Idle;
         if (Pose == CompanionPose.Idle) NavigationStatus = CompanionNavigationStatus.Blocked;
+    }
+
+    private void ClearHopMemory()
+    {
+        hopFailures.Clear(); hopExcursion = null; hasStableGoal = false;
+    }
+
+    private static bool SameRouteSurface(CompanionSurface first, CompanionSurface second, Vector2 size)
+    {
+        // A few pixels of observation jitter is not a new ledge. A moved/reused ID is.
+        var tolerance = Math.Max(4, size.Y * .1f);
+        return first.Id == second.Id && Vector2.DistanceSquared(first.Minimum, second.Minimum) <= tolerance * tolerance
+            && Vector2.DistanceSquared(first.Maximum, second.Maximum) <= tolerance * tolerance;
+    }
+
+    private bool HopSuppressed(CompanionSurface target, Vector2 size)
+        => hopFailures.Any(failure => (failure.Count >= 3 || hopClock < failure.Until) && SameRouteSurface(failure.Target, target, size));
+
+    private void UpdateHopMemory(IReadOnlyList<CompanionSurface> surfaces, Vector2 minimum, Vector2 maximum,
+        Vector2 size, float dt, bool grounded, Vector2? goal, CompanionLayout? area)
+    {
+        hopClock += dt;
+        var materiallyChanged = Vector2.DistanceSquared(routeSize, size) > 1
+            || Vector2.DistanceSquared(routeViewportMinimum, minimum) > 16
+            || Vector2.DistanceSquared(routeViewportMaximum, maximum) > 16
+            || area.HasValue != routeArea.HasValue
+            || area is { } nextArea && routeArea is { } previousArea
+                && (Vector2.DistanceSquared(nextArea.Minimum, previousArea.Minimum) > size.Y * size.Y * .0625f
+                    || Vector2.DistanceSquared(nextArea.Maximum, previousArea.Maximum) > size.Y * size.Y * .0625f)
+            || goal.HasValue != hasStableGoal
+            || goal is { } destination && Vector2.DistanceSquared(destination, stableGoal) > size.Y * size.Y * .5625f;
+        if (!grounded || materiallyChanged)
+        {
+            ClearHopMemory();
+            routeSize = size; routeViewportMinimum = minimum; routeViewportMaximum = maximum; routeArea = area;
+            if (goal is { } destinationGoal) { stableGoal = destinationGoal; hasStableGoal = true; }
+        }
+        if (!grounded) return;
+        var foot = Position + size * new Vector2(.5f, .9f);
+        CompanionSurface? currentSupport = null;
+        foreach (var candidate in surfaces)
+            if (Finite(candidate.Minimum) && Finite(candidate.Maximum) && candidate.Size.Y > 0
+                && Math.Abs(candidate.Minimum.Y - foot.Y) <= .01f && foot.X >= candidate.Minimum.X && foot.X <= candidate.Maximum.X
+                && (currentSupport == null || candidate.Order > currentSupport.Value.Order)) currentSupport = candidate;
+        var supported = Placement is (CompanionPlacement.Perched or CompanionPlacement.Floor or CompanionPlacement.Returning)
+            && (currentSupport.HasValue || Math.Abs(foot.Y - (maximum.Y - size.Y * .1f)) <= .01f);
+        for (var i = hopFailures.Count - 1; i >= 0; i--)
+        {
+            var failure = hopFailures[i];
+            var target = surfaces.FirstOrDefault(candidate => candidate.Id == failure.Target.Id);
+            var currentDistance = hasStableGoal ? Vector2.Distance(Position, stableGoal) : 0;
+            var progress = supported && currentSupport?.Id != failure.Target.Id && hasStableGoal
+                && currentDistance < failure.GoalDistance - size.Y * .75f;
+            if (!SameRouteSurface(failure.Target, target, size)) hopFailures.RemoveAt(i);
+            else if (progress) hopFailures[i] = failure with { Count = 0, Until = hopClock, GoalDistance = currentDistance };
+            // Walking away and back is not a new route. Three failed excursions
+            // stay quarantined until observed progress or an actual scene change.
+        }
+        if (hopExcursion is not { } excursion) return;
+        var observed = surfaces.FirstOrDefault(candidate => candidate.Id == excursion.Target.Id);
+        if (!SameRouteSurface(excursion.Target, observed, size)) { hopExcursion = null; return; }
+        // A temporary gain in height during the jump is not route progress. Judge
+        // only after settling back on its departure plane (or a lower support).
+        if (!supported || surfaceId == excursion.Target.Id || Position.Y < excursion.Start.Y - size.Y * .1f) return;
+        hopExcursion = null;
+        if (excursion.Goal is { } targetGoal && Vector2.Distance(Position, targetGoal)
+            < Vector2.Distance(excursion.Start, targetGoal) - size.Y * .75f) return;
+        var index = hopFailures.FindIndex(failure => SameRouteSurface(failure.Target, excursion.Target, size));
+        var count = index >= 0 ? Math.Min(4, hopFailures[index].Count + 1) : 1;
+        var until = hopClock + Math.Min(30, 5 * (1 << (count - 1)));
+        var distance = hasStableGoal ? Vector2.Distance(Position, stableGoal) : 0;
+        var remembered = new HopFailure(excursion.Target, Position, distance, count, until);
+        if (index >= 0) hopFailures[index] = remembered;
+        else { if (hopFailures.Count == 4) hopFailures.RemoveAt(0); hopFailures.Add(remembered); }
     }
 
     private static CompanionSurface? CrossedSurface(IReadOnlyList<CompanionSurface> surfaces, Vector2 previous,

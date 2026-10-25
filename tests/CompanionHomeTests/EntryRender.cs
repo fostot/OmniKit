@@ -85,7 +85,7 @@ internal static class EntryRender
             routine.Update(.025f, true, false, start, style.Mirrored, layout, house, style.Mirrored, 15, 5,
                 layout.Minimum, layout.Maximum, styleFrame: style, navigator: Navigate);
             if (stage == 0 && routine.State == CompanionHomeState.Approaching && Vector2.Distance(routine.Position, outside) < layout.SpriteSize.X * .3f) return routine;
-            if (stage is >= 1 and <= 4 && routine.State == CompanionHomeState.Entering && routine.SleepPhase >= new[] { 0f, .025f, .3f, .7f, 1.2f }[stage]) return routine;
+            if (stage is >= 1 and <= 4 && routine.State == CompanionHomeState.Entering && routine.SleepPhase >= new[] { 0f, .025f, .4f, .95f, 1.7f }[stage]) return routine;
             if (stage == 5 && routine.Sleeping) return routine;
         }
         throw new InvalidOperationException("The grounded synthetic approach could not reach its entry sample.");

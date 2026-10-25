@@ -81,7 +81,8 @@ internal static class StyleDrawChecks
                 for (var p = 0; p < 4; p++)
                 {
                     var at = new Vector2(p * cell.X, h * cell.Y); var center = at + new Vector2(cell.X * .5f, edge + 50);
-                    Set(config, "CompanionHandStyle", hands[h]); Set(config, "CompanionGrabHandScale", 1f);
+                    Set(config, "CompanionHandStyle", hands[h]); Set(config, "CompanionHandSize", edge); Set(config, "CompanionSceneScale", 2f);
+                    Set(config, "CompanionSize", edge == 96 ? 192f : 48f);
                     var selection = Field(companion, "styleSelection"); var hand = Call(selection, "BeginPickup", hands[h])!;
                     var pose = Enum.ToObject(f.Type("Ui.CompanionHandPose"), p); var metadata = Call(hand, "Pose", pose)!;
                     var time = p switch { 0 => 1f, 1 => .1f, 2 => .3f, _ => .05f };
@@ -90,7 +91,7 @@ internal static class StyleDrawChecks
                     draw.AddText(at + new Vector2(7, 5), 0xFFFFFFFF, hands[h] + " / " + pose);
                     draw.AddCircleFilled(center, edge * .25f, 0xFFB5CBAE, 32);
                     var first = draw.VtxBuffer.Size;
-                    Call(companion, "DrawGrabHand", draw, Vector2.Zero, io.DisplaySize, new Vector2(edge), 0f, dragging,
+                    Call(companion, "DrawGrabHand", draw, Vector2.Zero, io.DisplaySize, .5f, 0f, dragging,
                         p == 0 ? center : null, dragging ? center : null);
                     f.Check(draw.VtxBuffer.Size - first == 4 && requestedTexture == (string)Get(metadata, "File"),
                         "Actual hand cue uses the selected pose and texture.");
@@ -130,13 +131,14 @@ internal static class StyleDrawChecks
             Call(companion, "UpdateHomeStyle", box, Vector2.Zero, io.DisplaySize);
             f.Check((string)Get(Get(Field(companion, "homeStyleFrame"), "Style"), "Id") == "LanternHut", "Pending house choice applies once the companion is outside.");
 
-            Set(config, "CompanionHandStyle", "Random"); Set(companion, "handWasDragging", false);
+            Set(config, "CompanionHandStyle", "Random"); Set(config, "CompanionHandSize", 38.4f); Set(config, "CompanionSceneScale", 1f);
+            Set(companion, "handWasDragging", false);
             object? selectedHand = null;
             for (var tick = 0; tick < 25; tick++)
             {
                 ImGui.NewFrame();
                 Call(companion, "DrawGrabHand", ImGui.GetForegroundDrawList(), Vector2.Zero, io.DisplaySize,
-                    new Vector2(96), .016f, tick < 20, null, new Vector2(320, 220));
+                    1f, .016f, tick < 20, null, new Vector2(320, 220));
                 var current = Get(Field(companion, "styleSelection"), "CurrentHand"); selectedHand ??= current;
                 f.Check(ReferenceEquals(selectedHand, current), "Actual random hand stays fixed through one pickup, hold and release.");
                 ImGui.Render();

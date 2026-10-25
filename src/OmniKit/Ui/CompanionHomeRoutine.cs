@@ -21,9 +21,10 @@ internal static class CompanionHomeGeometry
             new(.852996f, .682081f), new(.863166f, .856395f)]);
 
     public static CompanionHomeRect Bounds(CompanionLayout layout, Vector2 viewportPosition,
-        Vector2 viewportSize, Vector2 anchor)
+        Vector2 viewportSize, Vector2 anchor, float? explicitEdge = null)
     {
-        var edge = Math.Max(0, Math.Min(Math.Min(viewportSize.X, viewportSize.Y), layout.SpriteSize.Y * 1.3f));
+        var desiredEdge = explicitEdge is { } supplied && float.IsFinite(supplied) ? Math.Max(0, supplied) : layout.SpriteSize.Y * 1.3f;
+        var edge = Math.Max(0, Math.Min(Math.Min(viewportSize.X, viewportSize.Y), desiredEdge));
         if (!float.IsFinite(anchor.X) || !float.IsFinite(anchor.Y)) anchor = new(.835f, .92f);
         var desired = viewportPosition + Vector2.Clamp(anchor, Vector2.Zero, Vector2.One) * viewportSize
             - new Vector2(edge * .5f, edge);
@@ -82,9 +83,11 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     private float travelStallTime;
     internal const float NavigationStallSeconds = 8;
     internal const float NavigationTimeoutSeconds = 120;
-    internal const float IndoorScale = .558f;
-    internal const float EntryShrinkSeconds = .6f;
-    internal const float EntryTravelSeconds = .8f;
+    internal const float IndoorScale = .45f;
+    internal const float EntryShrinkSeconds = .75f;
+    internal const float EntryTurnSeconds = .35f;
+    internal const float EntryTravelSeconds = 1.1f;
+    private float indoorScale = IndoorScale;
     public CompanionHomeState State { get; private set; }
     public bool Active => State != CompanionHomeState.Roaming;
     public bool UsesNapArt => State is CompanionHomeState.Entering or CompanionHomeState.Settling
@@ -100,6 +103,34 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     public CompanionPose TravelPose { get; private set; } = CompanionPose.Idle;
     public float ArtScale { get; private set; } = 1;
     public float SleepPhase => stateTime;
+    public float TargetIndoorScale => indoorScale;
+    public float EntryTurn => State == CompanionHomeState.Entering
+        ? Smooth((stateTime - EntryShrinkSeconds) / EntryTurnSeconds) : 0;
+    public float EntryClimb => State == CompanionHomeState.Entering
+        ? Math.Clamp((stateTime - EntryShrinkSeconds - EntryTurnSeconds) / EntryTravelSeconds, 0, 1) : 0;
+    // The connected image moves as one body. Its logical doorway lane never sways into a wall.
+    public Vector2 ArtOffset => State switch
+    {
+        CompanionHomeState.Entering => new(0, -Math.Abs(MathF.Sin(EntryClimb * MathF.Tau * 2)) * .035f),
+        CompanionHomeState.Settling => new(MathF.Sin(stateTime * MathF.Tau * 2) * MathF.Exp(-stateTime * 5) * .018f, 0),
+        _ => Vector2.Zero
+    };
+    public float ArtRotation => State switch
+    {
+        CompanionHomeState.Entering => MathF.Sin(EntryClimb * MathF.Tau * 2) * .035f,
+        CompanionHomeState.Settling => MathF.Sin(stateTime * MathF.Tau * 2) * MathF.Exp(-stateTime * 5) * .045f,
+        _ => 0
+    };
+    public Vector2 ArtStretch
+    {
+        get
+        {
+            var compression = State == CompanionHomeState.Entering ? MathF.Sin(EntryClimb * MathF.Tau * 2) * .014f
+                : Sleeping ? MathF.Sin(stateTime * MathF.Tau / 3.2f) * .012f : 0;
+            var turnWidth = State == CompanionHomeState.Entering ? 1 - .88f * MathF.Sin(EntryTurn * MathF.PI) : 1;
+            return new((1 + compression) * turnWidth, 1 - compression);
+        }
+    }
     public int ArtFrame => State switch
     {
         CompanionHomeState.Entering or CompanionHomeState.Leaving => 0,
@@ -125,6 +156,8 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
         this.viewportMinimum = viewportMinimum; this.viewportMaximum = viewportMaximum;
         this.navigator = navigator; restartInterval = Safe(interval, 15, 300, 45);
         if (styleFrame is { } fitted) { house = new(fitted.Minimum, fitted.Maximum); facesLeft = fitted.Mirrored; }
+        var oldSpriteSize = spriteSize;
+        var resized = Active && oldSpriteSize != layout.SpriteSize && oldSpriteSize.Y > 0 && layout.SpriteSize.Y > 0;
         spriteSize = layout.SpriteSize; houseAvailable = houseVisible;
         var dt = float.IsFinite(elapsed) ? Math.Clamp(elapsed, 0, .05f) : 0;
         if (!layout.IsVisible || !enabled && !Active)
@@ -132,9 +165,15 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
             if (Active || awakeRemaining <= 0) Reset(interval);
             return;
         }
-        if (paused) return;
+        if (paused) { spriteSize = oldSpriteSize; return; }
+        if (resized && UsesNapArt)
+        {
+            // Preserve the painted support point and pixel size for the safe exit.
+            Position += (oldSpriteSize - spriteSize) * new Vector2(.5f, .9f);
+            ArtScale *= oldSpriteSize.Y / spriteSize.Y;
+        }
         if (Active && !cancellationPending && (!enabled || house.Minimum != lastHouseMinimum || house.Maximum != lastHouseMaximum
-            || styleFrame != lastStyleFrame))
+            || styleFrame != lastStyleFrame || resized))
         {
             cancellationPending = true;
             if (UsesNapArt)
@@ -167,7 +206,11 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
             {
                 if (approachLeg++ == 0) return;
                 entryStart = Position; FacingLeft = !facesLeft;
-                entryThresholdY = (styleFrame ?? CompanionHomeGeometry.DefaultStyle.Place(house.Minimum, house.Maximum, facesLeft)).Threshold.Y;
+                var fittedEntry = styleFrame ?? CompanionHomeGeometry.DefaultStyle.Place(house.Minimum, house.Maximum, facesLeft);
+                entryThresholdY = fittedEntry.Threshold.Y;
+                var opening = fittedEntry.OpeningMaximum - fittedEntry.OpeningMinimum;
+                indoorScale = Math.Max(.001f, Math.Min(IndoorScale,
+                    Math.Min(opening.X * .78f / spriteSize.X, opening.Y * .75f / spriteSize.Y)));
                 TravelPose = CompanionPose.Idle;
                 SetState(CompanionHomeState.Entering);
             }
@@ -176,14 +219,14 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
         {
             // Become small at the visible threshold before passing behind its
             // arch. Masking a full-size visitor here cuts its face through a wall.
-            ArtScale = float.Lerp(1, IndoorScale, Smooth(stateTime / EntryShrinkSeconds));
-            var travel = Smooth((stateTime - EntryShrinkSeconds) / EntryTravelSeconds);
+            ArtScale = float.Lerp(1, indoorScale, Smooth(stateTime / EntryShrinkSeconds));
+            var travel = Smooth(EntryClimb);
             Position = Vector2.Lerp(entryStart, door, travel);
-            if (stateTime >= EntryShrinkSeconds + EntryTravelSeconds) SetState(CompanionHomeState.Settling);
+            if (stateTime >= EntryShrinkSeconds + EntryTurnSeconds + EntryTravelSeconds) SetState(CompanionHomeState.Settling);
         }
         else if (State == CompanionHomeState.Settling)
         {
-            if (stateTime >= .7f) SetState(CompanionHomeState.Sleeping);
+            if (stateTime >= .95f) SetState(CompanionHomeState.Sleeping);
         }
         else if (State == CompanionHomeState.Sleeping)
         {

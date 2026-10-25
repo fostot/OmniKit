@@ -23,7 +23,7 @@ internal readonly record struct CompanionLayout(Vector2 Minimum, Vector2 Maximum
         var min = viewportPosition + Vector2.Min(a, b) * viewportSize;
         var max = viewportPosition + Vector2.Max(a, b) * viewportSize;
         var size = Math.Clamp(float.IsFinite(logicalSize) ? logicalSize : 96f, 48f, 192f)
-            * Math.Clamp(float.IsFinite(scale) ? scale : 1f, .25f, 4f);
+            * Math.Clamp(float.IsFinite(scale) ? scale : 1f, .125f, 8f);
         aspect = float.IsFinite(aspect) && aspect > 0 ? aspect : 1f;
         var sprite = aspect >= 1 ? new Vector2(size, size / aspect) : new Vector2(size * aspect, size);
         var room = max - min;

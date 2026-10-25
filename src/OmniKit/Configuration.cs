@@ -15,7 +15,7 @@ public sealed class Configuration : IPluginConfiguration
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 12;
+    public int Version { get; set; } = 13;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism", "Nib", "Echo", "Fizz", "Glim", "Rune" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
@@ -122,6 +122,11 @@ public sealed class Configuration : IPluginConfiguration
     public float CompanionBoxRight = .95f;
     public float CompanionBoxBottom = .92f;
     public float CompanionSize = 96f;
+    public float CompanionBodyMotionStrength = 1f;
+    public bool CompanionMotionReactions = true;
+    public float CompanionSceneScale = 1f;
+    public float CompanionHomeSize = 124.8f;
+    public float CompanionHandSize = 38.4f;
     public bool VoiceEnabled = false;
     public bool AiEnabled = false;
     public AiConnectionKind AiConnection = AiConnectionKind.ApiKey;

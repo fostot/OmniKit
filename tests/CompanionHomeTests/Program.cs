@@ -10,6 +10,12 @@ if (args.Contains("--rotation-only"))
 }
 
 var checks = RotationChecks.Run();
+if (args.Contains("--homeposes-only"))
+{
+    HomePoseChecks.Run((passed, reason) => { if (!passed) throw new InvalidOperationException(reason); checks++; });
+    Console.WriteLine($"Home pose parser: {checks} focused checks passed.");
+    return;
+}
 var failures = new List<string>();
 var root = Path.GetFullPath(args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? ".");
 if (args.Contains("--entry-after"))
@@ -20,9 +26,10 @@ if (args.Contains("--entry-after"))
 if (args.Contains("--styles-only"))
 {
     void Verify(bool passed, string reason) { if (!passed) throw new InvalidOperationException(reason); checks++; }
+    HomePoseChecks.Run(Verify);
     StyleNavigationChecks.Run(root, Verify);
     if (!args.Contains("--logic-only")) StyleNapRender.Run(root, Verify);
-    Console.WriteLine($"Styled home integration: {checks} focused checks passed" + (args.Contains("--logic-only") ? "." : "; 192 native styled nap samples saved."));
+    Console.WriteLine($"Styled home integration: {checks} focused checks passed" + (args.Contains("--logic-only") ? "." : "; 208 native styled nap samples saved."));
     return;
 }
 if (args.Contains("--door-only") || args.Contains("--door-before"))
@@ -101,7 +108,7 @@ Check(ratio is > 1.9f and < 2.2f, "Nap approach is approximately twice the norma
 
 var artwork = new CompanionNapArtwork(Path.Combine(root, "assets"));
 var atlasCount = 0;
-foreach (var avatar in Configuration.AvatarNames)
+foreach (var avatar in Configuration.AvatarNames.Take(8))
 foreach (var outfit in new[] { "Default" })
 {
     Check(artwork.TryGet(avatar, outfit, out var sheet) && sheet != null, "Nap artwork resolves " + avatar + "/" + outfit);

@@ -65,6 +65,36 @@ internal static class StyleNavigationChecks
             check(Vector2.Distance(routine.Position, start) < .1f, "Styled routine returns to the caller's original point: " + id);
         }
 
+        foreach (var id in CompanionHomeStyleLibrary.HomeIds.Where(id => id != "Random"))
+        foreach (var companionEdge in new[] { 96f, 192f })
+        foreach (var homeEdge in new[] { 48f, 384f })
+        {
+            var independentLayout = new CompanionLayout(Vector2.Zero, new(1500, 1000), new(companionEdge));
+            var independentHome = CompanionHomeGeometry.Bounds(independentLayout, Vector2.Zero, new(1500, 1000), new(.65f, .6f), homeEdge);
+            check(Vector2.Distance(independentHome.Size, new(homeEdge)) < .001f, "Explicit home size is independent of companion size.");
+            var frame = library.GetHome(id).Place(independentHome.Minimum, independentHome.Maximum, false);
+            var visitor = Sample(independentLayout, independentHome, frame, CompanionHomeState.Entering, 0);
+            var thresholdPosition = visitor.Position;
+            for (var i = 0; i < 15; i++) visitor.Update(.05f, true, false, visitor.Position, false,
+                independentLayout, independentHome, false, 15, 5, Vector2.Zero, independentLayout.Maximum, styleFrame: frame);
+            check(visitor.Position == thresholdPosition && visitor.ArtScale <= CompanionHomeRoutine.IndoorScale + .001f,
+                "Full shrinking completes outside before turning or crossing.");
+            var aperture = frame.OpeningMaximum - frame.OpeningMinimum;
+            check(visitor.ArtScale * companionEdge <= aperture.X * .78f + .001f
+                && visitor.ArtScale * companionEdge <= aperture.Y * .75f + .001f,
+                "Even a large companion fits the independently smallest measured opening.");
+            var oldSupport = visitor.Position + independentLayout.SpriteSize * new Vector2(.5f, .9f);
+            var resized = independentLayout with { SpriteSize = independentLayout.SpriteSize * .75f };
+            visitor.Update(.01f, true, true, visitor.Position, false, resized, independentHome, false, 15, 5,
+                Vector2.Zero, independentLayout.Maximum, styleFrame: frame);
+            visitor.Update(.01f, true, false, visitor.Position, false, resized, independentHome, false, 15, 5,
+                Vector2.Zero, independentLayout.Maximum, styleFrame: frame);
+            check(visitor.State == CompanionHomeState.Leaving && visitor.InFrontOfHome,
+                "Resize after a paused shrink cancels into the safe foreground exit.");
+            check(Vector2.Distance(oldSupport, visitor.Position + resized.SpriteSize * new Vector2(.5f, .9f)) < companionEdge * .01f,
+                "Resize preserves the drawn support point before safe exit.");
+        }
+
         var box = new CompanionLayout(new(20), new(700, 600), new(96));
         var bounds = new CompanionHomeRect(new(450, 150), new(575, 275));
         var fitted = library.GetHome("LanternHut").Place(bounds.Minimum, bounds.Maximum, false);

@@ -21,7 +21,7 @@ internal static class StyleNapRender
             unsafe { io.IniFilename = null; io.LogFilename = null; }
             io.Fonts.AddFontDefault(); io.Fonts.Build(); var renderer = new SoftwareRenderer();
             var textures = new Dictionary<string, ulong>();
-            foreach (var file in new[] { "homes-standard.png", "homes-holiday.png", nap.File })
+            foreach (var file in new[] { "companion-house.png", "homes-standard.png", "homes-holiday.png", nap.File })
             {
                 var id = (ulong)textures.Count + 2;
                 using var image = new Bitmap(Path.Combine(directory, file));
@@ -39,9 +39,9 @@ internal static class StyleNapRender
                 var gutter = edge * .12f + 12;
                 var tile = new Vector2(edge + gutter * 2, edge + spriteSize.Y + 30);
                 var card = new Vector2(tile.X * 2 + 12, tile.Y * 2 + 35);
-                io.DisplaySize = new(card.X * 3, card.Y * 4);
+                io.DisplaySize = new(card.X * 3, card.Y * 5);
                 ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList(); var row = 0;
-                foreach (var id in CompanionHomeStyleLibrary.HomeIds.Where(id => id is not ("Default" or "Random")))
+                foreach (var id in CompanionHomeStyleLibrary.HomeIds.Where(id => id != "Random"))
                 {
                     var cardTop = new Vector2(row % 3 * card.X, row / 3 * card.Y);
                     draw.AddText(cardTop + new Vector2(8, 4), 0xFFFFFFFF, id + (mirrored ? " / left" : " / right"));
@@ -52,7 +52,7 @@ internal static class StyleNapRender
                         var house = new CompanionHomeRect(top + new Vector2(gutter, 12), top + new Vector2(gutter + edge, 12 + edge));
                         var style = styles.GetHome(id).Place(house.Minimum, house.Maximum, mirrored);
                         var state = stage < 2 ? CompanionHomeState.Entering : stage == 2 ? CompanionHomeState.Sleeping : CompanionHomeState.Leaving;
-                        var time = stage switch { 0 => .3f, 1 => 1f, 2 => .5f, _ => .7f };
+                        var time = stage switch { 0 => .3f, 1 => 1.7f, 2 => .5f, _ => .7f };
                         var routine = StyleNavigationChecks.Sample(layout, house, style, state, time);
                         draw.PushClipRect(top, top + tile, true);
                         var texture = new ImTextureID(textures[style.File]);
@@ -65,7 +65,7 @@ internal static class StyleNapRender
                         check(Math.Abs(routine.Position.X - style.BedPosition(spriteSize).X) < .01f,
                             $"Actual front door lane: {id}, {edge}, mirrored={mirrored}, stage={stage}, actual={routine.Position.X}, expected={style.BedPosition(spriteSize).X}.");
                         if (routine.Sleeping) CompanionHomeRenderer.DrawZs(draw, house, mirrored, routine.SleepPhase, top, tile, style);
-                        draw.AddText(top + new Vector2(12, tile.Y - 16), 0xFFB3C1D0, stage switch { 0 => "Enter .30", 1 => "Enter 1.00", 2 => "Sleep", _ => "Leave .70" });
+                        draw.AddText(top + new Vector2(12, tile.Y - 16), 0xFFB3C1D0, stage switch { 0 => "Shrink .30", 1 => "Climb 1.70", 2 => "Sleep", _ => "Leave .70" });
                         draw.PopClipRect();
                     }
                     row++;

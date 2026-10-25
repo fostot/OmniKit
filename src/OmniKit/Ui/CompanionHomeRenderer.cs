@@ -19,22 +19,32 @@ internal static class CompanionHomeRenderer
         CompanionHomeStyleFrame? styleFrame = null)
     {
         var frame = sheet.Frame(routine.ArtFrame, routine.Position, spriteSize, routine.ArtScale, routine.FacingLeft);
-        var bounds = (Minimum: frame.Position, Maximum: frame.Position + frame.Size);
-        if (routine.Sleeping)
-        {
-            var blend = (1 - MathF.Cos(routine.SleepPhase * MathF.Tau / 3.2f)) * .5f;
-            draw.AddImage(texture, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd,
-                ((uint)((1 - blend) * 255) << 24) | (tint & 0xFFFFFFu));
-            var other = sheet.Frame(3, routine.Position, spriteSize, routine.ArtScale, routine.FacingLeft);
-            draw.AddImage(texture, other.Position, other.Position + other.Size, other.UvStart, other.UvEnd,
-                ((uint)(blend * 255) << 24) | (tint & 0xFFFFFFu));
-            bounds = (Vector2.Min(bounds.Minimum, other.Position), Vector2.Max(bounds.Maximum, other.Position + other.Size));
-        }
-        else draw.AddImage(texture, frame.Position, frame.Position + frame.Size, frame.UvStart, frame.UvEnd, tint);
+        var bounds = DrawBody(draw, texture, frame, routine, spriteSize, tint);
 
         if (!showHouse || routine.InFrontOfHome) return bounds;
         DrawHouseWalls(draw, houseTexture, house, houseMirrored, styleFrame);
         return bounds;
+    }
+
+    public static Vector2 BodyPoint(Vector2 point, CompanionHomeRoutine routine, Vector2 spriteSize)
+    {
+        var anchor = routine.Position + spriteSize * new Vector2(.5f, .9f);
+        var relative = (point - anchor) * routine.ArtStretch;
+        var sine = MathF.Sin(routine.ArtRotation); var cosine = MathF.Cos(routine.ArtRotation);
+        return anchor + new Vector2(relative.X * cosine - relative.Y * sine, relative.X * sine + relative.Y * cosine)
+            + spriteSize * routine.ArtScale * routine.ArtOffset;
+    }
+
+    public static (Vector2 Minimum, Vector2 Maximum) DrawBody(ImDrawListPtr draw, ImTextureID texture,
+        CompanionFrame frame, CompanionHomeRoutine routine, Vector2 spriteSize, uint tint = 0xFFFFFFFFu)
+    {
+        var a = BodyPoint(frame.Position, routine, spriteSize);
+        var b = BodyPoint(frame.Position + new Vector2(frame.Size.X, 0), routine, spriteSize);
+        var c = BodyPoint(frame.Position + frame.Size, routine, spriteSize);
+        var d = BodyPoint(frame.Position + new Vector2(0, frame.Size.Y), routine, spriteSize);
+        draw.AddImageQuad(texture, a, b, c, d, frame.UvStart, new(frame.UvEnd.X, frame.UvStart.Y),
+            frame.UvEnd, new(frame.UvStart.X, frame.UvEnd.Y), tint);
+        return (Vector2.Min(Vector2.Min(a, b), Vector2.Min(c, d)), Vector2.Max(Vector2.Max(a, b), Vector2.Max(c, d)));
     }
 
     public static void DrawHouseWalls(ImDrawListPtr draw, ImTextureID houseTexture, CompanionHomeRect house, bool houseMirrored,

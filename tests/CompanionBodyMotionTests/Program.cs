@@ -70,6 +70,40 @@ foreach (var avatar in added)
     Check(frozen == running.Warp(avatar, new(32, 31), Vector2.Zero, size, .3f, false, true), "Disabled clock does not advance: " + avatar);
 }
 
+// Authored local reactions share the body support and attachment deformation.
+foreach (var avatar in supported)
+{
+    var motion = Motion(60, 2); var size = new Vector2(96); var p = new Vector2(32, 31);
+    var originalWarp = motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true);
+    motion.SetIntensity(1); motion.SetDynamics(0, 0, 0);
+    Check(originalWarp == motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true), "Default controls preserve exact authored motion: " + avatar);
+    motion.SetIntensity(.5f);
+    Check(Vector2.Distance(motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true), p + (originalWarp - p) * .5f) < .00001f,
+        "Strength applies to the complete final warp: " + avatar);
+    motion.SetIntensity(1); motion.SetDynamics(.04f, .03f, .025f);
+    var reaction = motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true);
+    var mirrored = motion.Warp(avatar, new(size.X - p.X, p.Y), Vector2.Zero, size, .3f, true, true);
+    if (added.Contains(avatar)) Check(Vector2.Distance(mirrored, new(size.X - reaction.X, reaction.Y)) < .001f, "Reaction facing stays mirrored: " + avatar);
+    motion.SetDynamics(99, 99, 99);
+    Check(reaction == motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true), "Reaction inputs are bounded: " + avatar);
+    Check(motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, false) == p, "Animation off bypasses reactions: " + avatar);
+    motion.SetIntensity(0);
+    Check(motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true) == p, "Zero body strength is exactly neutral: " + avatar);
+    motion.SetIntensity(float.NaN); motion.SetDynamics(float.NaN, float.PositiveInfinity, float.NegativeInfinity);
+    Check(originalWarp == motion.Warp(avatar, p, Vector2.Zero, size, .3f, false, true), "Non-finite controls return to safe defaults: " + avatar);
+}
+{
+    var orbit = Motion(60, 2); var center = new Vector2(100); var radius = 48f;
+    var baseline = orbit.OrbitMovement(center, radius, .3f, false, true);
+    orbit.SetIntensity(1); orbit.SetDynamics(0, 0, 0);
+    Check(baseline == orbit.OrbitMovement(center, radius, .3f, false, true), "Neutral Orbit is exactly the existing rigid travel.");
+    orbit.SetDynamics(.04f, .03f, .025f);
+    var reacted = orbit.OrbitMovement(center, radius, .3f, false, true);
+    Check(Math.Abs(reacted.GetDeterminant() - 1) < .00001f, "Orbit reactions preserve rigid scale for body, hat and rings.");
+    orbit.SetIntensity(0);
+    Check(orbit.OrbitMovement(center, radius, .3f, false, true) == Matrix3x2.Identity, "Zero intensity makes Orbit exactly neutral.");
+}
+
 var context = ImGui.CreateContext();
 try
 {

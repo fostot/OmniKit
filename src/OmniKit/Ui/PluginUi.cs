@@ -411,8 +411,15 @@ internal sealed class PluginUi : IDisposable
                 else if (new[] { "quest item", "item bar", "next action" }.Any(filter.Contains)) section = 6;
                 else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel", "emote", "soothe" }.Any(filter.Contains)) section = 1;
                 else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "effect", "intensity" }.Any(filter.Contains)) section = 2;
-                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab", "look", "holiday", "seasonal", "hat", "style", "ring", "hop", "flat surface" }.Any(filter.Contains))
-                { section = 3; companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0; }
+                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab", "look", "holiday", "seasonal", "hat", "style", "ring", "hop", "flat surface", "motion", "animation", "magic", "scene", "scale", "nap", "costume", "bow" }.Any(filter.Contains))
+                {
+                    section = 3;
+                    companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0;
+                    companionAppearanceSection = new[] { "holiday", "seasonal", "hat", "costume", "bow" }.Any(filter.Contains) ? 4
+                        : new[] { "home", "house", "nap", "comment" }.Any(filter.Contains) ? 3
+                        : new[] { "blink", "frame", "perch", "fall", "hop", "flat surface", "motion", "animation", "magic" }.Any(filter.Contains) ? 2
+                        : new[] { "size", "scale", "box", "hand", "grab", "pickup", "scene" }.Any(filter.Contains) ? 1 : 0;
+                }
                 else if (new[] { "data", "export", "import", "json", "source", "umbra", "wiki", "browser", "extension" }.Any(filter.Contains)) section = 4;
                 else if (new[] { "key", "shortcut", "launcher", "width", "height", "result count" }.Any(filter.Contains)) section = 0;
                 selectSettingsTab = true;
@@ -707,141 +714,191 @@ internal sealed class PluginUi : IDisposable
         companionTab = clickedTab >= 0 ? clickedTab : shownCompanionTab;
     }
 
+    private int companionAppearanceSection;
+
     private void DrawAppearance()
     {
         if (ImGui.Checkbox("Show companion", ref config.AvatarEnabled)) Save();
-        if (config.AvatarEnabled)
+        var sections = new[] { "Look", "Scene", "Motion", "Home", "Seasonal" };
+        for (var i = 0; i < sections.Length; i++)
         {
-            if (UiText.BeginCombo("Companion", AvatarLabel(config.Avatar)))
-            {
-                foreach (var avatar in Configuration.AvatarNames)
-                    if (UiText.Selectable(AvatarLabel(avatar), config.Avatar == avatar)) { config.Avatar = avatar; Save(); }
-                ImGui.EndCombo();
-            }
-            if (UiText.BeginCombo("Aura / shape color", config.CompanionPalette))
-            {
-                foreach (var palette in Configuration.PaletteNames)
-                {
-                    var picked = ImGui.ColorButton("##palette-" + palette, ProceduralCompanion.Palette(palette), ImGuiColorEditFlags.NoTooltip,
-                        new Vector2(ImGui.GetTextLineHeight()));
-                    ImGui.SameLine();
-                    if (UiText.Selectable(palette, config.CompanionPalette == palette) || picked) { config.CompanionPalette = palette; Save(); }
-                }
-                ImGui.EndCombo();
-            }
-            if (ImGui.Checkbox("Animate companion", ref config.AnimationsEnabled)) Save();
-            if (ImGui.Checkbox("Magic accents", ref config.CompanionMagicEnabled)) Save();
-            if (UiText.CollapsingHeader("Looks"))
-            {
-                if (roaming.HasEverydayLooks(config.Avatar) && StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
-                    choice => roaming.LookLabel(config.Avatar, choice), persist: false))
-                { config.CompanionHolidayBodiesEnabled = false; config.CompanionCostume = "None"; Save(); }
-                if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
-                    UiText.Hint("Holiday body active. Picking a look switches to everyday mode.");
-                if (roaming.HasEverydayLooks(config.Avatar) && config.CompanionVariant == "Random")
-                {
-                    if (ImGui.Checkbox("Change look on a timer", ref config.CompanionLookAutoRotateEnabled)) Save();
-                    if (config.CompanionLookAutoRotateEnabled && ImGui.SliderFloat("Look interval", ref config.CompanionLookInterval,
-                        30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                }
-                if (ImGui.Checkbox("Companion poof", ref config.CompanionTransitionEffectsEnabled)) Save();
-                UiText.Hint("Covers automatic companion swaps. Requires animation and magic accents.");
-                if (config.Avatar == "Orbit")
-                {
-                    if (ImGui.Checkbox("Moving rings", ref config.CompanionOrbitRingsEnabled)) Save();
-                    if (config.CompanionOrbitRingsEnabled && ImGui.SliderFloat("Ring speed", ref config.CompanionOrbitRingSpeed,
-                        .2f, 3, "%.1fx", ImGuiSliderFlags.AlwaysClamp)) Save();
-                }
-            }
-            if (UiText.CollapsingHeader("Seasonal looks & rotation"))
-            {
-                StyleChoice("Painted costume", ref config.CompanionCostume, Configuration.CostumeNames,
-                    choice => choice is "None" or "Auto" ? choice : SeasonalLabel(choice));
-                UiText.Hint("Complete painted body and hat. None returns to your chosen body; Auto follows the current event.");
-                if (roaming.HasHolidayBodies(config.Avatar) && ImGui.Checkbox("Holiday bodies", ref config.CompanionHolidayBodiesEnabled))
-                { if (config.CompanionHolidayBodiesEnabled) config.CompanionCostume = "None"; Save(); }
-                if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
-                    if (StyleChoice("Body theme", ref config.CompanionHolidayBody, Configuration.SeasonalThemeNames,
-                        choice => roaming.HolidayBodyLabel(config.Avatar, choice), persist: false))
-                    { config.CompanionCostume = "None"; Save(); }
-                if (ImGui.Checkbox("Seasonal bows", ref config.CompanionSeasonalEnabled)) Save();
-                if (UiText.Button("Fit accessories")) OpenAccessoryEditor();
-                UiText.Hint("Position, resize and rotate bows. Hats are painted into the costume.");
-                if ((config.CompanionSeasonalEnabled || config.CompanionHolidayHomeEnabled)
-                    && UiText.BeginCombo("Bow / home theme", SeasonalLabel(config.CompanionSeasonalTheme)))
-                {
-                    foreach (var theme in Configuration.SeasonalThemeNames)
-                        if (UiText.Selectable(SeasonalLabel(theme), config.CompanionSeasonalTheme == theme)) { config.CompanionSeasonalTheme = theme; Save(); }
-                    ImGui.EndCombo();
-                }
-                if (ImGui.Checkbox("Rotate companions", ref config.CompanionAutoRotateEnabled)) Save();
-                if (config.CompanionAutoRotateEnabled && ImGui.SliderFloat("Switch every", ref config.CompanionRotationInterval,
-                        30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                UiText.Hint("Auto follows verified game festivals. Rotation picks another companion locally; your saved selection stays unchanged.");
-                if (roaming.SeasonalStatus is { Length: > 0 } seasonStatus) UiText.Status(seasonStatus);
-            }
-            ImGui.BeginDisabled(!config.AnimationsEnabled);
-            if (UiText.BeginCombo("Preview animation", roaming.PreviewPose.ToString()))
-            {
-                foreach (var pose in Enum.GetValues<CompanionPose>())
-                    if (UiText.Selectable(pose.ToString(), roaming.PreviewPose == pose)) roaming.PreviewPose = pose;
-                ImGui.EndCombo();
-            }
-            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Preview only; no speech playback.");
-            ImGui.EndDisabled();
-            if (ImGui.SliderFloat("Companion size", ref config.CompanionSize, 48, 192, "%.0f")) Save();
-            if (UiText.Button("Draw roaming area")) { roaming.BeginChooseArea(); settingsOpen = false; }
-            UiText.Hint("Drag a roaming box over the game. Escape cancels. Click the companion to talk.");
-            if (ImGui.Checkbox("Walk on flat surfaces", ref config.CompanionGroundedEnabled)) Save();
-            if (config.CompanionGroundedEnabled && ImGui.Checkbox("Hop onto reachable ledges", ref config.CompanionAutoHopEnabled)) Save();
-            Heading("Frame interaction");
-            if (ImGui.Checkbox("Enable frame interaction", ref config.CompanionFrameInteractionEnabled)) Save();
-            if (config.CompanionFrameInteractionEnabled)
-            {
-                if (ImGui.Checkbox("Pick up and drag", ref config.CompanionPickupEnabled)) Save();
-                if (ImGui.Checkbox("Walk on window tops", ref config.CompanionPerchEnabled)) Save();
-                if (ImGui.Checkbox("Stay inside a window when dropped inside", ref config.CompanionContainmentEnabled)) Save();
-                if (ImGui.Checkbox("Fall when leaving a window", ref config.CompanionFallingEnabled)) Save();
-                UiText.Help("Frame behavior", "Drop on a window top or HUD strip to perch, or inside a supported window to stay within its edges. Open ledges let the companion fall off either end. Flat-surface movement uses reachable supports to return; pick it up if no route reaches the drawn area. Pickup works with animation off.");
-            }
-            if (UiText.CollapsingHeader("Home & personality"))
-            {
-                if (ImGui.Checkbox("Show companion home", ref config.CompanionHomeEnabled)) Save();
-                if (config.CompanionHomeEnabled)
-                {
-                    StyleChoice("Home style", ref config.CompanionHomeStyle, Configuration.HomeStyleNames);
-                    if (ImGui.Checkbox("Use holiday homes", ref config.CompanionHolidayHomeEnabled)) Save();
-                    UiText.Hint("Matches the selected seasonal theme. Turn it off to keep your chosen home style.");
-                }
-                UiText.Hint("Drag the house anywhere on screen. The drawn roaming area stays where you put it; naps are the only trip outside it.");
-                if (ImGui.Checkbox("Show grab hand", ref config.CompanionGrabHandEnabled)) Save();
-                UiText.Hint("Show the ready, pickup and release hand over the companion and its house.");
-                if (config.CompanionGrabHandEnabled && ImGui.SliderFloat("Hand size", ref config.CompanionGrabHandScale, .2f, 1, "%.2f", ImGuiSliderFlags.AlwaysClamp)) Save();
-                if (config.CompanionGrabHandEnabled) StyleChoice("Hand style", ref config.CompanionHandStyle, Configuration.HandStyleNames);
-                ImGui.BeginDisabled(!config.CompanionHomeEnabled || !config.AnimationsEnabled);
-                if (ImGui.Checkbox("Take naps at home", ref config.CompanionNapsEnabled)) Save();
-                UiText.Hint("Requires the home and animation. Walks to the house at bedtime, sleeps inside, then walks back to the drawn area. Entirely local; no AI request.");
-                if (config.CompanionNapsEnabled)
-                {
-                    if (ImGui.SliderFloat("Time awake", ref config.CompanionNapInterval, 15, 300, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                    if (ImGui.SliderFloat("Nap length", ref config.CompanionNapDuration, 5, 120, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                    if (ImGui.Checkbox("Chimney Zs", ref config.CompanionNapZsEnabled)) Save();
-                }
-                ImGui.EndDisabled();
-                if (ImGui.Checkbox("Local comments", ref config.CompanionCommentsEnabled)) Save();
-                UiText.Hint("Occasional local text phrases. No AI request, microphone or speech playback.");
-                ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
-                if (ImGui.SliderFloat("Comment interval", ref config.CompanionCommentInterval, 30, 600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                ImGui.EndDisabled();
-                if (ImGui.Checkbox("Blink", ref config.CompanionBlinkEnabled)) Save();
-                if (config.Avatar == "Wink" && ImGui.Checkbox("Fourier-smoothed blink", ref config.CompanionFourierBlinkEnabled)) Save();
-                UiText.Hint("Every companion blinks while resting or moving. Requires animation; paused in fitting mode.");
-                ImGui.BeginDisabled(!config.CompanionBlinkEnabled || !config.AnimationsEnabled);
-                if (ImGui.SliderFloat("Blink interval", ref config.CompanionBlinkInterval, 1, 10, "%.1f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                ImGui.EndDisabled();
-            }
+            if (i > 0) ImGui.SameLine();
+            if (ImGui.Selectable(sections[i] + "##companion-section", companionAppearanceSection == i,
+                ImGuiSelectableFlags.None, new Vector2(72 * ImGuiHelpers.GlobalScale, 0))) companionAppearanceSection = i;
         }
-        if (UiText.Button("Open companion conversation")) OpenCompanion();
+        ImGui.Spacing();
+        ImGui.BeginDisabled(!config.AvatarEnabled);
+        ImGui.PushItemWidth(Math.Max(120 * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().X * .56f));
+        switch (companionAppearanceSection)
+        {
+            case 0: DrawCompanionLook(); break;
+            case 1: DrawCompanionScene(); break;
+            case 2: DrawCompanionMotionSettings(); break;
+            case 3: DrawCompanionHomeSettings(); break;
+            case 4: DrawCompanionSeasonalSettings(); break;
+        }
+        ImGui.PopItemWidth();
+        ImGui.EndDisabled();
+        ImGui.Spacing();
+        if (UiText.Button("Open conversation")) OpenCompanion();
+    }
+
+    private static void CompanionTip(string text)
+    {
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) WrappedTooltip(text);
+    }
+
+    private void DrawCompanionLook()
+    {
+        if (UiText.BeginCombo("Companion", AvatarLabel(config.Avatar)))
+        {
+            foreach (var avatar in Configuration.AvatarNames)
+                if (UiText.Selectable(AvatarLabel(avatar), config.Avatar == avatar)) { config.Avatar = avatar; Save(); }
+            ImGui.EndCombo();
+        }
+        if (UiText.BeginCombo("Aura / shape color", config.CompanionPalette))
+        {
+            foreach (var palette in Configuration.PaletteNames)
+            {
+                var picked = ImGui.ColorButton("##palette-" + palette, ProceduralCompanion.Palette(palette), ImGuiColorEditFlags.NoTooltip,
+                    new Vector2(ImGui.GetTextLineHeight()));
+                ImGui.SameLine();
+                if (UiText.Selectable(palette, config.CompanionPalette == palette) || picked) { config.CompanionPalette = palette; Save(); }
+            }
+            ImGui.EndCombo();
+        }
+        if (roaming.HasEverydayLooks(config.Avatar) && StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
+            choice => roaming.LookLabel(config.Avatar, choice), persist: false))
+        { config.CompanionHolidayBodiesEnabled = false; config.CompanionCostume = "None"; Save(); }
+        if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
+            CompanionTip("Holiday body active. Picking a look switches to everyday mode.");
+        if (roaming.HasEverydayLooks(config.Avatar) && config.CompanionVariant == "Random")
+        {
+            if (ImGui.Checkbox("Change look on a timer", ref config.CompanionLookAutoRotateEnabled)) Save();
+            if (config.CompanionLookAutoRotateEnabled && ImGui.SliderFloat("Look interval", ref config.CompanionLookInterval,
+                30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+        }
+        if (ImGui.Checkbox("Companion poof", ref config.CompanionTransitionEffectsEnabled)) Save();
+        CompanionTip("Covers automatic companion swaps. Requires animation and magic accents.");
+        if (config.Avatar == "Orbit")
+        {
+            if (ImGui.Checkbox("Moving rings", ref config.CompanionOrbitRingsEnabled)) Save();
+            if (config.CompanionOrbitRingsEnabled && ImGui.SliderFloat("Ring speed", ref config.CompanionOrbitRingSpeed,
+                .2f, 3, "%.1fx", ImGuiSliderFlags.AlwaysClamp)) Save();
+        }
+    }
+
+    private void DrawCompanionScene()
+    {
+        if (ImGui.SliderFloat("Scene scale", ref config.CompanionSceneScale, .5f, 2f, "%.2fx", ImGuiSliderFlags.AlwaysClamp)) Save();
+        CompanionTip("Scales the companion, home and pickup hand together. Individual sizes stay unchanged.");
+        if (UiText.Button("Reset scene scale")) { config.CompanionSceneScale = 1f; Save(); }
+        ImGui.Spacing();
+        if (ImGui.SliderFloat("Companion size", ref config.CompanionSize, 48, 192, "%.0f px", ImGuiSliderFlags.AlwaysClamp)) Save();
+        if (ImGui.SliderFloat("Home size", ref config.CompanionHomeSize, 48, 384, "%.0f px", ImGuiSliderFlags.AlwaysClamp)) Save();
+        if (ImGui.SliderFloat("Hand size", ref config.CompanionHandSize, 8, 192, "%.0f px", ImGuiSliderFlags.AlwaysClamp)) Save();
+        if (UiText.Button("Reset individual sizes"))
+        { config.CompanionSize = 96f; config.CompanionHomeSize = 124.8f; config.CompanionHandSize = 38.4f; Save(); }
+        CompanionTip("Restores only the three individual sizes. Scene scale stays unchanged.");
+        ImGui.Spacing();
+        if (ImGui.Checkbox("Show grab hand", ref config.CompanionGrabHandEnabled)) Save();
+        if (config.CompanionGrabHandEnabled) StyleChoice("Hand style", ref config.CompanionHandStyle, Configuration.HandStyleNames);
+        ImGui.Spacing();
+        if (UiText.Button("Draw roaming area")) { roaming.BeginChooseArea(); settingsOpen = false; }
+        CompanionTip("Drag a box over the game. Escape cancels. Drag the house separately to position it.");
+    }
+
+    private void DrawCompanionMotionSettings()
+    {
+        if (ImGui.Checkbox("Animate companion", ref config.AnimationsEnabled)) Save();
+        ImGui.BeginDisabled(!config.AnimationsEnabled);
+        if (ImGui.SliderFloat("Body motion", ref config.CompanionBodyMotionStrength, 0f, 1.5f, "%.2fx", ImGuiSliderFlags.AlwaysClamp)) Save();
+        if (ImGui.Checkbox("Movement reactions", ref config.CompanionMotionReactions)) Save();
+        CompanionTip("Adds follow-through when starting, stopping and turning. Entirely local.");
+        ImGui.EndDisabled();
+        if (ImGui.Checkbox("Magic accents", ref config.CompanionMagicEnabled)) Save();
+        ImGui.BeginDisabled(!config.AnimationsEnabled);
+        if (UiText.BeginCombo("Preview animation", roaming.PreviewPose.ToString()))
+        {
+            foreach (var pose in Enum.GetValues<CompanionPose>())
+                if (UiText.Selectable(pose.ToString(), roaming.PreviewPose == pose)) roaming.PreviewPose = pose;
+            ImGui.EndCombo();
+        }
+        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Preview only; no speech playback.");
+        ImGui.EndDisabled();
+        if (ImGui.Checkbox("Walk on flat surfaces", ref config.CompanionGroundedEnabled)) Save();
+        if (config.CompanionGroundedEnabled && ImGui.Checkbox("Hop onto reachable ledges", ref config.CompanionAutoHopEnabled)) Save();
+        Heading("Frame interaction");
+        if (ImGui.Checkbox("Enable frame interaction", ref config.CompanionFrameInteractionEnabled)) Save();
+        if (config.CompanionFrameInteractionEnabled)
+        {
+            if (ImGui.Checkbox("Pick up and drag", ref config.CompanionPickupEnabled)) Save();
+            if (ImGui.Checkbox("Walk on window tops", ref config.CompanionPerchEnabled)) Save();
+            if (ImGui.Checkbox("Stay inside dropped-in windows", ref config.CompanionContainmentEnabled)) Save();
+            if (ImGui.Checkbox("Fall when leaving a window", ref config.CompanionFallingEnabled)) Save();
+            UiText.Help("Frame behavior", "Drop on a window top or HUD strip to perch, or inside a supported window to stay within its edges. Open ledges let the companion fall off either end. Flat-surface movement uses reachable supports to return; pick it up if no route reaches the drawn area. Pickup works with animation off.");
+        }
+        if (ImGui.Checkbox("Blink", ref config.CompanionBlinkEnabled)) Save();
+        if (config.Avatar == "Wink" && ImGui.Checkbox("Fourier-smoothed blink", ref config.CompanionFourierBlinkEnabled)) Save();
+        CompanionTip("Every companion blinks while resting or moving. Requires animation; also available while fitting accessories.");
+        ImGui.BeginDisabled(!config.CompanionBlinkEnabled || !config.AnimationsEnabled);
+        if (ImGui.SliderFloat("Blink interval", ref config.CompanionBlinkInterval, 1, 10, "%.1f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+        ImGui.EndDisabled();
+    }
+
+    private void DrawCompanionHomeSettings()
+    {
+        if (ImGui.Checkbox("Show companion home", ref config.CompanionHomeEnabled)) Save();
+        CompanionTip("Drag the house anywhere on screen. The roaming area stays where you put it; naps are the only trip outside it.");
+        if (config.CompanionHomeEnabled)
+        {
+            StyleChoice("Home style", ref config.CompanionHomeStyle, Configuration.HomeStyleNames);
+            if (ImGui.Checkbox("Use holiday homes", ref config.CompanionHolidayHomeEnabled)) Save();
+            CompanionTip("Matches the selected seasonal theme. Turn it off to keep your chosen home style.");
+        }
+        ImGui.BeginDisabled(!config.CompanionHomeEnabled || !config.AnimationsEnabled);
+        if (ImGui.Checkbox("Take naps at home", ref config.CompanionNapsEnabled)) Save();
+        CompanionTip("Requires the home and animation. Walks to the house at bedtime, sleeps inside, then walks back to the drawn area. Entirely local; no AI request.");
+        if (config.CompanionNapsEnabled)
+        {
+            if (ImGui.SliderFloat("Time awake", ref config.CompanionNapInterval, 15, 300, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+            if (ImGui.SliderFloat("Nap length", ref config.CompanionNapDuration, 5, 120, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+            if (ImGui.Checkbox("Chimney Zs", ref config.CompanionNapZsEnabled)) Save();
+        }
+        ImGui.EndDisabled();
+        if (ImGui.Checkbox("Local comments", ref config.CompanionCommentsEnabled)) Save();
+        CompanionTip("Occasional local text phrases. No AI request, microphone or speech playback.");
+        ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
+        if (ImGui.SliderFloat("Comment interval", ref config.CompanionCommentInterval, 30, 600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+        ImGui.EndDisabled();
+    }
+
+    private void DrawCompanionSeasonalSettings()
+    {
+        StyleChoice("Painted costume", ref config.CompanionCostume, Configuration.CostumeNames,
+            choice => choice is "None" or "Auto" ? choice : SeasonalLabel(choice));
+        CompanionTip("Complete painted body and hat. None returns to your chosen body; Auto follows the current event.");
+        if (roaming.HasHolidayBodies(config.Avatar) && ImGui.Checkbox("Holiday bodies", ref config.CompanionHolidayBodiesEnabled))
+        { if (config.CompanionHolidayBodiesEnabled) config.CompanionCostume = "None"; Save(); }
+        if (roaming.HasHolidayBodies(config.Avatar) && config.CompanionHolidayBodiesEnabled)
+            if (StyleChoice("Body theme", ref config.CompanionHolidayBody, Configuration.SeasonalThemeNames,
+                choice => roaming.HolidayBodyLabel(config.Avatar, choice), persist: false))
+            { config.CompanionCostume = "None"; Save(); }
+        if (ImGui.Checkbox("Seasonal bows", ref config.CompanionSeasonalEnabled)) Save();
+        if (UiText.Button("Fit accessories")) OpenAccessoryEditor();
+        CompanionTip("Position, resize and rotate bows. Hats are painted into the costume.");
+        if ((config.CompanionSeasonalEnabled || config.CompanionHolidayHomeEnabled)
+            && UiText.BeginCombo("Bow / home theme", SeasonalLabel(config.CompanionSeasonalTheme)))
+        {
+            foreach (var theme in Configuration.SeasonalThemeNames)
+                if (UiText.Selectable(SeasonalLabel(theme), config.CompanionSeasonalTheme == theme)) { config.CompanionSeasonalTheme = theme; Save(); }
+            ImGui.EndCombo();
+        }
+        if (ImGui.Checkbox("Rotate companions", ref config.CompanionAutoRotateEnabled)) Save();
+        if (config.CompanionAutoRotateEnabled && ImGui.SliderFloat("Switch every", ref config.CompanionRotationInterval,
+                30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+        CompanionTip("Auto follows verified game festivals. Rotation picks another companion locally; your saved selection stays unchanged.");
+        if (roaming.SeasonalStatus is { Length: > 0 } seasonStatus) UiText.Status(seasonStatus);
     }
 
     private void DrawVoiceSettings()

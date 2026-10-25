@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0023`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0025`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -32,7 +32,9 @@ start off until you enable them.
 
 Settings have seven tabs: **Launcher**, **Interact**, **HUD**, **Companion**, **Data**,
 **About** and **Quest Items**. About shows the complete version, author and
-copyable full source commit. Companion groups **Appearance**, **Voice** and **AI**. Click a shortcut
+copyable full source commit. Companion groups **Appearance**, **Voice** and **AI**;
+Appearance has **Look**, **Scene**, **Motion**, **Home** and **Seasonal** sections.
+Click a shortcut
 button to record it: hold Ctrl, Alt and/or Shift, press the main key, then release
 all keys. Escape cancels recording. The compact settings panel has teal controls,
 small corner rounding and a footer showing the built version and **by Zero**.
@@ -101,15 +103,28 @@ small corner rounding and a footer showing the built version and **by Zero**.
 - Thirteen illustrated whole-body companions: **Moonblob** (the default), **Wink**,
   **Nova**, **Mochi**, **Puff**, **Orbit**, **Ember**, **Prism**, **Nib** the ink drop,
   **Echo** the ghost, **Fizz** the soap bubble, **Glim** the star and **Rune** the rune stone. Each uses one
-  complete body, with no separate limb rig. Moonblob rolls continuously; the
+  complete body, with no separate limb rig. The default Moonblob rolls continuously; the
   others float using stable body images. Four extra looks for each original companion add 32
-  everyday choices, with Random and an optional look timer. Ember flickers and
+  everyday choices, with Random and an optional look timer. Each everyday and
+  holiday body has an explicit material profile: gels wobble, cream compresses,
+  water ripples, clouds billow, flames curl, silk sways and crystal/stone/metal
+  bodies rock with their shape intact. Soft Moonblob variants can roll; rigid
+  variants stay upright. Costume motion retains the creature's usual character.
+  Ember flickers and
   curls, Mochi squashes, Puff billows, Nib ripples, Echo curls, Fizz wobbles, Glim flexes, Rune rocks, and Wink/Nova/Prism have gentle body motion. Orbit and his hat sway together while his rings rotate and tilt around a
   steady core. Ring movement and speed have their own controls. Six aura palettes remain available:
   Moonlight, Aurora, Nebula, Rose, Ember and Starlight. In **Companion → Appearance**,
   draw a roaming area, preview an animation, or turn off magic accents, animation
   or the companion. Clicking it opens its conversation. Mouth movement is an
   explicit preview; synthesized speech and lip sync are not implemented.
+- **Companion → Appearance → Scene** resizes the companion, home and hand
+  independently. Scene scale changes all three together without replacing those
+  sizes. **Motion** controls body-motion strength and optional start/stop/turn
+  follow-through. Movement uses local state and authored artwork, with no AI
+  inference, microphone access or downloaded motion model.
+  Repeated hop-and-fall routes back off and stop after three failed excursions;
+  a changed scene, meaningful supported progress or manual placement can release
+  that route again.
 - **Companion → Appearance → Seasonal looks & rotation** adds nine painted body
   themes: All Saints' Wake, Starlight, Heavensturn, Valentione, Little Ladies' Day,
   Hatching-tide, Make It Rain, Moonfire Faire and The Rising. **Auto** reads supported

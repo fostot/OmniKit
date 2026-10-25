@@ -8,8 +8,9 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Plugin.Services;
 using LauncherUiSmoke;
 
-var plugin = Path.GetFullPath(args.ElementAtOrDefault(0) ?? "src/OmniKit/bin/Release/OmniKit.dll");
-var output = Path.GetFullPath(args.ElementAtOrDefault(1) ?? ".local/visualharness/companion-behavior");
+var positional = args.Where(argument => !argument.StartsWith("--", StringComparison.Ordinal)).ToArray();
+var plugin = Path.GetFullPath(positional.ElementAtOrDefault(0) ?? "src/OmniKit/bin/Release/OmniKit.dll");
+var output = Path.GetFullPath(positional.ElementAtOrDefault(1) ?? ".local/visualharness/companion-behavior");
 var host = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher", "addon", "Hooks", "dev");
 AssemblyLoadContext.Default.Resolving += (context, name) =>
 {
@@ -55,7 +56,7 @@ void Set(object target, string name, object value) => (target.GetType().GetField
     return (vertices, triangles);
 }
 var blink = roaming.GetMethod("BlinkAmount", statics)!;
-if (!surfacesOnly)
+if (!surfacesOnly && !args.Contains("--hands-only"))
 foreach (var interval in new[] { 1f, 3f, 10f })
 {
     var seenClosed = false;
@@ -78,6 +79,48 @@ try
         var io = ImGui.GetIO(); io.IniFilename = null; io.LogFilename = null;
         io.DisplaySize = new Vector2(640, 440); io.DeltaTime = 1f / 60;
         io.Fonts.AddFontDefault(); io.Fonts.Build();
+    }
+    if (args.Contains("--hands-only"))
+    {
+        var handConfig = Activator.CreateInstance(configType)!;
+        var handCompanion = RuntimeHelpers.GetUninitializedObject(roaming);
+        Set(handCompanion, "config", handConfig); Set(handCompanion, "assetDirectory", Path.GetFullPath("assets"));
+        Set(handCompanion, "currentUiScale", 1f);
+        object HandTexture(Type type) => LocalProxy.Create(type, (method, _) => method.Name switch
+        {
+            "get_Handle" => new ImTextureID(4UL), "get_Width" or "get_Height" => 1280,
+            "GetWrapOrDefault" => HandTexture(method.ReturnType), _ => throw new InvalidOperationException("Unexpected texture call.")
+        });
+        assembly.GetType("OmniKit.Services", true)!.GetProperty("Textures", statics)!.SetValue(null,
+            LocalProxy.Create<ITextureProvider>((method, _) => method.Name == "GetFromFile" ? HandTexture(method.ReturnType)
+                : throw new InvalidOperationException("Unexpected service access.")));
+        var drawHandOnly = roaming.GetMethod("DrawGrabHand", instance)!;
+        var gripMethod = assembly.GetType("OmniKit.Ui.CompanionGrabAnchor", true)!.GetMethod("GripInCell", statics)!;
+        ImGui.GetIO().DisplaySize = new(4096, 3072); var contactPoint = new Vector2(2048, 1536);
+        foreach (var petSize in new[] { 48f, 192f })
+        foreach (var handSize in new[] { 8f, 38.4f, 192f })
+        foreach (var sceneScale in new[] { .5f, 2f })
+        foreach (var uiScale in new[] { .25f, 4f })
+        foreach (var pose in new[] { 0, 1, 2, 3 })
+        {
+            Set(handConfig, "CompanionSize", petSize); Set(handConfig, "CompanionHandSize", handSize); Set(handConfig, "CompanionSceneScale", sceneScale);
+            var dragging = pose is 1 or 2; var time = pose switch { 0 => 1f, 1 => .1f, 2 => .3f, _ => .05f };
+            Set(handCompanion, "handWasDragging", dragging); Set(handCompanion, "handTime", time); Set(handCompanion, "handPoint", contactPoint);
+            ImGui.NewFrame(); var handDraw = ImGui.GetForegroundDrawList();
+            drawHandOnly.Invoke(handCompanion, [handDraw, Vector2.Zero, ImGui.GetIO().DisplaySize, uiScale, 0f, dragging,
+                pose == 0 ? contactPoint : null, dragging ? contactPoint : null]);
+            var edge = handSize * sceneScale * uiScale;
+            Check(handDraw.VtxBuffer.Size == 4 && Math.Abs(handDraw.VtxBuffer[1].Pos.X - handDraw.VtxBuffer[0].Pos.X - edge) < .001f,
+                "Independent hand size multiplies scene/UI scale and stays independent of companion size.");
+            var paintedSize = handDraw.VtxBuffer[2].Pos - handDraw.VtxBuffer[0].Pos;
+            var actualContact = handDraw.VtxBuffer[0].Pos + paintedSize * (Vector2)gripMethod.Invoke(null, [pose])!;
+            var cueLift = edge * (pose == 1 ? .1f : pose == 3 ? .07f : 0);
+            Check(Vector2.Distance(actualContact, contactPoint - new Vector2(0, cueLift)) < .001f,
+                "All four independent hand poses preserve the measured finger contact and cue lift.");
+            ImGui.Render();
+        }
+        Console.WriteLine($"Companion native independent hands: {checks} focused checks passed.");
+        return;
     }
     var renderer = new SoftwareRenderer();
     var services = assembly.GetType("OmniKit.Services", true)!;
@@ -166,6 +209,7 @@ try
 
     var config = Activator.CreateInstance(configType)!;
     var companion = RuntimeHelpers.GetUninitializedObject(roaming);
+    Set(companion, "currentUiScale", 1f);
     Set(companion, "config", config); Set(companion, "physics", Activator.CreateInstance(physics, nonPublic: true)!);
     Set(companion, "homeRoutine", Activator.CreateInstance(assembly.GetType("OmniKit.Ui.CompanionHomeRoutine", true)!, new object[] { 1 })!);
     Set(companion, "comment", "A little adventure, then a little nap."); Set(companion, "commentUntil", 999d);
@@ -257,10 +301,10 @@ try
     foreach (var step in new[] { (true, 0f, 0), (true, .05f, 0), (true, .05f, 1), (true, .05f, 1), (true, .05f, 2), (false, .01f, 3) })
     {
         ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList();
-        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), step.Item2, step.Item1, null, new Vector2(320, 220)]);
+        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), 1f, step.Item2, step.Item1, null, new Vector2(320, 220)]);
         var expected = new Vector2(step.Item3 % 2, step.Item3 / 2) * .5f;
         Check(draw.VtxBuffer.Size == 4 && draw.VtxBuffer[0].Uv == expected, "Grab cues use open, closing, hold, then release atlas poses.");
-        Check(Math.Abs(draw.VtxBuffer[1].Pos.X - draw.VtxBuffer[0].Pos.X - 96 * .4f) < .001f,
+        Check(Math.Abs(draw.VtxBuffer[1].Pos.X - draw.VtxBuffer[0].Pos.X - Value("CompanionHandSize")) < .001f,
             "Every grab pose uses the smaller default hand size.");
         for (var c = 0; c < draw.CmdBuffer.Size; c++)
             if (draw.CmdBuffer[c].ElemCount > 0)
@@ -273,21 +317,21 @@ try
     var grabAnchor = assembly.GetType("OmniKit.Ui.CompanionGrabAnchor", true)!;
     var gripInCell = grabAnchor.GetMethod("GripInCell", statics)!;
     foreach (var bodySize in new[] { 48f, 96f, 192f })
-    foreach (var handScale in new[] { .2f, .4f, 1f })
+    foreach (var independentHandSize in new[] { 8f, 38.4f, 192f })
     foreach (var center in new[] { new Vector2(320, 220), new Vector2(96), new Vector2(544, 344) })
     {
-        Set(config, "CompanionGrabHandScale", handScale);
+        Set(config, "CompanionSize", bodySize); Set(config, "CompanionHandSize", independentHandSize);
         Set(companion, "handWasDragging", true); Set(companion, "handTime", .3f);
         ImGui.NewFrame(); var draw = ImGui.GetForegroundDrawList();
         ImGui.GetIO().MousePos = new Vector2(-1000, 1000);
-        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(bodySize), 0f, true, null, center]);
+        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), 1f, 0f, true, null, center]);
         var handSize = draw.VtxBuffer[2].Pos - draw.VtxBuffer[0].Pos;
         var contact = draw.VtxBuffer[0].Pos + handSize * (Vector2)gripInCell.Invoke(null, [2])!;
         Check(Vector2.Distance(contact, center) < .0001f,
             "The actual held hand contacts the supplied body or house centre at every scale, regardless of mouse position.");
         ImGui.Render();
     }
-    Set(config, "CompanionGrabHandScale", .4f);
+    Set(config, "CompanionHandSize", 38.4f);
 
     var libraryType = assembly.GetType("OmniKit.Ui.CompanionAnimationLibrary", true)!;
     var library = Activator.CreateInstance(libraryType, Path.GetFullPath("assets"))!;
@@ -328,7 +372,7 @@ try
         var quad = getFloat.Invoke(atlas, [.2f, rightSide, position, new Vector2(96)])!;
         Vector2 Q(string name) => (Vector2)quad.GetType().GetProperty(name)!.GetValue(quad)!;
         draw.AddImageQuad(new ImTextureID(2UL), Q("A"), Q("B"), Q("C"), Q("D"), Q("UvA"), Q("UvB"), Q("UvC"), Q("UvD"), 0xFFFFFFFF);
-        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), new Vector2(96), .016f, false,
+        drawHand.Invoke(companion, [draw, Vector2.Zero, new Vector2(640, 440), 1f, .016f, false,
             bounds.Item1 + (bounds.Item2 - bounds.Item1) * new Vector2(.5f, .1f), null]);
         var (vertices, triangles) = Snapshot(draw);
         samples.Add(new { rightSide, vertices, triangles }); ImGui.Render();

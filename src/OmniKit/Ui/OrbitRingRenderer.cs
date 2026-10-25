@@ -59,15 +59,7 @@ internal sealed class OrbitRingRenderer
         => DrawPosed(draw, center, coreRadius, accent, front, theme, decorations, mirrored, Matrix3x2.Identity);
 
     public static Matrix3x2 Movement(Vector2 center, float radius, float stride, float activity, bool mirrored, bool animate)
-    {
-        if (!animate || !float.IsFinite(activity) || activity <= 0 || !float.IsFinite(stride)
-            || !float.IsFinite(radius) || radius <= 0 || !float.IsFinite(center.X) || !float.IsFinite(center.Y)) return Matrix3x2.Identity;
-        var phase = (stride - MathF.Floor(stride)) * MathF.Tau;
-        var strength = Math.Clamp(activity, 0, 1); var facing = mirrored ? -1 : 1;
-        var angle = MathF.Sin(phase) * .055f * strength * facing;
-        var offset = new Vector2(MathF.Sin(phase) * radius * .025f * facing, MathF.Sin(phase * 2) * radius * .035f) * strength;
-        return Matrix3x2.CreateTranslation(-center) * Matrix3x2.CreateRotation(angle) * Matrix3x2.CreateTranslation(center + offset);
-    }
+        => CompanionBodyMotion.RigidTravel(center, radius, stride, activity, mirrored, animate);
 
     public (Vector2 Minimum, Vector2 Maximum) DrawPosed(ImDrawListPtr draw, Vector2 center, float coreRadius,
         Vector4 accent, bool front, SeasonalCompanionTheme? theme, bool decorations, bool mirrored, Matrix3x2 pose)

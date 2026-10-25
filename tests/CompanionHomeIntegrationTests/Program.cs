@@ -82,7 +82,7 @@ internal sealed class IntegrationFixture(Assembly assembly)
             }
             var layout = New("Ui.CompanionLayout", layoutMinimum, layoutMaximum, size);
             var bounds = Type("Ui.CompanionHomeGeometry").GetMethod("Bounds", Static)!.Invoke(null,
-                [layout, Vector2.Zero, viewport, new Vector2((float)Field(config, "CompanionHomeX"), (float)Field(config, "CompanionHomeY"))])!;
+                [layout, Vector2.Zero, viewport, new Vector2((float)Field(config, "CompanionHomeX"), (float)Field(config, "CompanionHomeY")), null])!;
             Call(companion, "UpdateHomeStyle", bounds, Vector2.Zero, viewport);
             var frame = Field(companion, "homeStyleFrame");
             if (edge)
@@ -140,7 +140,7 @@ internal sealed class IntegrationFixture(Assembly assembly)
         var size = new Vector2(96); var viewport = new Vector2(1920, 1080);
         var layout = New("Ui.CompanionLayout", new Vector2(1382.4f, 594), new Vector2(1824, 993.6f), size);
         var bounds = Type("Ui.CompanionHomeGeometry").GetMethod("Bounds", Static)!.Invoke(null,
-            [layout, Vector2.Zero, viewport, new Vector2(.835f, .2f)])!;
+            [layout, Vector2.Zero, viewport, new Vector2(.835f, .2f), null])!;
         Call(companion, "UpdateHomeStyle", bounds, Vector2.Zero, viewport);
         var frame = Field(companion, "homeStyleFrame");
         var house = New("Ui.CompanionHomeRect", Get(frame, "Minimum"), Get(frame, "Maximum"));

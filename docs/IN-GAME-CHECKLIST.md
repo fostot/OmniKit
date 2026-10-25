@@ -109,6 +109,10 @@ establish them. None is marked passed until observed.
   Puff billow, plus Orbit's layered rotating/tilting rings with movement off/on
   and speed 0.2/1/3. Disabling animation must freeze them.
 - Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
+  Compare Ocean Opal with Lavender Geode, Tide Glass with Twilight Velvet,
+  and Puff's cream with bubble looks: soft bodies deform while rigid ones rock.
+  Test Body motion at 0/1/1.5 and Movement reactions off/on. Start, stop and turn
+  in both directions; reactions must settle without reversing or snapping.
   Check each creature's connected body motion, especially Nib/Echo/Fizz/Glim/Rune
   in tall painted hats. The hat must not cancel the deformation. Eyes and fitted
   bows follow the same warp; animation off freezes the movement. Stop/start and
@@ -127,6 +131,13 @@ establish them. None is marked passed until observed.
   not introduce sudden rotation. Check Moonblob's continuous roll and the other
   seven stable floating bodies. Verify full silhouettes and picking bounds at
   minimum and maximum companion sizes.
+- Put a reachable ledge below an unreachable higher destination and watch for
+  hop/fall loops in both directions. Three failed excursions must stop further
+  retries in an unchanged scene, including wide ledges and jittering waypoints.
+  Moving the ledge, resizing, changing the destination or manual pickup can
+  release it. Actual contact with a different higher support counts as progress;
+  passing through the same point in midair does not. A safe alternate route must
+  remain usable.
   Include diagonal and nearly vertical paths, sharp turns and high-refresh
   displays. Tiny horizontal drift must not repeatedly flip facing. Compare
   frame pacing at 60/144 Hz where available; no alternating frozen/moving frames.
@@ -144,11 +155,11 @@ establish them. None is marked passed until observed.
   With flat-surface walking on, verify no free-space ascent. Nearby reachable
   ledges permit bounded hops; open edges permit falls. Toggle hopping off and
   verify unreachable routes stop instead of teleporting.
-- Expand Home & personality. Show/hide the house and drag it near each screen
+- Open Companion → Appearance → Home. Show/hide the house and drag it near each screen
   edge and outside the drawn area; the roaming area must remain unchanged and
   the entrance must face inward. Normal free roaming must remain in the drawn
   area and avoid the house footprint. Pick up
-  the companion and house with the grab hand on/off and at scale 0.2/0.4/1; disable animations and verify
+  the companion and house with the grab hand on/off and at hand size 8/38/192; disable animations and verify
   manual pickup still works without animated hand effects. Test local comments
   on/off and 30/120/600-second intervals with AI disabled. For Wink, test blinking
   on/off and 1/3/10-second intervals while idle and floating; animation off freezes
@@ -193,7 +204,10 @@ establish them. None is marked passed until observed.
 - Test naps for all thirteen companions: about 45 seconds awake and 20 asleep by
   default, plus awake interval 15/300 and sleep duration 5/120.
   Check all thirteen homes at both facings: the companion first shrinks fully
-  in front of the doorstep, then passes through the actual opening. No wall may
+  in front of the doorstep, turns away, then climbs through the actual opening.
+  Check all everyday/holiday rear looks keep their original color and markings;
+  the four rear poses must share one support point and show one body at a time.
+  No wall may
   cut across the full-size foreground body. Inspect Default's curved arch,
   cancellation during foreground shrink, hats off/on, and the existing exit path.
   A nap trip can leave the
@@ -205,6 +219,12 @@ establish them. None is marked passed until observed.
   approach and sleep; position must freeze. Disable naps, hide or move the house
   during approach/entry/sleep; the companion must exit and return without a
   teleport. Approved walking/rolling/floating cadence must remain intact.
+- In Appearance → Scene, change companion/home/hand sizes separately. Each
+  control must leave the other two sizes unchanged. Scene scale 0.5/1/2 changes
+  them together; reset controls keep the other size group intact. Test a small
+  home with a large companion, both screen edges, resizing during a nap, and a
+  small roaming box. The pet must shrink to the actual opening and exit safely.
+  Check all five Appearance sections and their conditional controls at 480×330.
 - In Companion settings click AI → Appearance → Voice → AI repeatedly. Open
   settings directly into each subtab too. No AI option or status may trap the
   user on its tab. Inspect every connection's revealed controls at minimum size.

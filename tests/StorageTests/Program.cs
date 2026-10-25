@@ -140,7 +140,63 @@ try
     var versionNineFields = new[] { "CompanionVariant", "CompanionLookAutoRotateEnabled", "CompanionLookInterval", "LauncherHeight", "CompanionHomeStyle", "CompanionHolidayHomeEnabled", "CompanionHolidayBodiesEnabled", "CompanionHandStyle", "CompanionGroundedEnabled", "CompanionAutoHopEnabled", "CompanionOrbitRingsEnabled", "CompanionOrbitRingSpeed" };
     var versionTenFields = new[] { "CompanionHolidayBody", "CompanionAccessoryFits", "CompanionTransitionEffectsEnabled" };
     var versionTwelveFields = new[] { "CompanionCostume" };
-    var versionNineDocument = JsonNode.Parse(exported)!;
+    var versionThirteenFields = new[] { "CompanionSceneScale", "CompanionHomeSize", "CompanionHandSize", "CompanionBodyMotionStrength", "CompanionMotionReactions" };
+    var versionTwelveDocument = JsonNode.Parse(exported)!;
+    versionTwelveDocument["SchemaVersion"] = 12; versionTwelveDocument["Settings"]!["Version"] = 12;
+    foreach (var field in versionThirteenFields) versionTwelveDocument["Settings"]!.AsObject().Remove(field);
+    foreach (var (pet, hand) in new[] { (48f, .2f), (120f, .65f), (192f, 1f) })
+    {
+        var legacySizes = versionTwelveDocument.DeepClone();
+        legacySizes["Settings"]!["CompanionSize"] = pet;
+        legacySizes["Settings"]!["CompanionGrabHandScale"] = hand;
+        var migrated = new Configuration(); store.ImportInto(migrated, legacySizes.ToJsonString());
+        Check(migrated.CompanionSceneScale == 1f && migrated.CompanionSize == pet &&
+            migrated.CompanionHomeSize == Math.Clamp(pet * 1.3f, 48f, 384f) &&
+            migrated.CompanionHandSize == Math.Clamp(pet * hand, 8f, 192f), "Schema twelve migration preserves independently derived scene sizes.");
+        if (pet == 48f && hand == .2f)
+            Check(Math.Abs(migrated.CompanionHomeSize - 62.4f) < .00001f && Math.Abs(migrated.CompanionHandSize - 9.6f) < .00001f,
+                "The smallest legacy companion retains its exact62.4home and9.6hand extents.");
+        store.Save(migrated); Check(store.Export(store.Load()!) == store.Export(migrated), "Migrated scene sizes round-trip.");
+    }
+    foreach (var (field, minimum, maximum) in new[] { ("CompanionBodyMotionStrength", 0f, 1.5f), ("CompanionSceneScale", .5f, 2f), ("CompanionHomeSize", 48f, 384f), ("CompanionHandSize", 8f, 192f) })
+    {
+        foreach (var value in new JsonNode?[] { JsonValue.Create(minimum - .1f), JsonValue.Create(maximum + .1f), null, JsonValue.Create("NaN") })
+        {
+            var invalidSize = JsonNode.Parse(exported)!; invalidSize["Settings"]![field] = value;
+            Invalid(invalidSize.ToJsonString(), "Malformed scene size: " + field);
+        }
+        var missingSize = JsonNode.Parse(exported)!; missingSize["Settings"]!.AsObject().Remove(field);
+        Invalid(missingSize.ToJsonString(), "Required scene size: " + field);
+    }
+    foreach (var lower in new[] { true, false })
+    {
+        var sizes = new Configuration { CompanionSceneScale = lower ? .5f : 2f,
+            CompanionSize = lower ? 48f : 192f, CompanionHomeSize = lower ? 48f : 384f,
+            CompanionHandSize = lower ? 8f : 192f, CompanionBodyMotionStrength = lower ? 0f : 1.5f,
+            CompanionMotionReactions = lower };
+        var sizeJson = store.Export(sizes); var copy = new Configuration(); store.ImportInto(copy, sizeJson);
+        store.Save(copy); Check(store.Export(store.Load()!) == sizeJson, "Independent size and motion endpoints round-trip through JSON and SQLite.");
+        var home = OmniKit.Ui.CompanionSceneSizing.HomeEdge(copy, 1.5f);
+        var hand = OmniKit.Ui.CompanionSceneSizing.HandEdge(copy, 1.5f);
+        copy.CompanionSize = 96;
+        Check(home == OmniKit.Ui.CompanionSceneSizing.HomeEdge(copy, 1.5f) && hand == OmniKit.Ui.CompanionSceneSizing.HandEdge(copy, 1.5f),
+            "Changing the companion size leaves home and hand extents unchanged.");
+        copy.CompanionSceneScale = 1f;
+        Check(Math.Abs(home / OmniKit.Ui.CompanionSceneSizing.HomeEdge(copy, 1.5f) - sizes.CompanionSceneScale) < .0001f &&
+            Math.Abs(hand / OmniKit.Ui.CompanionSceneSizing.HandEdge(copy, 1.5f) - sizes.CompanionSceneScale) < .0001f,
+            "Scene scale multiplies home and hand together.");
+    }
+    foreach (var value in new JsonNode?[] { null, JsonValue.Create(1), JsonValue.Create("true") })
+    {
+        var invalidReaction = JsonNode.Parse(exported)!; invalidReaction["Settings"]!["CompanionMotionReactions"] = value;
+        Invalid(invalidReaction.ToJsonString(), "Motion reactions require a JSON boolean.");
+    }
+    if (args.Contains("--scene-only"))
+    {
+        Console.WriteLine($"Storage scene migration: {checks} focused checks passed.");
+        return;
+    }
+    var versionNineDocument = versionTwelveDocument.DeepClone();
     versionNineDocument["SchemaVersion"] = 9;
     versionNineDocument["Settings"]!["Version"] = 9;
     foreach (var field in versionTenFields) versionNineDocument["Settings"]!.AsObject().Remove(field);
@@ -201,7 +257,7 @@ try
 
     void CheckLegacy(Configuration migrated)
     {
-        Check(migrated.Version == 12 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
+        Check(migrated.Version == 13 && migrated.LauncherModifier == ModifierKeys.Alt && migrated.SettingsModifier == ModifierKeys.Control &&
             migrated.InteractModifier == ModifierKeys.None, "Legacy virtual-key modifiers must migrate to the correct masks.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         foreach (var field in legacySettings)
@@ -209,9 +265,10 @@ try
                 Check(JsonNode.DeepEquals(snapshot[field.Key], field.Value), "Migration must preserve legacy field " + field.Key);
         var defaults = new Configuration();
         var defaultSnapshot = JsonNode.Parse(store.Export(defaults))!["Settings"]!.AsObject();
-        foreach (var field in versionTwoFields.Concat(versionThreeFields).Concat(versionFourFields).Concat(versionFiveFields).Concat(versionSixFields).Concat(versionSevenFields).Concat(versionEightFields).Concat(versionNineFields).Concat(versionTenFields).Concat(versionTwelveFields))
+        foreach (var field in versionTwoFields.Concat(versionThreeFields).Concat(versionFourFields).Concat(versionFiveFields).Concat(versionSixFields).Concat(versionSevenFields).Concat(versionEightFields).Concat(versionNineFields).Concat(versionTenFields).Concat(versionTwelveFields).Concat(versionThirteenFields))
             Check(field == nameof(Configuration.CompanionHomeX)
                 ? Math.Abs(migrated.CompanionHomeX - defaults.CompanionHomeX) < .000001f
+                : field == nameof(Configuration.CompanionHomeSize) ? Math.Abs(migrated.CompanionHomeSize - defaults.CompanionHomeSize) < .0001f
                 : JsonNode.DeepEquals(snapshot[field], defaultSnapshot[field]), "Migration must use the default for new field " + field);
     }
 
@@ -230,7 +287,7 @@ try
         AnimationsEnabled = false,
     };
     var upgradedFallback = store.Upgrade(legacyFallback);
-    Check(upgradedFallback.Version == 12 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
+    Check(upgradedFallback.Version == 13 && upgradedFallback.LauncherModifier == ModifierKeys.Alt &&
         upgradedFallback.SettingsModifier == ModifierKeys.Control && upgradedFallback.InteractionHudOffsetY == -73f &&
         !upgradedFallback.AvatarEnabled && !upgradedFallback.AnimationsEnabled &&
         legacyFallback.Version == 1 && (int)legacyFallback.LauncherModifier == 18,
@@ -273,13 +330,13 @@ try
     var migratedStore = new LocalStore(legacyDirectory);
     CheckLegacy(migratedStore.Load()!);
     var migratedRow = ReadDatabase(legacyDirectory);
-    Check(migratedRow.DatabaseSchema == 12 && migratedRow.RowSchema == 12 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(migratedRow.DatabaseSchema == 13 && migratedRow.RowSchema == 13 && JsonNode.Parse(migratedRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Database version, row version and JSON schema must migrate together.");
     CheckLegacy(new LocalStore(legacyDirectory).Load()!);
 
     void CheckVersionTwo(Configuration migrated)
     {
-        Check(migrated.Version == 12 && migrated.CompanionOutfit == "Navigator" && migrated.CompanionPalette == "Moonlight" && migrated.CompanionMagicEnabled &&
+        Check(migrated.Version == 13 && migrated.CompanionOutfit == "Navigator" && migrated.CompanionPalette == "Moonlight" && migrated.CompanionMagicEnabled &&
             migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
             "Version two must gain the new companion defaults.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
@@ -293,12 +350,12 @@ try
     CheckVersionTwo(store.Upgrade(versionTwoFallback));
     var versionTwoDirectory = LegacyDatabase("version-two", versionTwoJson, 2);
     CheckVersionTwo(new LocalStore(versionTwoDirectory).Load()!);
-    Check(ReadDatabase(versionTwoDirectory).DatabaseSchema == 12 && ReadDatabase(versionTwoDirectory).RowSchema == 12,
+    Check(ReadDatabase(versionTwoDirectory).DatabaseSchema == 13 && ReadDatabase(versionTwoDirectory).RowSchema == 13,
         "Version two SQLite schema and row must migrate together.");
 
     void CheckVersionThree(Configuration migrated)
     {
-        Check(migrated.Version == 12 && migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
+        Check(migrated.Version == 13 && migrated.InteractionTargets == InteractionTargets.DefaultWorld && migrated.EnemyInteractMode == EnemyInteractMode.Choose,
             "Version three must gain world targets with enemies off and no preselected enemy action.");
         Check(!migrated.CompanionFrameInteractionEnabled && migrated.CompanionPickupEnabled && migrated.CompanionPerchEnabled &&
             migrated.CompanionContainmentEnabled && migrated.CompanionFallingEnabled,
@@ -317,12 +374,12 @@ try
     var versionThreeDirectory = LegacyDatabase("version-three", versionThreeJson, 3);
     CheckVersionThree(new LocalStore(versionThreeDirectory).Load()!);
     var versionThreeRow = ReadDatabase(versionThreeDirectory);
-    Check(versionThreeRow.DatabaseSchema == 12 && versionThreeRow.RowSchema == 12 && JsonNode.Parse(versionThreeRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(versionThreeRow.DatabaseSchema == 13 && versionThreeRow.RowSchema == 13 && JsonNode.Parse(versionThreeRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version three SQLite schema, row and JSON must migrate together.");
 
     void CheckVersionFour(Configuration migrated)
     {
-        Check(migrated.Version == 12 && !migrated.InteractionHudOutline && migrated.InteractionHudEffect == HudTextEffect.Shadow,
+        Check(migrated.Version == 13 && !migrated.InteractionHudOutline && migrated.InteractionHudEffect == HudTextEffect.Shadow,
             "Version four must retain its shadow appearance without enabling an outline.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         foreach (var field in versionFourDocument["Settings"]!.AsObject())
@@ -336,7 +393,7 @@ try
     var versionFourDirectory = LegacyDatabase("version-four", versionFourJson, 4);
     CheckVersionFour(new LocalStore(versionFourDirectory).Load()!);
     var versionFourRow = ReadDatabase(versionFourDirectory);
-    Check(versionFourRow.DatabaseSchema == 12 && versionFourRow.RowSchema == 12 && JsonNode.Parse(versionFourRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(versionFourRow.DatabaseSchema == 13 && versionFourRow.RowSchema == 13 && JsonNode.Parse(versionFourRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version four SQLite schema, row and JSON must migrate together.");
     var badVersionFour = versionFourDocument.DeepClone();
     badVersionFour["Settings"]!["InteractionHudScale"] = 3;
@@ -350,7 +407,7 @@ try
 
     void CheckVersionFive(Configuration migrated)
     {
-        Check(migrated.Version == 12 && migrated.InteractionHudEffectIntensity == 1f && migrated.InteractionHudEffectSpeed == 1f &&
+        Check(migrated.Version == 13 && migrated.InteractionHudEffectIntensity == 1f && migrated.InteractionHudEffectSpeed == 1f &&
             migrated.InteractionHudEffectAnimated && migrated.WikiInGame && migrated.CompanionHomeEnabled && migrated.CompanionGrabHandEnabled && migrated.CompanionCommentsEnabled &&
             migrated.CompanionCommentInterval == 120f && migrated.CompanionBlinkEnabled && migrated.CompanionBlinkInterval == 3f && !migrated.BrowserInterceptLinks,
             "Version five must gain default effect controls and always use the in-game browser.");
@@ -368,7 +425,7 @@ try
     var versionFiveDirectory = LegacyDatabase("version-five", versionFiveJson, 5);
     CheckVersionFive(new LocalStore(versionFiveDirectory).Load()!);
     var versionFiveRow = ReadDatabase(versionFiveDirectory);
-    Check(versionFiveRow.DatabaseSchema == 12 && versionFiveRow.RowSchema == 12 && JsonNode.Parse(versionFiveRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(versionFiveRow.DatabaseSchema == 13 && versionFiveRow.RowSchema == 13 && JsonNode.Parse(versionFiveRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version five SQLite schema, row and JSON must migrate together.");
 
     foreach (var oldDocument in new[] { legacyDocument, versionTwoDocument, versionThreeDocument, versionFourDocument, versionFiveDocument })
@@ -460,7 +517,7 @@ try
     }
     void CheckVersionSix(Configuration migrated)
     {
-        Check(migrated.Version == 12, "Version six must migrate to the current configuration version.");
+        Check(migrated.Version == 13, "Version six must migrate to the current configuration version.");
         CheckNapDefaults(migrated);
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         foreach (var field in versionSixDocument["Settings"]!.AsObject())
@@ -478,7 +535,7 @@ try
     var versionSixDirectory = LegacyDatabase("version-six", versionSixJson, 6);
     CheckVersionSix(new LocalStore(versionSixDirectory).Load()!);
     var versionSixRow = ReadDatabase(versionSixDirectory);
-    Check(versionSixRow.DatabaseSchema == 12 && versionSixRow.RowSchema == 12 && JsonNode.Parse(versionSixRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(versionSixRow.DatabaseSchema == 13 && versionSixRow.RowSchema == 13 && JsonNode.Parse(versionSixRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version six database, row and JSON versions must upgrade together.");
     CheckVersionSix(new LocalStore(versionSixDirectory).Load()!);
 
@@ -528,7 +585,7 @@ try
         "The original blink and selected companion stay the defaults while seasonal looks use Auto.");
     void CheckVersionSeven(Configuration migrated)
     {
-        Check(migrated.Version == 12, "Version seven must migrate to the current configuration version.");
+        Check(migrated.Version == 13, "Version seven must migrate to the current configuration version.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         var defaults = JsonNode.Parse(store.Export(new Configuration()))!["Settings"]!.AsObject();
         foreach (var field in versionEightFields)
@@ -548,7 +605,7 @@ try
     var sevenDirectory = LegacyDatabase("version-seven", versionSevenJson, 7);
     CheckVersionSeven(new LocalStore(sevenDirectory).Load()!);
     var sevenRow = ReadDatabase(sevenDirectory);
-    Check(sevenRow.DatabaseSchema == 12 && sevenRow.RowSchema == 12 && JsonNode.Parse(sevenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(sevenRow.DatabaseSchema == 13 && sevenRow.RowSchema == 13 && JsonNode.Parse(sevenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version seven database, row and JSON versions migrate atomically to the current schema.");
     var consentSeven = versionSevenDocument.DeepClone(); consentSeven["Settings"]!["AiEnabled"] = true;
     var consentSevenJson = consentSeven.ToJsonString();
@@ -579,7 +636,7 @@ try
 
     void CheckVersionEight(Configuration migrated)
     {
-        Check(migrated.Version == 12, "Version eight must migrate to the current schema.");
+        Check(migrated.Version == 13, "Version eight must migrate to the current schema.");
         var snapshot = JsonNode.Parse(store.Export(migrated))!["Settings"]!.AsObject();
         var defaults = JsonNode.Parse(store.Export(new Configuration()))!["Settings"]!.AsObject();
         foreach (var field in versionNineFields)
@@ -596,7 +653,7 @@ try
     var eightDirectory = LegacyDatabase("version-eight", versionEightJson, 8);
     CheckVersionEight(new LocalStore(eightDirectory).Load()!);
     var eightRow = ReadDatabase(eightDirectory);
-    Check(eightRow.DatabaseSchema == 12 && eightRow.RowSchema == 12 && JsonNode.Parse(eightRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12,
+    Check(eightRow.DatabaseSchema == 13 && eightRow.RowSchema == 13 && JsonNode.Parse(eightRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13,
         "Version eight migration commits database, row and JSON versions atomically.");
     var consentEight = versionEightDocument.DeepClone(); consentEight["Settings"]!["AiEnabled"] = true;
     Check(new LocalStore(LegacyDatabase("version-eight-consent", consentEight.ToJsonString(), 8)).Load()!.AiEnabled, "Version eight local consent survives migration.");
@@ -702,8 +759,8 @@ try
     Invalid("null", "Null root");
     Invalid(new string(' ', 262145), "Oversize input");
     Invalid(new string('界', 100000), "Oversize UTF-8 input");
-    Invalid(exported.Replace("\"SchemaVersion\": 12", "\"SchemaVersion\": 13"), "Future schema");
-    Invalid(exported.Replace("\"SchemaVersion\": 12", "\"SchemaVersion\": 12, \"SchemaVersion\": 12"), "Duplicate root fields");
+    Invalid(exported.Replace("\"SchemaVersion\": 13", "\"SchemaVersion\": 14"), "Future schema");
+    Invalid(exported.Replace("\"SchemaVersion\": 13", "\"SchemaVersion\": 13, \"SchemaVersion\": 13"), "Duplicate root fields");
     Invalid(exported.Replace("\"Avatar\": \"Moonblob\"", "\"Avatar\": \"Moonblob\", \"Avatar\": \"Wink\""), "Duplicate nested fields");
     Invalid(Change("UnapprovedFutureField", "should not import"), "Unknown fields");
     foreach (var field in versionEightFields)
@@ -1076,7 +1133,7 @@ try
     try { _ = new LocalStore(testDirectory); } catch (InvalidOperationException) { futureRejected = true; }
     Check(futureRejected, "Future database versions must be preserved and rejected.");
     checks += AccessoryFitChecks.Run(testDirectory);
-    Console.WriteLine($"{checks} storage checks passed: v1-v11 migration to v12, costume selection and fits, bounded UI controls, rollback, atomic validation, export whitelist and AI consent.");
+    Console.WriteLine($"{checks} storage checks passed: v1-v12 migration to v13, costume selection and fits, bounded UI controls, rollback, atomic validation, export whitelist and AI consent.");
 }
 finally
 {

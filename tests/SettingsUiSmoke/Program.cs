@@ -7,6 +7,7 @@ using LauncherUiSmoke;
 
 var measureOnly = args.Contains("--measure-hotkeys");
 var appearance15Only = args.Contains("--appearance15");
+var scene13Only = args.Contains("--scene13");
 var caseFilter = args.FirstOrDefault(argument => argument.StartsWith("--case=", StringComparison.Ordinal))?[7..].Split(',');
 var scaleFilter = args.FirstOrDefault(argument => argument.StartsWith("--scale=", StringComparison.Ordinal))?[8..];
 var paths = args.Where(argument => !argument.StartsWith("--", StringComparison.Ordinal)).ToArray();
@@ -42,6 +43,23 @@ if (args.Contains("--companions") || args.Contains("--companion-poses"))
 }
 var cases = new[]
 {
+    (Name: "scene13-look-timer", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-motion-help", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-home-quiet", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-look", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-look-random", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-look-orbit", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-scene", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-scene-hand-off", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-motion", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-motion-frame", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-motion-static", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-motion-wink", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-home", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-home-off", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-seasonal", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-seasonal-holiday", Section: 3, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "scene13-seasonal-off", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "wardrobe-costume-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "wardrobe-avatar-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "wardrobe-nib", Section: 3, Tab: 0, Enabled: true, Scroll: false),
@@ -153,6 +171,7 @@ var renders = 0;
 foreach (var scale in new[] { 1f, 1.5f, 2f })
 foreach (var scenario in cases)
 {
+    if (scene13Only && !scenario.Name.StartsWith("scene13-", StringComparison.Ordinal)) continue;
     if (measureOnly && scenario.Name != "launcher") continue;
     if (appearance15Only && !scenario.Name.StartsWith("appearance15-", StringComparison.Ordinal)) continue;
     if (caseFilter is not null && !caseFilter.Contains(scenario.Name)) continue;
@@ -267,6 +286,30 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(ui, "companionOpen", section == -1);
     Set(ui, "section", section); Set(ui, "companionTab", tab); Set(ui, "shownCompanionTab", -1);
     Set(ui, "selectSettingsTab", true);
+    var scene13 = name.StartsWith("scene13-", StringComparison.Ordinal);
+    var appearanceSection = name.Contains("seasonal", StringComparison.Ordinal) || name is "wardrobe-costume-menu" or "wardrobe-nib" ? 4
+        : name.Contains("home", StringComparison.Ordinal) || name.Contains("styles-", StringComparison.Ordinal) && name != "appearance15-styles-random" ? 3
+        : name.Contains("hand", StringComparison.Ordinal) || name == "appearance15-styles-random" || name.StartsWith("scene13-scene", StringComparison.Ordinal) ? 1
+        : name.Contains("motion", StringComparison.Ordinal) || name.StartsWith("frame-", StringComparison.Ordinal) || name == "pose-menu"
+          || name.Contains("grounded", StringComparison.Ordinal) || name.Contains("hop-off", StringComparison.Ordinal) ? 2 : 0;
+    Set(ui, "companionAppearanceSection", appearanceSection);
+    if (scene13)
+    {
+        Set(config, "AvatarEnabled", true);
+        Set(config, "CompanionFrameInteractionEnabled", name is "scene13-motion-frame" or "scene13-motion-help");
+        Set(config, "CompanionHomeEnabled", name != "scene13-home-off");
+        Set(config, "CompanionGrabHandEnabled", name != "scene13-scene-hand-off");
+        Set(config, "CompanionAutoRotateEnabled", name != "scene13-seasonal-off");
+        Set(config, "CompanionSeasonalEnabled", name != "scene13-seasonal-off");
+        Set(config, "CompanionHolidayBodiesEnabled", name == "scene13-seasonal-holiday");
+        Set(config, "CompanionVariant", name is "scene13-look-random" or "scene13-look-timer" ? "Random" : "Default");
+        Set(config, "CompanionLookAutoRotateEnabled", name == "scene13-look-timer");
+        Set(config, "CompanionNapsEnabled", name != "scene13-home-quiet");
+        Set(config, "CompanionCommentsEnabled", name != "scene13-home-quiet");
+        Set(config, "AnimationsEnabled", name != "scene13-motion-static");
+        Set(config, "Avatar", name == "scene13-look-orbit" ? "Orbit" : name == "scene13-motion-wink" ? "Wink" : "Moonblob");
+    }
+
     Set(ui, "hotkeys", Activator.CreateInstance(Type("OmniKit.Ui.HotkeyCapture"), nonPublic: true));
     var fixtureRoaming = RuntimeHelpers.GetUninitializedObject(Type("OmniKit.Ui.RoamingCompanion"));
     Set(fixtureRoaming, "assetDirectory", Path.GetFullPath("assets"));
@@ -419,21 +462,18 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "launcher-help" => "Shortcut help", "launcher-examples" => "Search examples", "hud-help" => "HUD help",
             "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
             "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
-            "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => "Home & personality",
-            "seasonal" => "Seasonal looks & rotation",
-            "interact-enemy-help" => "Enemy behavior", "frame-help" => "Frame behavior", "voice-help" => "Voice shortcut help",
+            "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => null,
+            "seasonal" => null,
+            "interact-enemy-help" => "Enemy behavior", "frame-help" or "scene13-motion-help" => "Frame behavior", "voice-help" => "Voice shortcut help",
             "ai-cli-help" => "CLI privacy & limits", "data-import" => "Import settings", "data-plugins" => "Plugins & Umbra",
             "data-browser" => "In-game browser", "about-source" => "Source details", "about-credits" => "Credits",
             "conversation-help" => "Connection choices",
             "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
         };
-        var appearanceHeader = name == "wardrobe-costume-menu" ? "Seasonal looks & rotation"
-            : name == "wardrobe-nib" ? "Looks" : !appearance15 ? null : name.Contains("looks-", StringComparison.Ordinal) ? "Looks"
-            : name.Contains("styles-", StringComparison.Ordinal) || name.Contains("style-menu", StringComparison.Ordinal) ? "Home & personality" : null;
-        var appearanceTarget = name == "wardrobe-costume-menu" ? "Painted costume" : name == "wardrobe-avatar-menu" ? "Companion"
-            : name == "wardrobe-nib" ? "Seasonal looks & rotation" : !appearance15 ? null : name == "appearance15-hand-style-menu" || name == "appearance15-styles-random" ? "Hand style"
-            : appearanceHeader == "Home & personality" ? "Home style"
-            : appearanceHeader == "Looks" ? "Look" : "Draw roaming area";
+        string? appearanceHeader = null;
+        var appearanceTarget = name is "wardrobe-costume-menu" or "wardrobe-nib" ? "Painted costume" : name == "wardrobe-avatar-menu" ? "Companion"
+            : !appearance15 ? null : name == "appearance15-hand-style-menu" || name == "appearance15-styles-random" ? "Hand style"
+            : appearanceSection == 3 ? "Home style" : appearanceSection == 0 ? "Look" : "Preview animation";
         bool PointAt(string label, bool click, bool scrollTo = true)
         {
             var key = measured.ContainsKey(label) ? label : measured.Keys.FirstOrDefault(key => key.Contains(label, StringComparison.Ordinal));
@@ -478,8 +518,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 { if (PointAt(appearanceHeader, true)) clickedFrame = frame; }
                 else if (appearanceHeader != null && frame == clickedFrame + 1) io.AddMouseButtonEvent(0, false);
                 else if (appearanceReady < 0 && (appearanceHeader == null || frame >= clickedFrame + 3))
-                { if (PointAt(appearanceTarget!, popupCase || name == "wardrobe-nib")) appearanceReady = frame; }
-                else if ((popupCase || name == "wardrobe-nib") && frame == appearanceReady + 1) io.AddMouseButtonEvent(0, false);
+                { if (PointAt(appearanceTarget!, popupCase)) appearanceReady = frame; }
+                else if ((popupCase) && frame == appearanceReady + 1) io.AddMouseButtonEvent(0, false);
                 else if (!popupCase && !appearanceScrolled && appearanceReady >= 0 && frame >= appearanceReady + 3)
                 {
                     // Settle the chosen row near the content top, so the

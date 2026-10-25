@@ -180,19 +180,20 @@ internal static class AccessoryFitChecks
 
         var legacy = JsonNode.Parse(json)!;
         legacy["SchemaVersion"] = 9; legacy["Settings"]!["Version"] = 9;
+        foreach (var field in new[] { "CompanionSceneScale", "CompanionHomeSize", "CompanionHandSize", "CompanionBodyMotionStrength", "CompanionMotionReactions" }) legacy["Settings"]!.AsObject().Remove(field);
         legacy["Settings"]!.AsObject().Remove("CompanionHolidayBody"); legacy["Settings"]!.AsObject().Remove("CompanionAccessoryFits");
         legacy["Settings"]!.AsObject().Remove("CompanionTransitionEffectsEnabled");
         legacy["Settings"]!.AsObject().Remove("CompanionCostume");
         var legacyJson = legacy.ToJsonString();
         var fresh = new Configuration();
-        Check(fresh.Version == 12 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionCostume == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
+        Check(fresh.Version == 13 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionCostume == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
             "New configurations default to automatic body selection, no fit overrides and enabled transition effects.");
         var fallback = JsonSerializer.Deserialize<Configuration>(legacy["Settings"]!.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
         fallback.CompanionHolidayBody = "TheRising"; fallback.CompanionAccessoryFits = [fit];
         fallback.CompanionTransitionEffectsEnabled = false;
         var fallbackBefore = JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true });
         var migratedFallback = store.Upgrade(fallback);
-        Check(migratedFallback.Version == 12 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
+        Check(migratedFallback.Version == 13 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
             JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true }) == fallbackBefore,
             "Legacy fallback initializes new fields on a detached copy and leaves its source untouched.");
         var legacyImport = new Configuration(); store.ImportInto(legacyImport, legacyJson);
@@ -230,7 +231,7 @@ internal static class AccessoryFitChecks
         var legacyDirectory = LegacyDatabase("accessory-v9", legacyJson);
         var migrated = new LocalStore(legacyDirectory).Load()!;
         var row = ReadDatabase(legacyDirectory);
-        Check(row.Version == 12 && row.RowVersion == 12 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 12 &&
+        Check(row.Version == 13 && row.RowVersion == 13 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 13 &&
             migrated.AiEnabled && migrated.CompanionHolidayBody == "Auto" && migrated.CompanionAccessoryFits.Count == 0 && migrated.CompanionTransitionEffectsEnabled,
             "Schema nine database, row, and JSON migrate atomically with local consent retained.");
         var migratedSettings = JsonNode.Parse(store.Export(migrated))!["Settings"]!;
@@ -247,13 +248,14 @@ internal static class AccessoryFitChecks
 
         var legacyTen = JsonNode.Parse(json)!;
         legacyTen["SchemaVersion"] = 10; legacyTen["Settings"]!["Version"] = 10;
+        foreach (var field in new[] { "CompanionSceneScale", "CompanionHomeSize", "CompanionHandSize", "CompanionBodyMotionStrength", "CompanionMotionReactions" }) legacyTen["Settings"]!.AsObject().Remove(field);
         legacyTen["Settings"]!.AsObject().Remove("CompanionCostume");
         foreach (var oldFit in legacyTen["Settings"]!["CompanionAccessoryFits"]!.AsArray())
             oldFit!.AsObject().Remove("RotationDegrees");
         var legacyTenJson = legacyTen.ToJsonString();
         var unrotated = fit with { RotationDegrees = 0 };
         var tenImport = new Configuration(); store.ImportInto(tenImport, legacyTenJson);
-        Check(tenImport.Version == 12 && tenImport.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && !tenImport.AiEnabled,
+        Check(tenImport.Version == 13 && tenImport.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && !tenImport.AiEnabled,
             "Schema ten fits acquire zero rotation while retaining every previous fit value and never granting consent.");
         tenImport.AiEnabled = true; store.ImportInto(tenImport, legacyTenJson);
         Check(tenImport.AiEnabled, "Schema ten fit import retains existing same-provider consent.");
@@ -261,7 +263,7 @@ internal static class AccessoryFitChecks
         Invalid(mixedTen.ToJsonString(), "Schema eleven nested rotation in a schema ten document");
         var tenFallback = new Configuration { Version = 10, CompanionAccessoryFits = [fit], AiEnabled = true };
         var upgradedTen = store.Upgrade(tenFallback);
-        Check(upgradedTen.Version == 12 && upgradedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && upgradedTen.AiEnabled &&
+        Check(upgradedTen.Version == 13 && upgradedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && upgradedTen.AiEnabled &&
             tenFallback.Version == 10 && tenFallback.CompanionAccessoryFits.SequenceEqual(new[] { fit }) &&
             !ReferenceEquals(upgradedTen.CompanionAccessoryFits, tenFallback.CompanionAccessoryFits),
             "Legacy fallback initializes rotation on a detached fit collection and preserves the source and consent.");
@@ -270,7 +272,7 @@ internal static class AccessoryFitChecks
         var tenDirectory = LegacyDatabase("accessory-v10", legacyTenJson, schema: 10);
         var migratedTen = new LocalStore(tenDirectory).Load()!;
         var tenRow = ReadDatabase(tenDirectory);
-        Check(tenRow.Version == 12 && tenRow.RowVersion == 12 && JsonNode.Parse(tenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 12 &&
+        Check(tenRow.Version == 13 && tenRow.RowVersion == 13 && JsonNode.Parse(tenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 13 &&
             migratedTen.AiEnabled && migratedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }),
             "Schema ten database, row and JSON migrate atomically with zero rotation and existing fits/consent retained.");
         var tenSettings = JsonNode.Parse(store.Export(migratedTen))!["Settings"]!;
@@ -318,6 +320,7 @@ internal static class AccessoryFitChecks
         }
         var legacyEleven = JsonNode.Parse(json)!;
         legacyEleven["SchemaVersion"] = 11; legacyEleven["Settings"]!["Version"] = 11;
+        foreach (var field in new[] { "CompanionSceneScale", "CompanionHomeSize", "CompanionHandSize", "CompanionBodyMotionStrength", "CompanionMotionReactions" }) legacyEleven["Settings"]!.AsObject().Remove(field);
         legacyEleven["Settings"]!.AsObject().Remove("CompanionCostume");
         var elevenJson = legacyEleven.ToJsonString();
         var elevenImport = new Configuration { CompanionCostume = "None" }; store.ImportInto(elevenImport, elevenJson);
@@ -327,12 +330,12 @@ internal static class AccessoryFitChecks
         Invalid(mixedEleven.ToJsonString(), "Schema twelve preference in a schema eleven document");
         var oldFallback = new Configuration { Version = 11, CompanionCostume = "None", AiEnabled = true, CompanionAccessoryFits = [fit] };
         var newFallback = store.Upgrade(oldFallback);
-        Check(newFallback.Version == 12 && newFallback.CompanionCostume == "Auto" && newFallback.AiEnabled &&
+        Check(newFallback.Version == 13 && newFallback.CompanionCostume == "Auto" && newFallback.AiEnabled &&
             newFallback.CompanionAccessoryFits.SequenceEqual(new[] { fit }) && oldFallback.Version == 11 && oldFallback.CompanionCostume == "None",
             "Legacy fallback changes the new costume default on a detached copy only.");
         var elevenDirectory = LegacyDatabase("costume-v11", elevenJson, schema: 11);
         var migratedEleven = new LocalStore(elevenDirectory).Load()!; var elevenRow = ReadDatabase(elevenDirectory);
-        Check(elevenRow.Version == 12 && elevenRow.RowVersion == 12 && migratedEleven.Version == 12 &&
+        Check(elevenRow.Version == 13 && elevenRow.RowVersion == 13 && migratedEleven.Version == 13 &&
             migratedEleven.CompanionCostume == "Auto" && migratedEleven.AiEnabled,
             "Schema eleven row, database and JSON upgrade atomically with existing consent.");
         var elevenSettings = JsonNode.Parse(store.Export(migratedEleven))!["Settings"]!;

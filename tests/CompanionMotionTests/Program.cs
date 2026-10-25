@@ -9,6 +9,7 @@ if (args.Contains("--blink-only"))
 }
 
 var checks = 0;
+checks += MotionDynamicsChecks.Run();
 void Check(bool condition, string message)
 {
     checks++;
@@ -25,6 +26,10 @@ void Contained(CompanionMotion motion, CompanionLayout layout)
 
 var layout = CompanionLayout.Create(new Vector2(200, 50), new Vector2(620, 500),
     new Vector4(.1f, .2f, .9f, .9f), 96, 1.5f, 1);
+var largeScene = CompanionLayout.Create(Vector2.Zero, new(4000, 3000), new(0, 0, 1, 1), 192, 8, 1);
+Check(largeScene.SpriteSize.X == 1536, "UI scale four and scene scale two retain their full combined scale.");
+var fittedScene = CompanionLayout.Create(Vector2.Zero, new(80, 60), new(0, 0, 1, 1), 192, 8, 1);
+Check(fittedScene.SpriteSize.X == 60 && fittedScene.SpriteSize.Y == 60, "An oversized scene still fits the actual small box.");
 var motion = new CompanionMotion(17);
 motion.Update(layout, 0, true);
 Check(Close(motion.Position.X, layout.Minimum.X), "The companion starts at the area's left edge.");

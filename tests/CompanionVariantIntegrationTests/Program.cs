@@ -70,9 +70,11 @@ try{
     else original=(Vector2)Call(normal,"Map",Get(normal,"Grip"),position,new Vector2(size),mirror)!;
     var t=time/.18f;t=t*t*(3-2*t);Check(Vector2.Distance(grip,Vector2.Lerp(original,position+new Vector2(size*.5f),t))<.001f,"Carry pickup eases from original grip.");}
    Set(companion,"handWasDragging",true);Set(companion,"handTime",.3f);var hfirst=draw.VtxBuffer.Size;
-   Call(companion,"DrawGrabHand",draw,Vector2.Zero,io.DisplaySize,new Vector2(size),0f,true,null,grip);
+   Set(config,"CompanionHandSize",30f);Set(config,"CompanionSceneScale",1.2f);
+   Call(companion,"DrawGrabHand",draw,Vector2.Zero,io.DisplaySize,1.25f,0f,true,null,grip);
    var hv=Indices(draw,textures["companion-grab-hand.png"].Id).Where(i=>i>=hfirst).Distinct().ToArray();Check(hv.Length==4,"Actual hand draws one held image.");
    var a=draw.VtxBuffer[hv[0]].Pos;var b=draw.VtxBuffer[hv[2]].Pos;var contact=a+(b-a)*new Vector2(.5f,.77f);Check(Vector2.Distance(contact,grip)<.001f,"Actual held hand contact equals Roaming.visualGrip.");
+   Check(Math.Abs(b.X-a.X-45f)<.001f,"Independent hand size30 times scene1.2 times UI1.25 stays45pixels for every companion size.");
   }
  }
  if(!args.Contains("--seasonal-only")){

@@ -12,6 +12,7 @@
     <Compile Include="../../src/OmniKit/Ui/CompanionHolidayLibrary.cs" Link="CompanionHolidayLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionAnimationLibrary.cs" Link="CompanionAnimationLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionBodyMotion.cs" Link="CompanionBodyMotion.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionMotionProfiles.cs" Link="CompanionMotionProfiles.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionObstacle.cs" Link="CompanionObstacle.cs" />
     <Compile Include="../../src/OmniKit/Ui/SeasonalCompanionRenderer.cs" Link="SeasonalCompanionRenderer.cs" />
