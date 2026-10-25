@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Include="../../src/OmniKit/Ui/CompanionBodyMotion.cs" Link="CompanionBodyMotion.cs" />
     <Compile Include="../../src/OmniKit/Ui/OrbitRingRenderer.cs" Link="OrbitRingRenderer.cs" />
+    <Compile Include="../../src/OmniKit/Ui/SeasonalCompanionPolicy.cs" Link="SeasonalCompanionPolicy.cs" />
+    <Compile Include="../../src/OmniKit/Ui/CompanionHolidayLibrary.cs" Link="CompanionHolidayLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionVariantLibrary.cs" Link="CompanionVariantLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionAnimationLibrary.cs" Link="CompanionAnimationLibrary.cs" />
     <Compile Include="../../src/OmniKit/Ui/CompanionMotion.cs" Link="CompanionMotion.cs" />

@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.Json;
 using Dalamud.Bindings.ImGui;
 using LauncherUiSmoke;
 
@@ -43,11 +44,13 @@ void Check(bool condition, string message) { checks++; if (!condition) throw new
 bool Near(Vector2 a, Vector2 b, float tolerance = .0003f) => Vector2.Distance(a, b) <= tolerance;
 Vector2 Property(object value, string name) => (Vector2)value.GetType().GetProperty(name)!.GetValue(value)!;
 Vector2[] Points(object quad) => [Property(quad, "A"), Property(quad, "B"), Property(quad, "C"), Property(quad, "D")];
-object Adjustment(float x = 0, float y = 0, float scale = 1) => Activator.CreateInstance(adjustmentType,
-    ["Wink", "Default", "Starlight", x, y, scale])!;
+object Adjustment(float x = 0, float y = 0, float scale = 1, float rotation = 0) => Activator.CreateInstance(adjustmentType,
+    ["Wink", "Default", "Starlight", x, y, scale, rotation])!;
 object Apply(object quad, object body, object adjustment) => apply.Invoke(null, [quad, body, fit, adjustment])!;
 Vector2 LocalDelta(object body, Vector2 delta) => (Vector2)localDelta.Invoke(null, [body, fit, delta])!;
 var drawings = new List<(object Original, object Adjusted, Vector2 Pivot, string Label)>();
+var sourceOffsets = new[] { new Vector2(-45, -50), new Vector2(45, -50), new Vector2(45, 15), new Vector2(-45, 15) };
+float Cross(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
 
 foreach (var edge in new[] { 96f, 192f })
 foreach (var mirrored in new[] { false, true })
@@ -78,6 +81,29 @@ foreach (var origin in new[] { new Vector2(0, 0), new Vector2(237, 109) })
             Near(vertices[3] - vertices[0], (originalVertices[3] - originalVertices[0]) * scale),
             "Mirroring, rotation and shear preserve the accessory's scaled local axes.");
     }
+    foreach (var rotation in new[] { -450f, -180f, -90f, -35f, 0f, 35f, 90f, 180f, 450f })
+    foreach (var size in new[] { .25f, 1f, 3f })
+    {
+        var adjusted = Apply(original, body, Adjustment(.4f, -.2f, size, rotation));
+        // The oracle starts from source artwork rather than inverting production screen
+        // geometry. Positive source angles are clockwise in the image's downward Y axis.
+        var rotate = Matrix3x2.CreateRotation(Math.Clamp(rotation, -180, 180) * MathF.PI / 180);
+        var expected = sourceOffsets.Select(offset => Map(anchor + new Vector2(.4f, -.2f) * headWidth
+            + Vector2.Transform(offset, rotate) * size)).ToArray();
+        var vertices = Points(adjusted);
+        Check(vertices.Zip(expected).All(pair => Near(pair.First, pair.Second)),
+            "Accessory rotation precedes body mirroring, roll and shear; the offset stays in unrotated head-local axes.");
+        Check(Property(adjusted, "UvStart") == uvStart && Property(adjusted, "UvEnd") == uvEnd,
+            "Local rotation preserves the complete source crop and corner-to-UV order.");
+        var originalVertices = Points(original);
+        Check(Math.Sign(Cross(vertices[1] - vertices[0], vertices[3] - vertices[0])) ==
+            Math.Sign(Cross(originalVertices[1] - originalVertices[0], originalVertices[3] - originalVertices[0])),
+            "Rotation preserves winding; only the body's mirror changes handedness.");
+        var pivotQuad = Activator.CreateInstance(quadType, [pivot, pivot, pivot, pivot, uvStart, uvEnd])!;
+        Check(Points(Apply(pivotQuad, body, Adjustment(.4f, -.2f, size, rotation)))
+                .All(point => Near(point, Map(anchor + new Vector2(.4f, -.2f) * headWidth))),
+            "The measured crown pivot does not orbit when the angle or uniform scale changes.");
+    }
     foreach (var delta in new[] { new Vector2(.6f, -.35f), new Vector2(-.9f, .8f), Vector2.Zero })
     {
         var screen = Map(anchor + delta * headWidth) - pivot;
@@ -88,16 +114,38 @@ foreach (var origin in new[] { new Vector2(0, 0), new Vector2(237, 109) })
     }
     Check(Near(LocalDelta(body, new Vector2(13, -7)) + LocalDelta(body, new Vector2(-3, 19)), LocalDelta(body, new Vector2(10, 12))),
         "Splitting a mouse drag into frames does not change its final local displacement.");
-    var bounded = Apply(original, body, Adjustment(float.NaN, float.PositiveInfinity, float.NaN));
-    Check(Points(bounded).Zip(Points(original)).All(pair => Near(pair.First, pair.Second)), "Nonfinite direct-call values fall back to a finite neutral placement.");
-    if (origin == Vector2.Zero && edge == 96 && shear == 0 && angle != MathF.Tau)
-        drawings.Add((original, Apply(original, body, Adjustment(.4f, -.2f, 1.4f)), pivot, $"{(mirrored ? "Mirror" : "Normal")} {angle:0.0}"));
+    foreach (var invalidAngle in new[] { float.NaN, float.PositiveInfinity, float.NegativeInfinity })
+    {
+        var bounded = Apply(original, body, Adjustment(float.NaN, float.PositiveInfinity, float.NaN, invalidAngle));
+        Check(Points(bounded).Zip(Points(original)).All(pair => Near(pair.First, pair.Second)),
+            "Nonfinite offsets, scale and rotation fall back to a finite neutral placement.");
+    }
+    if (origin == Vector2.Zero && edge == 96 && shear == .3f && angle != MathF.Tau)
+        drawings.Add((original, Apply(original, body, Adjustment(.4f, -.2f, 1.4f, 45)), pivot,
+            $"{(mirrored ? "Mirror" : "Normal")} roll {angle:0.0}, hat +45"));
 }
 var singular = Activator.CreateInstance(transformType, [sourceRect, 300f, Vector2.Zero, Vector2.UnitX, Vector2.UnitX])!;
 Check(LocalDelta(singular, new Vector2(12, 8)) == Vector2.Zero, "A degenerate transform rejects the drag instead of dividing by zero.");
 var zeroWidth = Activator.CreateInstance(fitType, [anchor, 0f])!;
 Check((Vector2)localDelta.Invoke(null, [singular, zeroWidth, Vector2.One])! == Vector2.Zero, "A zero-width head cannot produce an unbounded drag.");
+foreach (var rotation in new[] { -180f, -37.5f, 0f, 62.25f, 180f })
+{
+    var saved = Adjustment(.3f, -.2f, 1.4f, rotation);
+    var json = JsonSerializer.Serialize(saved, adjustmentType);
+    using var parsed = JsonDocument.Parse(json);
+    Check(parsed.RootElement.GetProperty("RotationDegrees").GetSingle() == rotation,
+        "The real adjustment record serializes rotation as a named numeric preference.");
+    Check(Equals(saved, JsonSerializer.Deserialize(json, adjustmentType)),
+        "The complete synthetic saved fit, including angle, round-trips without altering its identity or other adjustments.");
+}
+var legacy = JsonSerializer.Deserialize("""{"Avatar":"Wink","Look":"Default","Theme":"Starlight","OffsetX":0.3,"OffsetY":-0.2,"Scale":1.4}""", adjustmentType)!;
+Check((float)adjustmentType.GetProperty("RotationDegrees")!.GetValue(legacy)! == 0,
+    "A legacy serialized fit without an angle keeps its original zero rotation.");
+Check(!(bool)placement.GetMethod("IsDefault")!.Invoke(null, [Adjustment(rotation: 35)])!,
+    "An angle-only preference is retained rather than discarded as the default fit.");
 Render();
+checks += RotationPaddingChecks.Run(plugin, Path.GetFullPath("assets"));
+checks += LayerOrderingChecks.Run(plugin, Path.GetFullPath("assets"));
 checks += EditorIsolationChecks.Run(plugin, Path.GetFullPath("assets"));
 if (args.Contains("--editor")) checks += EditorChecks.Run(plugin, Path.GetFullPath("assets"));
 Console.WriteLine($"Actual DLL accessory placement: {checks} checks passed; transformed-quads.png rendered. No personal settings, framework, game or network calls.");
@@ -126,7 +174,11 @@ unsafe void Render()
             rendererType.GetMethod("Draw")!.Invoke(null, [draw, new ImTextureID(2UL), adjusted, 0xFFFFFFFFu]);
             Check(draw.VtxBuffer.Size - before == 4, "The production renderer emits one adjusted accessory quad, not a duplicated body.");
             for (var vertex = 0; vertex < 4; vertex++)
+            {
                 Check(Near(draw.VtxBuffer[before + vertex].Pos, Points(adjusted)[vertex]), "Native vertices match the tested adjusted geometry.");
+                var expectedUv = new[] { uvStart, new Vector2(uvEnd.X, uvStart.Y), uvEnd, new Vector2(uvStart.X, uvEnd.Y) }[vertex];
+                Check(draw.VtxBuffer[before + vertex].Uv == expectedUv, "Native rotated vertices retain their original source UV correspondence.");
+            }
             draw.AddCircleFilled(item.Pivot + shift, 3, 0xFF70CFFFu);
             draw.AddText(new Vector2(index % 3 * 240 + 12, index / 3 * 210 + 12), 0xFFFFFFFFu, item.Label);
         }

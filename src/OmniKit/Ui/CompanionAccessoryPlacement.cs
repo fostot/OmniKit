@@ -15,7 +15,16 @@ internal static class CompanionAccessoryPlacement
         var pivot = body.Map(fit.Anchor);
         var shifted = body.Map(AdjustedAnchor(fit, adjustment));
         var scale = float.IsFinite(adjustment.Scale) ? Math.Clamp(adjustment.Scale, .25f, 3) : 1;
-        Vector2 Point(Vector2 point) => shifted + (point - pivot) * scale;
+        var angle = float.IsFinite(adjustment.RotationDegrees) ? Math.Clamp(adjustment.RotationDegrees, -180, 180) * MathF.PI / 180 : 0;
+        var cosine = MathF.Cos(angle); var sine = MathF.Sin(angle);
+        Vector2 Point(Vector2 point)
+        {
+            if (angle == 0) return shifted + (point - pivot) * scale;
+            // Rotate in the head's axes so a mirrored or rolling body carries the fit with it.
+            var local = LocalDelta(body, fit, point - pivot);
+            var rotated = new Vector2(local.X * cosine - local.Y * sine, local.X * sine + local.Y * cosine);
+            return body.Map(AdjustedAnchor(fit, adjustment) + rotated * fit.HeadWidth * scale);
+        }
         return quad with { A = Point(quad.A), B = Point(quad.B), C = Point(quad.C), D = Point(quad.D) };
     }
 
@@ -39,6 +48,6 @@ internal static class CompanionAccessoryPlacement
             + new Vector2(Safe(adjustment.OffsetX), Safe(adjustment.OffsetY)).Length();
 
     public static bool IsDefault(CompanionAccessoryAdjustment adjustment)
-        => adjustment.OffsetX == 0 && adjustment.OffsetY == 0 && adjustment.Scale == 1;
+        => adjustment.OffsetX == 0 && adjustment.OffsetY == 0 && adjustment.Scale == 1 && adjustment.RotationDegrees == 0;
     private static float Safe(float value) => float.IsFinite(value) ? Math.Clamp(value, -1, 1) : 0;
 }

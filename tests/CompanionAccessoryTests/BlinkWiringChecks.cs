@@ -18,7 +18,7 @@ internal static class BlinkWiringChecks
         var padding = Type("Ui.CompanionAccessoryPlacement").GetMethod("Padding")!;
         var adjustmentType = Type("CompanionAccessoryAdjustment");
         float Padding(float x, float y, float scale = 1) => (float)padding.Invoke(null,
-            [Activator.CreateInstance(adjustmentType, ["Moonblob", "Default", "Starlight", x, y, scale])])!;
+            [Activator.CreateInstance(adjustmentType, ["Moonblob", "Default", "Starlight", x, y, scale, 0f])])!;
         var basePadding = (float)Type("Ui.SeasonalCompanionRenderer").GetField("RequiredVisualPaddingFraction")!.GetRawConstantValue()!;
         Check(Padding(0, 0) == basePadding, "Default fits retain their existing padding.");
         foreach (var scale in new[] { 1f, 3f })

@@ -16,7 +16,7 @@ internal static class AccessoryFitChecks
         }
 
         var store = new LocalStore(Path.Combine(testRoot, "accessory-fits"));
-        var fit = new CompanionAccessoryAdjustment("Wink", "HolidayStarlight", "AllSaintsWake", -.4f, .7f, 1.25f);
+        var fit = new CompanionAccessoryAdjustment("Wink", "HolidayStarlight", "AllSaintsWake", -.4f, .7f, 1.25f, 37.5f);
         var source = new Configuration
         {
             CompanionHolidayBody = "Starlight", CompanionSeasonalTheme = "AllSaintsWake",
@@ -109,7 +109,7 @@ internal static class AccessoryFitChecks
         Invalid(FitChange("Avatar", "wink"), "Noncanonical avatar casing");
         Invalid(FitChange("Look", "HolidayAuto"), "Noncanonical holiday look");
         Invalid(FitChange("Theme", "starlight"), "Noncanonical theme casing");
-        foreach (var (field, minimum, maximum) in new[] { ("OffsetX", -1f, 1f), ("OffsetY", -1f, 1f), ("Scale", .25f, 3f) })
+        foreach (var (field, minimum, maximum) in new[] { ("OffsetX", -1f, 1f), ("OffsetY", -1f, 1f), ("Scale", .25f, 3f), ("RotationDegrees", -180f, 180f) })
         {
             foreach (var value in new[] { minimum, maximum })
             {
@@ -158,7 +158,10 @@ internal static class AccessoryFitChecks
         Check(oversizedRejected && store.Export(store.Load()!) == beforeRejectedSave,
             "Combined otherwise-valid fits and voice bindings cannot save a snapshot that exceeds the importer size limit.");
         foreach (var invalidFit in new CompanionAccessoryAdjustment?[] { null, fit with { Avatar = "Unknown" }, fit with { Scale = float.NaN },
-            fit with { OffsetX = float.PositiveInfinity }, fit with { OffsetY = float.NegativeInfinity } })
+            fit with { OffsetX = float.PositiveInfinity }, fit with { OffsetY = float.NegativeInfinity },
+            fit with { RotationDegrees = float.NaN }, fit with { RotationDegrees = float.PositiveInfinity },
+            fit with { RotationDegrees = float.NegativeInfinity }, fit with { RotationDegrees = 180.01f },
+            fit with { RotationDegrees = -180.01f } })
         {
             var rejected = false;
             try { store.Save(new Configuration { CompanionAccessoryFits = [invalidFit!] }); } catch (InvalidOperationException) { rejected = true; }
@@ -177,14 +180,14 @@ internal static class AccessoryFitChecks
         legacy["Settings"]!.AsObject().Remove("CompanionTransitionEffectsEnabled");
         var legacyJson = legacy.ToJsonString();
         var fresh = new Configuration();
-        Check(fresh.Version == 10 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
+        Check(fresh.Version == 11 && fresh.CompanionHolidayBody == "Auto" && fresh.CompanionAccessoryFits.Count == 0 && fresh.CompanionTransitionEffectsEnabled,
             "New configurations default to automatic body selection, no fit overrides and enabled transition effects.");
         var fallback = JsonSerializer.Deserialize<Configuration>(legacy["Settings"]!.ToJsonString(), new JsonSerializerOptions { IncludeFields = true })!;
         fallback.CompanionHolidayBody = "TheRising"; fallback.CompanionAccessoryFits = [fit];
         fallback.CompanionTransitionEffectsEnabled = false;
         var fallbackBefore = JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true });
         var migratedFallback = store.Upgrade(fallback);
-        Check(migratedFallback.Version == 10 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
+        Check(migratedFallback.Version == 11 && migratedFallback.CompanionHolidayBody == "Auto" && migratedFallback.CompanionAccessoryFits.Count == 0 && migratedFallback.CompanionTransitionEffectsEnabled &&
             JsonSerializer.Serialize(fallback, new JsonSerializerOptions { IncludeFields = true }) == fallbackBefore,
             "Legacy fallback initializes new fields on a detached copy and leaves its source untouched.");
         var legacyImport = new Configuration(); store.ImportInto(legacyImport, legacyJson);
@@ -197,12 +200,13 @@ internal static class AccessoryFitChecks
             var mixed = legacy.DeepClone(); mixed["Settings"]![field] = JsonNode.Parse(json)!["Settings"]![field]!.DeepClone();
             Invalid(mixed.ToJsonString(), "Schema ten field in a schema nine snapshot");
         }
-        string LegacyDatabase(string name, string document, bool failWrite = false)
+        string LegacyDatabase(string name, string document, bool failWrite = false, int schema = 9)
         {
             var directory = Path.Combine(testRoot, name); Directory.CreateDirectory(directory);
             using var db = new SqliteConnection($"Data Source={Path.Combine(directory, "omnikit.db")};Pooling=False");
             db.Open(); using var command = db.CreateCommand();
-            command.CommandText = "CREATE TABLE OmniKitSettings (Id INTEGER PRIMARY KEY, SchemaVersion INTEGER NOT NULL, Json TEXT NOT NULL); INSERT INTO OmniKitSettings VALUES (1, 9, $json); PRAGMA user_version = 9;";
+            command.CommandText = $"CREATE TABLE OmniKitSettings (Id INTEGER PRIMARY KEY, SchemaVersion INTEGER NOT NULL, Json TEXT NOT NULL); INSERT INTO OmniKitSettings VALUES (1, $schema, $json); PRAGMA user_version = {schema};";
+            command.Parameters.AddWithValue("$schema", schema);
             command.Parameters.AddWithValue("$json", document); command.ExecuteNonQuery();
             if (failWrite)
             {
@@ -221,7 +225,7 @@ internal static class AccessoryFitChecks
         var legacyDirectory = LegacyDatabase("accessory-v9", legacyJson);
         var migrated = new LocalStore(legacyDirectory).Load()!;
         var row = ReadDatabase(legacyDirectory);
-        Check(row.Version == 10 && row.RowVersion == 10 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 10 &&
+        Check(row.Version == 11 && row.RowVersion == 11 && JsonNode.Parse(row.Json)!["SchemaVersion"]!.GetValue<int>() == 11 &&
             migrated.AiEnabled && migrated.CompanionHolidayBody == "Auto" && migrated.CompanionAccessoryFits.Count == 0 && migrated.CompanionTransitionEffectsEnabled,
             "Schema nine database, row, and JSON migrate atomically with local consent retained.");
         var migratedSettings = JsonNode.Parse(store.Export(migrated))!["Settings"]!;
@@ -234,6 +238,47 @@ internal static class AccessoryFitChecks
             var rejected = false;
             try { _ = new LocalStore(directory); } catch (InvalidOperationException) { rejected = true; } catch (SqliteException) when (failWrite) { rejected = true; }
             Check(rejected && ReadDatabase(directory) == (9, 9, document), "A failed schema nine migration preserves the complete original row and both schema versions.");
+        }
+
+        var legacyTen = JsonNode.Parse(json)!;
+        legacyTen["SchemaVersion"] = 10; legacyTen["Settings"]!["Version"] = 10;
+        foreach (var oldFit in legacyTen["Settings"]!["CompanionAccessoryFits"]!.AsArray())
+            oldFit!.AsObject().Remove("RotationDegrees");
+        var legacyTenJson = legacyTen.ToJsonString();
+        var unrotated = fit with { RotationDegrees = 0 };
+        var tenImport = new Configuration(); store.ImportInto(tenImport, legacyTenJson);
+        Check(tenImport.Version == 11 && tenImport.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && !tenImport.AiEnabled,
+            "Schema ten fits acquire zero rotation while retaining every previous fit value and never granting consent.");
+        tenImport.AiEnabled = true; store.ImportInto(tenImport, legacyTenJson);
+        Check(tenImport.AiEnabled, "Schema ten fit import retains existing same-provider consent.");
+        var mixedTen = legacyTen.DeepClone(); mixedTen["Settings"]!["CompanionAccessoryFits"]![0]!["RotationDegrees"] = 0;
+        Invalid(mixedTen.ToJsonString(), "Schema eleven nested rotation in a schema ten document");
+        var tenFallback = new Configuration { Version = 10, CompanionAccessoryFits = [fit], AiEnabled = true };
+        var upgradedTen = store.Upgrade(tenFallback);
+        Check(upgradedTen.Version == 11 && upgradedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }) && upgradedTen.AiEnabled &&
+            tenFallback.Version == 10 && tenFallback.CompanionAccessoryFits.SequenceEqual(new[] { fit }) &&
+            !ReferenceEquals(upgradedTen.CompanionAccessoryFits, tenFallback.CompanionAccessoryFits),
+            "Legacy fallback initializes rotation on a detached fit collection and preserves the source and consent.");
+        Check(new CompanionAccessoryAdjustment("Wink", "Default", "Starlight", 0, 0, 1).RotationDegrees == 0,
+            "Existing six-argument source callers retain zero rotation.");
+        var tenDirectory = LegacyDatabase("accessory-v10", legacyTenJson, schema: 10);
+        var migratedTen = new LocalStore(tenDirectory).Load()!;
+        var tenRow = ReadDatabase(tenDirectory);
+        Check(tenRow.Version == 11 && tenRow.RowVersion == 11 && JsonNode.Parse(tenRow.Json)!["SchemaVersion"]!.GetValue<int>() == 11 &&
+            migratedTen.AiEnabled && migratedTen.CompanionAccessoryFits.SequenceEqual(new[] { unrotated }),
+            "Schema ten database, row and JSON migrate atomically with zero rotation and existing fits/consent retained.");
+        var tenSettings = JsonNode.Parse(store.Export(migratedTen))!["Settings"]!;
+        foreach (var field in legacyTen["Settings"]!.AsObject())
+            if (field.Key is not ("Version" or "CompanionAccessoryFits"))
+                Check(JsonNode.DeepEquals(tenSettings[field.Key], field.Value), "Rotation migration preserves prior field " + field.Key);
+        var badTen = legacyTen.DeepClone(); badTen["Settings"]!["CompanionAccessoryFits"]![0]!["Scale"] = 99;
+        foreach (var (name, document, failWrite) in new[] { ("accessory-v10-invalid", badTen.ToJsonString(), false), ("accessory-v10-write-failure", legacyTenJson, true) })
+        {
+            var directory = LegacyDatabase(name, document, failWrite, 10);
+            var rejected = false;
+            try { _ = new LocalStore(directory); } catch (InvalidOperationException) { rejected = true; } catch (SqliteException) when (failWrite) { rejected = true; }
+            Check(rejected && ReadDatabase(directory) == (10, 10, document),
+                "A failed rotation migration retains the original row, fits and both schema versions.");
         }
         return checks;
     }

@@ -15,7 +15,7 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 10;
+    private const int SchemaVersion = 11;
     private const int MaximumAccessoryFits = 1024;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
@@ -191,10 +191,11 @@ public sealed class LocalStore
                 var fits = settingsElement.GetProperty(nameof(Settings.CompanionAccessoryFits));
                 if (fits.ValueKind != JsonValueKind.Array || fits.GetArrayLength() > MaximumAccessoryFits)
                     throw new InvalidOperationException("Accessory fits must be an array containing at most 1024 entries.");
-                foreach (var fit in fits.EnumerateArray())
-                    RequireFields(fit, [nameof(CompanionAccessoryAdjustment.Avatar), nameof(CompanionAccessoryAdjustment.Look),
-                        nameof(CompanionAccessoryAdjustment.Theme), nameof(CompanionAccessoryAdjustment.OffsetX),
-                        nameof(CompanionAccessoryAdjustment.OffsetY), nameof(CompanionAccessoryAdjustment.Scale)]);
+                string[] fitFields = [nameof(CompanionAccessoryAdjustment.Avatar), nameof(CompanionAccessoryAdjustment.Look),
+                    nameof(CompanionAccessoryAdjustment.Theme), nameof(CompanionAccessoryAdjustment.OffsetX),
+                    nameof(CompanionAccessoryAdjustment.OffsetY), nameof(CompanionAccessoryAdjustment.Scale)];
+                if (schemaVersion >= 11) fitFields = [.. fitFields, nameof(CompanionAccessoryAdjustment.RotationDegrees)];
+                foreach (var fit in fits.EnumerateArray()) RequireFields(fit, fitFields);
             }
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
@@ -328,6 +329,9 @@ public sealed class LocalStore
             settings.CompanionAccessoryFits = [];
             settings.CompanionTransitionEffectsEnabled = true;
         }
+        if (settings.Version < 11)
+            settings.CompanionAccessoryFits = settings.CompanionAccessoryFits?.Select(fit =>
+                fit is null ? null! : fit with { RotationDegrees = 0 }).ToList()!;
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -415,8 +419,8 @@ public sealed class LocalStore
                     (fit.Look is not null && fit.Look.StartsWith("Holiday", StringComparison.Ordinal) &&
                      Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Look[7..]))) ||
                 !FiniteRange(fit.OffsetX, -1f, 1f) || !FiniteRange(fit.OffsetY, -1f, 1f) ||
-                !FiniteRange(fit.Scale, .25f, 3f))
-                throw new InvalidOperationException("Accessory fits need supported avatar, look and theme keys with bounded offsets and scale.");
+                !FiniteRange(fit.Scale, .25f, 3f) || !FiniteRange(fit.RotationDegrees, -180f, 180f))
+                throw new InvalidOperationException("Accessory fits need supported avatar, look and theme keys with bounded offsets, scale and rotation.");
             if (!fitKeys.Add((fit.Avatar, fit.Look, fit.Theme)))
                 throw new InvalidOperationException("Accessory fit keys must be unique.");
         }

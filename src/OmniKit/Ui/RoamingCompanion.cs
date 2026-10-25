@@ -323,6 +323,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var clipMaximum = physics.Active ? physics.ClipMaximum : homeRoutine.Active ? viewport.Pos + viewport.Size : layout.Maximum + visualPadding;
         clipMinimum = Vector2.Max(clipMinimum, viewport.Pos); clipMaximum = Vector2.Min(clipMaximum, viewport.Pos + viewport.Size);
         draw.PushClipRect(clipMinimum, clipMaximum, true);
+        // Rear hat pieces share one pass beneath the body, including deformed and nap poses.
+        draw.ChannelsSplit(2);
         try
         {
             if (!homeRoutine.UsesNapArt)
@@ -330,6 +332,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                     config.CompanionHolidayBodiesEnabled, config.CompanionHolidayBody, seasonal?.CurrentTheme),
                     position, layout.SpriteSize, ProceduralCompanion.Palette(config.CompanionPalette), animationTime,
                     config.CompanionMagicEnabled, config.AnimationsEnabled, mirrored: facingLeft);
+            draw.ChannelsSetCurrent(1);
             if (homeRoutine.UsesNapArt && DrawNap(draw, layout, out var napBounds))
             {
                 (hitStart, hitEnd) = napBounds;
@@ -390,7 +393,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 poof.Draw(draw, Vector2.Min(hitStart, position), Vector2.Max(hitEnd, position + layout.SpriteSize),
                     ProceduralCompanion.Palette(config.CompanionPalette));
         }
-        finally { draw.PopClipRect(); }
+        finally { draw.ChannelsMerge(); draw.PopClipRect(); }
         if (homeRoutine.Sleeping && config.CompanionNapZsEnabled) DrawSleepZs(draw, home, viewport.Pos, viewport.Size);
         // A stable pause region avoids rapid walk/idle changes as animated ear
         // and foot silhouettes move past a stationary pointer. Only the visible
@@ -598,9 +601,12 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 var shift = desiredGrip - mappedGrip;
                 placed = placed with { Frame = placed.Frame with { Position = placed.Frame.Position + shift }, Center = placed.Center + shift };
             }
-            var back = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), false);
+            var ringTheme = OrbitRingRenderer.ThemeForLook(currentLook?.Choice);
+            var back = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), false,
+                ringTheme, config.CompanionMagicEnabled);
             var core = CompanionVariantRenderer.Draw(draw, texture.Handle, placed.Frame, tint);
-            var front = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), true);
+            var front = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), true,
+                ringTheme, config.CompanionMagicEnabled);
             bounds = (Vector2.Min(core.Minimum, Vector2.Min(back.Minimum, front.Minimum)), Vector2.Max(core.Maximum, Vector2.Max(back.Maximum, front.Maximum)));
             body = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, placed.Frame, mirrored);
         }
@@ -678,7 +684,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             quad = quad with { A = quad.A + shift, B = quad.B + shift, C = quad.C + shift, D = quad.D + shift };
         }
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault();
-        return texture == null ? null : SeasonalCompanionRenderer.Draw(draw, texture.Handle, quad);
+        return texture == null ? null : DrawAccessoryLayers(draw, texture.Handle, quad, theme);
         Vector2 Warp(Vector2 point) => bodyMotion.WarpAttachment(displayAvatar, point, position, size, gait.Phase, mirrored, config.AnimationsEnabled);
     }
 
@@ -729,8 +735,18 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             quad = quad with { A = quad.A + shift, B = quad.B + shift, C = quad.C + shift, D = quad.D + shift };
         }
         var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault();
-        return texture == null ? null : SeasonalCompanionRenderer.Draw(draw, texture.Handle, quad, tint);
+        return texture == null ? null : DrawAccessoryLayers(draw, texture.Handle, quad, theme, tint);
         Vector2 Warp(Vector2 point) => bodyMotion.WarpAttachment(displayAvatar, point, position, size, gait.Phase, mirrored, config.AnimationsEnabled);
+    }
+
+    private (Vector2 Minimum, Vector2 Maximum) DrawAccessoryLayers(ImDrawListPtr draw, ImTextureID texture,
+        SeasonalOverlayQuad quad, SeasonalCompanionTheme theme, uint tint = 0xFFFFFFFFu)
+    {
+        draw.ChannelsSetCurrent(0);
+        seasonalArtwork!.DrawLayer(draw, texture, quad, theme, false, tint);
+        draw.ChannelsSetCurrent(1);
+        seasonalArtwork.DrawLayer(draw, texture, quad, theme, true, tint);
+        return quad.Bounds;
     }
 
     private void DrawSleepZs(ImDrawListPtr draw, CompanionHomeRect house, Vector2 viewportPosition, Vector2 viewportSize)

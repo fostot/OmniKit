@@ -5,6 +5,8 @@ using Dalamud.Bindings.ImGui;
 using LauncherUiSmoke;
 using OmniKit.Ui;
 
+if (args.Contains("--holiday-rings")) { HolidayRingChecks.Run(); return; }
+
 var root = Path.GetFullPath(args.FirstOrDefault() ?? ".");
 var output = Path.Combine(root, ".local", "visualharness", "companion-expressions");
 Directory.CreateDirectory(output);

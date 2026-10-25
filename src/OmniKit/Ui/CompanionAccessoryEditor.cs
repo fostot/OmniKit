@@ -104,9 +104,14 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
             DrawStage(canvas, scale);
             var current = Current;
             var percent = current.Scale * 100;
-            ImGui.SetNextItemWidth(Math.Max(1, ImGui.GetContentRegionAvail().X - ImGui.CalcTextSize("Size").X - 12 * scale));
-            if (ImGui.SliderFloat("Size", ref percent, 25, 300, "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
+            var controlWidth = Math.Max(1, (ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X) * .5f);
+            ImGui.SetNextItemWidth(controlWidth);
+            if (UiText.SliderFloat("##fit-size", ref percent, 25, 300, "Size %.0f%%"))
                 Change(current with { Scale = percent / 100 });
+            ImGui.SameLine(); ImGui.SetNextItemWidth(controlWidth);
+            var angle = Current.RotationDegrees;
+            if (UiText.SliderFloat("##fit-angle", ref angle, -180, 180, "Angle %.0f deg"))
+                Change(Current with { RotationDegrees = angle });
             ImGui.BeginDisabled(!IsDirty);
             if (UiText.Button("Save fits")) Save();
             ImGui.EndDisabled(); ImGui.SameLine();
@@ -183,19 +188,22 @@ internal sealed class CompanionAccessoryEditor(Configuration config, string asse
             { draw.AddText(minimum + new Vector2(10 * scale), 0xFFB3A59B, "This body artwork is unavailable."); return; }
             var texture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, source.File)).GetWrapOrDefault();
             if (texture == null) return;
+            var hasAccessory = accessories!.TryGetQuad(theme, body, fit, out var original);
+            var quad = hasAccessory ? CompanionAccessoryPlacement.Apply(original, body, fit, adjustment) : default;
+            var accessoryTexture = hasAccessory
+                ? Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault() : null;
+            if (accessoryTexture != null) accessories.DrawLayer(draw, accessoryTexture.Handle, quad, theme, false);
             if (avatar == "Orbit")
             {
                 var orbit = OrbitRingRenderer.Place(source, source, position, cell, false);
-                rings.Draw(draw, orbit.Center, orbit.Radius, Vector4.One, false);
+                var ringTheme = OrbitRingRenderer.ThemeForLook(look);
+                rings.Draw(draw, orbit.Center, orbit.Radius, Vector4.One, false, ringTheme, config.CompanionMagicEnabled);
                 CompanionVariantRenderer.Draw(draw, texture.Handle, frame);
-                rings.Draw(draw, orbit.Center, orbit.Radius, Vector4.One, true);
+                rings.Draw(draw, orbit.Center, orbit.Radius, Vector4.One, true, ringTheme, config.CompanionMagicEnabled);
             }
             else CompanionVariantRenderer.Draw(draw, texture.Handle, frame);
-            if (accessories?.TryGetQuad(theme, body, fit, out var original) != true) return;
-            var quad = CompanionAccessoryPlacement.Apply(original, body, fit, adjustment);
-            var accessoryTexture = Services.Textures.GetFromFile(Path.Combine(assetDirectory, SeasonalCompanionRenderer.File)).GetWrapOrDefault();
             if (accessoryTexture == null) return;
-            SeasonalCompanionRenderer.Draw(draw, accessoryTexture.Handle, quad);
+            accessories.DrawLayer(draw, accessoryTexture.Handle, quad, theme, true);
             var bounds = quad.Bounds;
             var radius = 5 * scale;
             var handle = Vector2.Clamp(bounds.Maximum, minimum + new Vector2(radius + 1),

@@ -1,3 +1,29 @@
+# 0.1.0.0019: accessory rotation, hat depth and holiday rings
+
+Fit accessories now has an Angle slider beside Size. Drag to position, resize,
+rotate from -180 to 180 degrees, then Save fits. Rotation uses the companion's
+own head axes, so the fit follows mirroring, rolling and body motion rather than
+screen coordinates. Cancel, Reset and Fit view keep their existing behavior.
+
+The four seasonal hats now draw their rear brim/underside behind the companion
+and their crown, ornament and front rim over it. Bow accessories remain front
+decorations. Both passes use one exact artwork partition and the same saved fit;
+they do not draw two complete hats or alter body animation.
+
+Orbit's nine holiday bodies also theme his moving rings. Each has its own palette
+and ring-bound details. They follow the active body theme, independently of hats;
+Magic controls the extra details and animation controls the existing ring motion.
+Everyday looks retain their original rings. The still fitting preview uses the
+same holiday ring style.
+
+Settings schema 11 adds rotation to each saved fit. Existing schema-10 fits
+migrate with zero rotation, retaining their position and size. Strict bounded
+JSON imports/exports preserve the angle. No user database is part of this release.
+
+Build, isolated native UI renders and synthetic migration checks are separate
+from live FFXIV validation; the game checklist includes depth, doorway, mirrored
+and rolling fits.
+
 # 0.1.0.0017: accessory fitting, named holiday bodies and companion effects
 
 Companion → Appearance → Seasonal looks & rotation → Fit accessories opens a

@@ -11,6 +11,14 @@ internal sealed class OrbitRingRenderer
     private float precession;
     private float tiltPhase;
     private float lightPhase;
+    public static SeasonalCompanionTheme? ThemeForLook(string? choice)
+    {
+        const string prefix = "Holiday";
+        if (choice == null || !choice.StartsWith(prefix, StringComparison.Ordinal)) return null;
+        var name = choice[prefix.Length..];
+        return Enum.TryParse<SeasonalCompanionTheme>(name, out var theme) && Enum.IsDefined(theme)
+            && name == theme.ToString() ? theme : null;
+    }
     public static OrbitCorePlacement Place(CompanionVariantFrame source, CompanionVariantFrame normal,
         Vector2 position, Vector2 cellSize, bool mirrored)
     {
@@ -46,12 +54,13 @@ internal sealed class OrbitRingRenderer
     }
 
     public (Vector2 Minimum, Vector2 Maximum) Draw(ImDrawListPtr draw, Vector2 center, float coreRadius,
-        Vector4 accent, bool front)
+        Vector4 accent, bool front, SeasonalCompanionTheme? theme = null, bool decorations = true)
     {
         const int segments = 128;
         var firstVertex = draw.VtxBuffer.Size;
         var minimum = center; var maximum = center;
         var radius = coreRadius * 1.47f;
+        var palette = PaletteFor(theme);
         var flags = draw.Flags;
         // Adjacent pieces form one band. Antialias only its inner/outer lines,
         // not every radial join, which would stripe the ring with dark seams.
@@ -71,11 +80,14 @@ internal sealed class OrbitRingRenderer
                 var shimmer = .5f + .5f * MathF.Sin(angle * 3 - lightPhase);
                 var baseColor = Vector4.Lerp(new(.42f, .63f, .93f, 1), accent, .5f);
                 var color = Vector4.Lerp(baseColor, new(1, .93f, .72f, 1), .25f + shimmer * .5f);
+                if (palette is { } holiday) color = Vector4.Lerp(holiday.Base, holiday.Light, .25f + shimmer * .5f);
                 color.W = front ? .98f : .78f;
                 draw.AddQuadFilled(innerA, outerA, outerB, innerB, ImGui.ColorConvertFloat4ToU32(color));
-                draw.AddLine(outerA, outerB, 0xDDFBE4C2u, Math.Max(.65f, coreRadius * .025f));
-                draw.AddLine(innerA, innerB, 0x99F6F0E0u, Math.Max(.55f, coreRadius * .018f));
+                draw.AddLine(outerA, outerB, palette is { } edge ? Ink(edge.Light, .87f) : 0xDDFBE4C2u, Math.Max(.65f, coreRadius * .025f));
+                draw.AddLine(innerA, innerB, palette is { } inner ? Ink(inner.Mark, .60f) : 0x99F6F0E0u, Math.Max(.55f, coreRadius * .018f));
             }
+            if (decorations && palette is { } motif && theme is { } selected)
+                DrawMotifs(draw, center, radius, selected, motif, front);
         }
         finally { draw.Flags = flags; }
         // Read only this bounded ring pass. Native antialias miters and line
@@ -87,5 +99,133 @@ internal sealed class OrbitRingRenderer
         }
         return (minimum, maximum);
         Vector2 Project(Vector3 p) => center + new Vector2(p.X, p.Y);
+    }
+
+    private readonly record struct RingPalette(Vector4 Base, Vector4 Light, Vector4 Mark);
+    private static RingPalette? PaletteFor(SeasonalCompanionTheme? theme) => theme switch
+    {
+        SeasonalCompanionTheme.Heavensturn => new(Rgb(0xA92F39), Rgb(0xF4CD70), Rgb(0xFFF0C9)),
+        SeasonalCompanionTheme.Valentione => new(Rgb(0xB2467E), Rgb(0xF7B6CB), Rgb(0xFFF1EE)),
+        SeasonalCompanionTheme.LittleLadies => new(Rgb(0xA577AE), Rgb(0xF5CDE0), Rgb(0xFFEAB0)),
+        SeasonalCompanionTheme.HatchingTide => new(Rgb(0x659F8B), Rgb(0xC9E5A9), Rgb(0xFFF0C0)),
+        SeasonalCompanionTheme.MakeItRain => new(Rgb(0xA86F31), Rgb(0xF7D469), Rgb(0xFFF7C6)),
+        SeasonalCompanionTheme.MoonfireFaire => new(Rgb(0x237FAD), Rgb(0x6DDEC9), Rgb(0xFFE0A6)),
+        SeasonalCompanionTheme.TheRising => new(Rgb(0x5A459C), Rgb(0xAAA7EF), Rgb(0xF6DCAF)),
+        SeasonalCompanionTheme.AllSaintsWake => new(Rgb(0x654187), Rgb(0xE39A43), Rgb(0xF8EACA)),
+        SeasonalCompanionTheme.Starlight => new(Rgb(0x317F79), Rgb(0xA7E0DB), Rgb(0xFFF1D2)),
+        _ => null,
+    };
+    private static Vector4 Rgb(uint value) => new((value >> 16 & 255) / 255f, (value >> 8 & 255) / 255f, (value & 255) / 255f, 1);
+    private static uint Ink(Vector4 color, float alpha) { color.W = alpha; return ImGui.ColorConvertFloat4ToU32(color); }
+
+    private void DrawMotifs(ImDrawListPtr draw, Vector2 center, float radius, SeasonalCompanionTheme theme, RingPalette palette, bool front)
+    {
+        // Every mark lies inside the existing band. Its plane/depth come from Point,
+        // with no extra clock, screen-space bobbing or enlarged hit/layout bounds.
+        var size = radius * .055f;
+        var ink = Ink(palette.Mark, front ? .98f : .78f);
+        var dark = Ink(palette.Base, front ? .98f : .78f);
+        Span<Vector2> heart = stackalloc Vector2[24];
+        for (var n = 0; n < 10; n++)
+        {
+            var angle = n * MathF.Tau / 10 + .11f;
+            var radial = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var tangent = new Vector2(-radial.Y, radial.X);
+            Vector3 Plane(Vector2 local)
+            {
+                var p = radial * (radius * .96f + local.Y * size) + tangent * (local.X * size);
+                return Point(MathF.Atan2(p.Y, p.X), p.Length());
+            }
+            void Triangle(Vector2 a, Vector2 b, Vector2 c, uint color)
+            {
+                // Clip in the ring plane at Z=0 so marks crossing the planet's depth
+                // boundary are split, instead of jumping wholesale between passes.
+                Span<Vector3> input = stackalloc Vector3[3] { Plane(a), Plane(b), Plane(c) };
+                Span<Vector3> clipped = stackalloc Vector3[4]; var count = 0;
+                for (var j = 0; j < input.Length; j++)
+                {
+                    var p = input[j]; var q = input[(j + 1) % input.Length];
+                    var insideP = front ? p.Z >= 0 : p.Z < 0; var insideQ = front ? q.Z >= 0 : q.Z < 0;
+                    if (insideP) clipped[count++] = p;
+                    if (insideP != insideQ) clipped[count++] = Vector3.Lerp(p, q, p.Z / (p.Z - q.Z));
+                }
+                for (var j = 1; j + 1 < count; j++)
+                    draw.AddTriangleFilled(center + new Vector2(clipped[0].X, clipped[0].Y),
+                        center + new Vector2(clipped[j].X, clipped[j].Y), center + new Vector2(clipped[j + 1].X, clipped[j + 1].Y), color);
+            }
+            void Polygon(ReadOnlySpan<Vector2> points, uint color)
+            {
+                var middle = Vector2.Zero;
+                foreach (var point in points) middle += point;
+                middle /= points.Length;
+                for (var j = 0; j < points.Length; j++) Triangle(middle, points[j], points[(j + 1) % points.Length], color);
+            }
+            void Disc(Vector2 at, Vector2 half, uint color)
+            {
+                for (var j = 0; j < 12; j++)
+                {
+                    var a = j * MathF.Tau / 12; var b = (j + 1) * MathF.Tau / 12;
+                    Triangle(at, at + new Vector2(MathF.Cos(a), MathF.Sin(a)) * half,
+                        at + new Vector2(MathF.Cos(b), MathF.Sin(b)) * half, color);
+                }
+            }
+            void Stroke(Vector2 a, Vector2 b, float width, uint color)
+            {
+                var normal = Vector2.Normalize(new Vector2(a.Y - b.Y, b.X - a.X)) * width * .5f;
+                Triangle(a - normal, a + normal, b + normal, color); Triangle(a - normal, b + normal, b - normal, color);
+            }
+            switch (theme)
+            {
+                case SeasonalCompanionTheme.Heavensturn:
+                    Polygon([new(-.5f,-.65f), new(.5f,-.65f), new(.7f,0), new(.5f,.65f), new(-.5f,.65f), new(-.7f,0)], ink);
+                    Stroke(new(0,-.65f), new(0,.65f), .18f, dark);
+                    Stroke(new(-.45f,-.82f), new(.45f,-.82f), .20f, ink);
+                    Stroke(new(-.45f,.82f), new(.45f,.82f), .20f, ink);
+                    break;
+                case SeasonalCompanionTheme.Valentione:
+                    for (var j = 0; j < heart.Length; j++)
+                    {
+                        var t = j * MathF.Tau / heart.Length;
+                        heart[j] = new(MathF.Pow(MathF.Sin(t), 3) * .88f,
+                            -(13 * MathF.Cos(t) - 5 * MathF.Cos(2*t) - 2 * MathF.Cos(3*t) - MathF.Cos(4*t)) / 18);
+                    }
+                    Polygon(heart, ink); break;
+                case SeasonalCompanionTheme.LittleLadies:
+                    for (var j = 0; j < 5; j++)
+                    { var t = j * MathF.Tau / 5; Disc(new Vector2(MathF.Cos(t), MathF.Sin(t)) * .47f, new(.36f), ink); }
+                    Disc(Vector2.Zero, new(.22f), dark); break;
+                case SeasonalCompanionTheme.HatchingTide:
+                    Disc(Vector2.Zero, new(.62f,.88f), ink);
+                    Stroke(new(-.49f,-.05f), new(0,.18f), .18f, dark);
+                    Stroke(new(0,.18f), new(.49f,-.05f), .18f, dark); break;
+                case SeasonalCompanionTheme.MakeItRain:
+                    Disc(Vector2.Zero, new(.85f), ink); Disc(Vector2.Zero, new(.55f), dark);
+                    Polygon([new(-.2f,-.2f),new(.2f,-.2f),new(.2f,.2f),new(-.2f,.2f)], ink); break;
+                case SeasonalCompanionTheme.MoonfireFaire:
+                    for (var j = 0; j < 6; j++)
+                    {
+                        var x = -.85f + j * .28f; var next = x + .28f;
+                        Stroke(new(x,MathF.Sin(x*4)*.4f),new(next,MathF.Sin(next*4)*.4f),.25f,ink);
+                    }
+                    Disc(new(-.4f,-.65f),new(.2f),ink); break;
+                case SeasonalCompanionTheme.TheRising:
+                    Polygon([new(0,-.95f),new(.62f,-.15f),new(.4f,.5f),new(0,.95f),new(-.4f,.5f),new(-.62f,-.15f)], ink);
+                    Triangle(new(0,-.95f),new(0,.95f),new(.62f,-.15f),dark); break;
+                case SeasonalCompanionTheme.AllSaintsWake:
+                    Polygon([new(-.65f,.7f),new(-.65f,-.2f),new(-.45f,-.7f),new(0,-.9f),new(.45f,-.7f),new(.65f,-.2f),
+                        new(.65f,.7f),new(.25f,.45f),new(0,.75f),new(-.25f,.45f)], ink);
+                    Disc(new(-.25f,-.15f),new(.13f,.2f),dark); Disc(new(.25f,-.15f),new(.13f,.2f),dark); break;
+                case SeasonalCompanionTheme.Starlight:
+                    for (var j = 0; j < 6; j++)
+                    {
+                        var t = j * MathF.Tau / 6; var direction = new Vector2(MathF.Cos(t), MathF.Sin(t));
+                        var side = new Vector2(-direction.Y,direction.X);
+                        Stroke(Vector2.Zero,direction*.9f,.16f,ink);
+                        Stroke(direction*.55f,direction*.36f+side*.22f,.13f,ink);
+                        Stroke(direction*.55f,direction*.36f-side*.22f,.13f,ink);
+                    }
+                    break;
+            }
+        }
     }
 }

@@ -22,6 +22,11 @@ internal static class UiText
         ItemMeasured(label, minimum, maximum, ImGui.IsItemVisible() && minimum.X < maximum.X && minimum.Y < maximum.Y);
     }
     internal static bool Button(string label) { var result = ImGui.Button(label); Measure(label); return result; }
+    internal static bool SliderFloat(string label, ref float value, float minimum, float maximum, string format)
+    {
+        var result = ImGui.SliderFloat(label, ref value, minimum, maximum, format, ImGuiSliderFlags.AlwaysClamp);
+        Measure(label); return result;
+    }
     internal static bool Button(string label, Vector2 size) { var result = ImGui.Button(label, size); Measure(label); return result; }
     internal static bool BeginCombo(string label, string preview) { var result = ImGui.BeginCombo(label, preview); Measure(label); return result; }
     internal static bool BeginTabItem(string label, ImGuiTabItemFlags flags = ImGuiTabItemFlags.None)

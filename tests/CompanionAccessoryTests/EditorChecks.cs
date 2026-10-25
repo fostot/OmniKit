@@ -118,11 +118,24 @@ internal static class EditorChecks
                     Check(window.Pos.X >= 12 * scale - .01f && window.Pos.Y >= 12 * scale - .01f &&
                         window.Pos.X + window.Size.X <= io.DisplaySize.X - 12 * scale + .01f &&
                         window.Pos.Y + window.Size.Y <= io.DisplaySize.Y - 12 * scale + .01f, label + ": viewport gutters remain clear.");
-                    foreach (var name in new[] { "##fit-avatar", "##fit-body", "##fit-accessory", "Save fits", "Reset fit", "Fit view", "Cancel" })
+                    foreach (var name in new[] { "##fit-avatar", "##fit-body", "##fit-accessory", "##fit-size", "##fit-angle", "Save fits", "Reset fit", "Fit view", "Cancel" })
+                    {
                         Check(measured.TryGetValue(name, out var item) && item.Visible && item.Max.Y - item.Min.Y >= ImGui.GetFrameHeight() - .01f,
                             label + ": complete fitting control is visible: " + name);
+                        Check(item.Min.X >= window.Pos.X + ImGui.GetStyle().WindowPadding.X - .01f &&
+                            item.Max.X <= window.Pos.X + window.Size.X - ImGui.GetStyle().WindowPadding.X + .01f,
+                            label + ": fitting controls retain horizontal window gutters: " + name);
+                    }
+                    var sizeControl = measured["##fit-size"]; var angleControl = measured["##fit-angle"];
+                    Check(Math.Abs(sizeControl.Min.Y - angleControl.Min.Y) < .01f &&
+                        angleControl.Min.X - sizeControl.Max.X >= ImGui.GetStyle().ItemSpacing.X - .01f,
+                        label + ": the size and angle controls share one row with a visible gutter.");
+                    // Native cursor positioning rounds fractional font heights to pixels.
+                    Check(angleControl.Max.Y + ImGui.GetStyle().ItemSpacing.Y <= measured["Save fits"].Min.Y + 1f,
+                        $"{label}: angle hit targets stay above the separate save-button row (angle bottom {angleControl.Max.Y}, save top {measured["Save fits"].Min.Y}, spacing {ImGui.GetStyle().ItemSpacing.Y}).");
                     var body = ImageVertices(false); var hat = ImageVertices(true);
-                    Check(body.Length == 4 && hat.Length == 4, label + ": the stage draws exactly one neutral body and one accessory.");
+                    Check(body.Length == 4 && hat.Length >= 4 && hat.Length % 4 == 0,
+                        label + ": the stage draws one neutral body plus the accessory's complementary layer mesh.");
                     Check(body.All(point => point.X > window.Pos.X && point.X < window.Pos.X + window.Size.X &&
                         point.Y > window.Pos.Y && point.Y < window.Pos.Y + window.Size.Y), label + ": neutral rest pose stays inside its centered stage.");
                 }
@@ -135,6 +148,14 @@ internal static class EditorChecks
                 void Click(string name)
                 {
                     var item = measured[name]; var point = (item.Min + item.Max) * .5f;
+                    Frame(point, false); Frame(point, true); Frame(point, false); Frame(new(-100, -100));
+                }
+                object Current() => editorType.GetProperty("Current", instance)!.GetValue(editor)!;
+                float FitValue(object value, string name) => (float)value.GetType().GetProperty(name)!.GetValue(value)!;
+                void Slider(string name, float fraction)
+                {
+                    var item = measured[name]; var point = new Vector2(item.Min.X + (item.Max.X - item.Min.X) * fraction,
+                        (item.Min.Y + item.Max.Y) * .5f);
                     Frame(point, false); Frame(point, true); Frame(point, false); Frame(new(-100, -100));
                 }
                 foreach (var selector in new[] { "##fit-avatar", "##fit-body", "##fit-accessory" })
@@ -162,20 +183,45 @@ internal static class EditorChecks
                 Frame(grab + new Vector2(9, -4) * scale, false);
                 Check(bodyBeforeDrag.SequenceEqual(ImageVertices(false)), label + ": releasing a fit never changes body scale or position.");
                 Check(State("IsDirty") && Fits().Count == 0 && saves == 0, label + ": native dragging changes the draft only.");
+                var beforeAngleBody = ImageVertices(false); var beforeAngleHat = ImageVertices(true);
+                var beforeAngleFit = Current();
+                Slider("##fit-angle", .64f);
+                var changedAngle = FitValue(Current(), "RotationDegrees");
+                Check(changedAngle is > 25 and < 80 && !beforeAngleHat.SequenceEqual(ImageVertices(true)),
+                    label + ": the native Angle slider rotates the painted accessory.");
+                Check(beforeAngleBody.SequenceEqual(ImageVertices(false)) &&
+                    new[] { "OffsetX", "OffsetY", "Scale" }.All(name => FitValue(beforeAngleFit, name) == FitValue(Current(), name)),
+                    label + ": changing angle keeps the body, measured crown offset and uniform scale unchanged.");
+                Check(State("IsDirty") && Fits().Count == 0 && saves == 0,
+                    label + ": angle changes remain draft-only until the explicit save.");
+                Bounds();
+                renderer.Save(ImGui.GetDrawData(), Path.GetFullPath(".local/visualharness/companion-accessories/editor-rotated-" + label + ".png"));
                 Click("Save fits");
                 Check(!State("IsDirty") && Fits().Count == 1 && saves == 1, label + ": Save writes the fitted preference exactly once.");
                 var savedFits = Fits(); var savedFit = savedFits[0];
+                Check(FitValue(savedFit!, "RotationDegrees") == changedAngle, label + ": Save retains the native slider's exact angle.");
+                Click("Cancel"); Open(); Frame(); Frame();
+                Check(FitValue(Current(), "RotationDegrees") == changedAngle && !State("IsDirty") && saves == 1,
+                    label + ": reopening loads the persisted rotation without another write.");
                 var fitted = ImageVertices(true); var corner = fitted.Aggregate(Vector2.Max);
                 var beforeResize = ImageVertices(false);
                 var oldScale = (float)savedFit!.GetType().GetProperty("Scale")!.GetValue(savedFit)!;
                 Frame(corner, false); Frame(corner, true); Frame(corner + new Vector2(0, 10 * scale), true);
                 Frame(corner + new Vector2(0, 10 * scale), false); Frame(new(-100, -100));
-                var currentFit = editorType.GetProperty("Current", instance)!.GetValue(editor)!;
+                var currentFit = Current();
                 Check((float)currentFit.GetType().GetProperty("Scale")!.GetValue(currentFit)! > oldScale,
                     label + ": a vertical corner drag changes uniform scale through the two-axis resize projection.");
                 Check(beforeResize.SequenceEqual(ImageVertices(false)) && saves == 1 && ReferenceEquals(savedFits, Fits()),
                     label + ": resizing preserves body geometry and remains an unsaved draft.");
+                Check(FitValue(currentFit, "RotationDegrees") == changedAngle, label + ": resizing a rotated accessory keeps its saved angle.");
+                Slider("##fit-angle", .001f);
+                Check(FitValue(Current(), "RotationDegrees") == -180, label + ": the minimum slider position reaches -180 degrees.");
+                Bounds();
+                Slider("##fit-angle", .999f);
+                Check(FitValue(Current(), "RotationDegrees") == 180, label + ": the maximum slider position reaches 180 degrees.");
+                Bounds();
                 Click("Reset fit");
+                Check(FitValue(Current(), "RotationDegrees") == 0, label + ": Reset returns the draft rotation to zero.");
                 Check(State("IsDirty") && ReferenceEquals(savedFits, Fits()) && Equals(savedFit, Fits()[0]), label + ": resetting remains an unsaved draft.");
                 Click("Cancel");
                 Check(!State("IsOpen") && saves == 1 && ReferenceEquals(savedFits, Fits()), label + ": Cancel preserves the last saved fit.");
