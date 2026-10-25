@@ -85,6 +85,17 @@ internal sealed class SeasonalCompanionRenderer
         return true;
     }
 
+    public bool TryGetFit(string avatar, int frameIndex, bool nap, out SeasonalAccessoryFit fit)
+    {
+        fit = default;
+        if (!profiles.TryGetValue(avatar, out var profile)) return false;
+        var anchors = nap ? profile.NapSourceAnchors : profile.NormalSourceAnchors;
+        var widths = nap ? profile.NapHeadWidths : profile.NormalHeadWidths;
+        if ((uint)frameIndex >= (uint)anchors.Length || widths.Length != anchors.Length) return false;
+        fit = new(Point(anchors[frameIndex]), widths[frameIndex]);
+        return true;
+    }
+
     public bool TryGetQuad(SeasonalCompanionTheme theme, SeasonalBodyTransform body, SeasonalAccessoryFit fit, out SeasonalOverlayQuad quad)
     {
         quad = default;

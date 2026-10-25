@@ -53,7 +53,7 @@ $runtimeFiles = @(
     'assets/companion-naps-abstract.png', 'assets/companion-naps.frames.json',
     'assets/seasonal-accessories.png', 'assets/seasonal-accessories.frames.json',
     'assets/companion-styles.frames.json', 'assets/homes-standard.png', 'assets/homes-holiday.png', 'assets/hands-styles.png',
-    'assets/companion-variants.frames.json', 'assets/moonblob-variants.png', 'assets/wink-variants.png',
+    'assets/companion-blinks.frames.json', 'assets/companion-variants.frames.json', 'assets/moonblob-variants.png', 'assets/wink-variants.png',
     'assets/nova-variants.png', 'assets/mochi-variants.png', 'assets/puff-variants.png', 'assets/orbit-variants.png',
     'assets/ember-variants.png', 'assets/prism-variants.png', 'assets/puff-variants-motion.png',
     'assets/ember-variants-motion.png', 'assets/orbit-core.png',

@@ -62,6 +62,9 @@ foreach (var locked in new[] { true, false })
     Run("matched-item-" + locked, true, false, 0, locked, true, 1, new(480, 360));
     Run("matched-emote-" + locked, true, false, 0, locked, true, 1, new(480, 360), questKind: "Emote", action: "Emote");
     Run("matched-unusable-item-" + locked, true, false, 0, locked, false, 1, new(480, 360));
+    foreach (var kind in new[] { "EventItem", "Emote" })
+    foreach (var enabled in new[] { true, false })
+        Run($"hidden-zero-icon-{kind}-{enabled}-{locked}", true, false, 0, locked, enabled, 1, new(480, 360), questKind: kind, iconId: 0);
 }
 if (!visibilityOnly)
 foreach (var scale in new[] { 1f, 1.5f, 2f })
@@ -147,7 +150,7 @@ unsafe void TooltipCase(float scale, Vector2 viewport, Vector2 corner)
 
 unsafe void Run(string name, bool next, bool items, int count, bool locked, bool enabled, float scale,
     Vector2 viewport, bool edge = false, bool input = false, string? questKind = "EventItem", string action = "Use quest item",
-    bool paused = false, bool missing = false)
+    bool paused = false, bool missing = false, uint iconId = 100)
 {
     var label = $"{name}-{viewport.X:0}-scale{scale:0.0}";
     var config = Activator.CreateInstance(Type("OmniKit.Configuration"))!;
@@ -173,7 +176,7 @@ unsafe void Run(string name, bool next, bool items, int count, bool locked, bool
         Enum.Parse(Type("OmniKit.Interaction.InteractionTargets"), "QuestObjects")]);
     Set(interaction, "candidate", candidate);
     var preview = Activator.CreateInstance(Type("OmniKit.Interaction.InteractionActionPreview"),
-        [42UL, (nint)128, "Synthetic quest item", action, 100u, enabled,
+        [42UL, (nint)128, "Synthetic quest item", action, iconId, enabled,
             enabled ? "" : "The item is not usable on this target right now. Check your range and state."]);
     if (questKind != null) preview!.GetType().GetProperty("QuestKind")!.SetValue(preview, Enum.Parse(Type("OmniKit.Interaction.QuestActionKind"), questKind));
     Set(interaction, "nextAction", missing ? null : preview);
@@ -221,7 +224,7 @@ unsafe void Run(string name, bool next, bool items, int count, bool locked, bool
         {
             var nextWindow = ImGuiP.FindWindowByName("##OmniKitNextAction");
             var visible = nextWindow.Handle != null && nextWindow.Active && !nextWindow.Hidden;
-            Check(visible == (!missing && !paused && questKind != null),
+            Check(visible == (!missing && !paused && questKind != null && iconId != 0),
                 label + ": only a matched quest item/emote may show Next Action, including while unlocked.");
         }
         foreach (var id in new[] { "##OmniKitNextAction", "##OmniKitQuestItems" })

@@ -27,6 +27,7 @@ internal sealed class PluginUi : IDisposable
     private readonly CompactLauncher launcher = new();
     private readonly HotkeyCapture hotkeys = new();
     private readonly RoamingCompanion roaming;
+    private CompanionAccessoryEditor? accessoryEditor;
     private bool mainOpen;
     private bool companionOpen;
     private bool settingsOpen;
@@ -72,7 +73,7 @@ internal sealed class PluginUi : IDisposable
     private static readonly int[] SectionOrder = [0, 1, 6, 2, 3, 4, 5];
     private static readonly Vector4 Gold = new(.48f, .78f, .74f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
-    public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea;
+    public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea || accessoryEditor?.IsOpen == true;
     public bool CapturingBinding => hotkeys.IsCapturing;
     public bool BrowserCapturesInput => wiki.CapturesInput;
     public bool BrowserReady => wiki.IsReady;
@@ -169,10 +170,15 @@ internal sealed class PluginUi : IDisposable
         CapturesText = ImGui.GetIO().WantTextInput;
         if (!mainOpen) SearchHasFocus = false;
         fileDialogs.Draw();
+        roaming.IsEditingAccessories = accessoryEditor?.IsOpen == true;
         roaming.Draw(ImGuiHelpers.GlobalScale);
         if (!IsOpen) { SearchHasFocus = false; return; }
         PushTheme();
-        try { if (mainOpen) DrawMain(); if (companionOpen) DrawCompanionWindow(); if (settingsOpen) DrawSettings(); }
+        try
+        {
+            if (accessoryEditor?.IsOpen == true) { accessoryEditor.Draw(ImGuiHelpers.GlobalScale); return; }
+            if (mainOpen) DrawMain(); if (companionOpen) DrawCompanionWindow(); if (settingsOpen) DrawSettings();
+        }
         finally { ImGui.PopStyleColor(15); ImGui.PopStyleVar(6); }
     }
 
@@ -473,13 +479,23 @@ internal sealed class PluginUi : IDisposable
         _ => Enum.TryParse<SeasonalCompanionTheme>(value, out var theme) ? SeasonalCompanionPolicy.Label(theme) : value
     };
 
-    private void StyleChoice(string label, ref string value, IReadOnlyList<string> choices, Func<string, string>? name = null)
+    private bool StyleChoice(string label, ref string value, IReadOnlyList<string> choices, Func<string, string>? name = null, bool persist = true)
     {
         name ??= StyleLabel;
-        if (!UiText.BeginCombo(label, name(value))) return;
+        if (!UiText.BeginCombo(label, name(value))) return false;
+        var changed = false;
         foreach (var choice in choices)
-            if (UiText.Selectable(name(choice), choice == value)) { value = choice; Save(); }
+            if (UiText.Selectable(name(choice), choice == value)) { value = choice; changed = true; if (persist) Save(); }
         ImGui.EndCombo();
+        return changed;
+    }
+
+    private void OpenAccessoryEditor()
+    {
+        accessoryEditor ??= new(config, roaming.AssetDirectory);
+        accessoryEditor.Open(roaming.DisplayAvatar, roaming.CurrentLookId, roaming.AccessoryTheme);
+        roaming.IsEditingAccessories = true;
+        hotkeys.Cancel();
     }
 
     private void DrawQuestItems()
@@ -716,14 +732,18 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.Checkbox("Magic accents", ref config.CompanionMagicEnabled)) Save();
             if (UiText.CollapsingHeader("Looks"))
             {
-                StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
-                    choice => roaming.LookLabel(config.Avatar, choice));
+                if (StyleChoice("Look", ref config.CompanionVariant, Configuration.CompanionVariantNames,
+                    choice => roaming.LookLabel(config.Avatar, choice), persist: false))
+                { config.CompanionHolidayBodiesEnabled = false; Save(); }
+                if (config.CompanionHolidayBodiesEnabled) UiText.Hint("Holiday body active. Picking a look switches to everyday mode.");
                 if (config.CompanionVariant == "Random")
                 {
                     if (ImGui.Checkbox("Change look on a timer", ref config.CompanionLookAutoRotateEnabled)) Save();
                     if (config.CompanionLookAutoRotateEnabled && ImGui.SliderFloat("Look interval", ref config.CompanionLookInterval,
                         30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
                 }
+                if (ImGui.Checkbox("Companion poof", ref config.CompanionTransitionEffectsEnabled)) Save();
+                UiText.Hint("Covers automatic companion swaps. Requires animation and magic accents.");
                 if (config.Avatar == "Orbit")
                 {
                     if (ImGui.Checkbox("Moving rings", ref config.CompanionOrbitRingsEnabled)) Save();
@@ -734,9 +754,13 @@ internal sealed class PluginUi : IDisposable
             if (UiText.CollapsingHeader("Seasonal looks & rotation"))
             {
                 if (ImGui.Checkbox("Holiday bodies", ref config.CompanionHolidayBodiesEnabled)) Save();
+                if (config.CompanionHolidayBodiesEnabled)
+                    StyleChoice("Body theme", ref config.CompanionHolidayBody, Configuration.SeasonalThemeNames,
+                        choice => roaming.HolidayBodyLabel(config.Avatar, choice));
                 if (ImGui.Checkbox("Seasonal accessories", ref config.CompanionSeasonalEnabled)) Save();
-                if ((config.CompanionSeasonalEnabled || config.CompanionHolidayBodiesEnabled || config.CompanionHolidayHomeEnabled)
-                    && UiText.BeginCombo("Seasonal theme", SeasonalLabel(config.CompanionSeasonalTheme)))
+                if (UiText.Button("Fit accessories")) OpenAccessoryEditor();
+                if ((config.CompanionSeasonalEnabled || config.CompanionHolidayHomeEnabled)
+                    && UiText.BeginCombo("Accessory / home theme", SeasonalLabel(config.CompanionSeasonalTheme)))
                 {
                     foreach (var theme in Configuration.SeasonalThemeNames)
                         if (UiText.Selectable(SeasonalLabel(theme), config.CompanionSeasonalTheme == theme)) { config.CompanionSeasonalTheme = theme; Save(); }
@@ -801,15 +825,12 @@ internal sealed class PluginUi : IDisposable
                 ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
                 if (ImGui.SliderFloat("Comment interval", ref config.CompanionCommentInterval, 30, 600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
                 ImGui.EndDisabled();
-                if (config.Avatar == "Wink" || config.CompanionVariant != "Default" || config.CompanionHolidayBodiesEnabled)
-                {
-                    if (ImGui.Checkbox("Blink", ref config.CompanionBlinkEnabled)) Save();
-                    if (config.Avatar == "Wink" && ImGui.Checkbox("Fourier-smoothed blink", ref config.CompanionFourierBlinkEnabled)) Save();
-                    UiText.Hint("Blinking needs animation. Wink uses a moving eyelid; other new looks blink while resting.");
-                    ImGui.BeginDisabled(!config.CompanionBlinkEnabled || !config.AnimationsEnabled);
-                    if (ImGui.SliderFloat("Blink interval", ref config.CompanionBlinkInterval, 1, 10, "%.1f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-                    ImGui.EndDisabled();
-                }
+                if (ImGui.Checkbox("Blink", ref config.CompanionBlinkEnabled)) Save();
+                if (config.Avatar == "Wink" && ImGui.Checkbox("Fourier-smoothed blink", ref config.CompanionFourierBlinkEnabled)) Save();
+                UiText.Hint("Every companion blinks while resting or moving. Requires animation; paused in fitting mode.");
+                ImGui.BeginDisabled(!config.CompanionBlinkEnabled || !config.AnimationsEnabled);
+                if (ImGui.SliderFloat("Blink interval", ref config.CompanionBlinkInterval, 1, 10, "%.1f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
+                ImGui.EndDisabled();
             }
         }
         if (UiText.Button("Open companion conversation")) OpenCompanion();

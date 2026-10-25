@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with Moonblob and seven other moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0015`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0017`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -118,8 +118,19 @@ small corner rounding and a footer showing the built version and **by Zero**.
   chooses another companion every 30–3600 seconds without replacing your saved
   selection. Each companion has all nine painted holiday bodies, with optional
   accessories fitted to its crown and width. Bodies, accessories and holiday
-  homes can be enabled separately. A body stays unchanged while carried or
-  napping. Wink also has an optional Fourier-smoothed blink.
+  homes can be enabled separately. Automatic body changes wait while carried or napping; manual choices apply immediately. Wink also has an optional Fourier-smoothed blink.
+- **Companion → Appearance → Seasonal looks & rotation → Fit accessories** opens
+  a still, centered fitting stage. Choose a companion, body and accessory; drag to
+  position it and drag the corner or use Size to resize. **Save fits** writes the
+  head-relative fit to the local database; **Cancel** discards unsaved edits.
+  Fits follow the body through movement, mirroring and size changes. **Fit view**
+  changes preview zoom only. The real companion pauses during fitting.
+- Selecting an everyday Look switches off holiday-body mode while preserving its
+  saved holiday choice. **Body theme** independently selects a named holiday body
+  or Auto. Manual changes also update a sleeping companion without restarting
+  its nap. All eight blink while resting or moving, with eye-only changes.
+  Type-specific magic and optional **Companion poof** accompany automatic avatar
+  swaps; the poof also requires animation and magic accents.
 - Optional **Companion → Appearance → Frame interaction** lets you pick up the
   companion and drop it onto a supported visible frame. It can perch on a top
   edge, turn and walk off, land on supported frames below or the screen floor,

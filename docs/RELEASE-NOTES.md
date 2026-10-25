@@ -1,3 +1,49 @@
+# 0.1.0.0017: accessory fitting, named holiday bodies and companion effects
+
+Companion → Appearance → Seasonal looks & rotation → Fit accessories opens a
+still, centered fitting stage. The real companion's motion, physics, nap timers,
+blinks and effects pause. Select a companion, body and accessory; drag to place,
+drag the corner or use Size to resize. Fit view changes preview zoom only.
+Save fits writes all edited fits to the local database; Cancel discards unsaved
+edits. Reset remains a draft until saved. Failed saves preserve existing fits.
+Offsets are in head-width units in the body's own axes, keyed by companion,
+body look and accessory, so placement follows movement, mirroring and resizing.
+
+Everyday looks and holiday bodies have independent saved choices. Selecting an
+everyday look turns off holiday-body mode; its saved holiday selection remains.
+A named holiday body can be previewed out of season; Auto follows the verified
+current event. Accessory/home theme remains separate. Manual appearance changes
+apply immediately, including during a nap, without restarting the nap or moving
+the companion. Automatic changes still defer while carried or napping.
+
+All 72 holiday looks have been redesigned with distinct seasonal materials and
+silhouettes, including pumpkin gel, snowglobes, lanterns, hearts, blossom and egg
+bodies, gold ingots, waves and celestial forms. The eight companions remain
+Moonblob, Wink, Nova, Mochi, Puff, Orbit, Ember and Prism; each has four everyday
+variants and nine named holiday transformations. Original holiday artwork is
+preserved locally and in the previous immutable release.
+
+Type-specific magic gives each companion its own wisps, droplets, comet trails,
+embers, orbital trails or crystal refractions, with holiday motifs. Magic and
+animation switches still apply. Automatic companion rotation can use a short
+magical poof: it covers the outgoing companion, switches at the opaque peak,
+then fades away. Companion poof has its own switch and also requires magic and
+animation. Position and gait are retained through the swap.
+
+All eight normal idle/walking bodies blink through eye-only overlays. Their
+bodies keep the same texture and shape through the blink. Blink and animation
+switches apply globally, fitting mode is still, and Wink keeps optional Fourier
+smoothing. Sleeping companions retain their sleeping expressions.
+
+Next Action also suppresses mapped entries with missing icon metadata instead
+of showing an empty dot. Blocked actions with a real icon retain their reason.
+
+Schema 10 adds the saved fits, independent holiday-body choice and poof switch.
+Versions 1–9 migrate atomically; imports retain strict validation and cannot
+grant AI consent. JSON exports remain bounded at 256 KiB. All new behavior is
+local and makes no model requests. Build/native offscreen checks are separate
+from live FFXIV acceptance. Base version remains 0.1.0; this source batch targets
+commit count 17 and its own finalized hash. Previous releases remain unchanged.
 # 0.1.0.0015: expressive companions and complete seasonal looks
 
 The eight companions now have four additional everyday looks each and nine

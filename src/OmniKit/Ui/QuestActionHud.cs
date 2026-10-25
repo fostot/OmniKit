@@ -32,7 +32,7 @@ internal sealed class QuestActionHud(Configuration config, SoftInteractionServic
     private void DrawNext(float scale)
     {
         var preview = interaction.NextAction;
-        if (preview == null || preview.QuestKind is not (QuestActionKind.EventItem or QuestActionKind.Emote)) return;
+        if (preview == null || preview.IconId == 0 || preview.QuestKind is not (QuestActionKind.EventItem or QuestActionKind.Emote)) return;
         if (interaction.ActionPaused) return;
         var edge = 52 * scale;
         var size = new Vector2(edge);

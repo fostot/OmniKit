@@ -7,13 +7,15 @@ using OmniKit.Storage;
 
 namespace OmniKit;
 
+public sealed record CompanionAccessoryAdjustment(string Avatar, string Look, string Theme, float OffsetX, float OffsetY, float Scale);
+
 [Serializable]
 public sealed class Configuration : IPluginConfiguration
 {
     public const float MinimumDetectionDistance = 1f;
     public const float MaximumDetectionDistance = 30f;
     public const float DefaultDetectionDistance = 6f;
-    public int Version { get; set; } = 9;
+    public int Version { get; set; } = 10;
     public static IReadOnlyList<string> AvatarNames { get; } = Array.AsReadOnly(new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" });
     public static IReadOnlyList<string> OutfitNames { get; } = Array.AsReadOnly(new[] { "Navigator", "Stargazer" });
     public static IReadOnlyList<string> PaletteNames { get; } = Array.AsReadOnly(new[] { "Moonlight", "Aurora", "Nebula", "Rose", "Ember", "Starlight" });
@@ -97,6 +99,9 @@ public sealed class Configuration : IPluginConfiguration
     public string CompanionHomeStyle = "Default";
     public bool CompanionHolidayHomeEnabled = true;
     public bool CompanionHolidayBodiesEnabled = true;
+    public string CompanionHolidayBody = "Auto";
+    public List<CompanionAccessoryAdjustment> CompanionAccessoryFits = [];
+    public bool CompanionTransitionEffectsEnabled = true;
     public string CompanionHandStyle = "Default";
     public bool CompanionGroundedEnabled = true;
     public bool CompanionAutoHopEnabled = true;

@@ -1,0 +1,5220 @@
+{
+  "Version": 1,
+  "CoordinateSystem": "Source pixels; rectangle right and bottom exclusive. Eye ellipses are centerX, centerY, radiusX, radiusY. Skin samples belong to the same look closed frame.",
+  "Sheets": [
+    {
+      "File": "ember-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "23cdeafdbfc8c626c972844d0616f5bdc8cf70c31d25cd97018f6429605b9665"
+    },
+    {
+      "File": "ember-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "b5a116c4ec4876a10455e64150f20eda9423257e6153cd0386251615113d106b"
+    },
+    {
+      "File": "ember-variants.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "881c0d927b4a41b6542e40bf102daab21f1088add944cc69be76dd4060fd2eb4"
+    },
+    {
+      "File": "mochi-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "8d328fe133011ae233605d99d8414c510c9e2337d38a4c8255f42629355b98cd"
+    },
+    {
+      "File": "mochi-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "767c01195f021a9a936b8fd943d9d9e8256b4170741bf6cfce462d13a25f1422"
+    },
+    {
+      "File": "mochi-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "f5961be4fe5172687cff8dea34e732775b4b16e7a86cbf046c5d329404cb899a"
+    },
+    {
+      "File": "moonblob-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "de95d5b066398bd9b64ddd640be6f0f4c320878aa714d35e7a17effb152a6d6f"
+    },
+    {
+      "File": "moonblob-limbless.png",
+      "Width": 1024,
+      "Height": 1536,
+      "SHA256": "6c88b89d296e413a81dedb8a13c4fef94203f5ffc00707fb350fd8276b75ca15"
+    },
+    {
+      "File": "moonblob-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "f772b76deb9eb14b4f13418a7bae92097e17317a6166b0cb4390ccad00ff6331"
+    },
+    {
+      "File": "nova-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "5dec7ae8e9e4b89424a8905dee3a27f477dbb94550e52b4c2c2c7b5cf3aed114"
+    },
+    {
+      "File": "nova-motion.png",
+      "Width": 1024,
+      "Height": 1536,
+      "SHA256": "6248bf83f55759c07911d76a4d6d253bbc1d1e3905d9347f470be20b484ab75c"
+    },
+    {
+      "File": "nova-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "e5f33ca4366b9a1578bc0be970cb9be887953dc0ef7071070b9b887da42c9cc6"
+    },
+    {
+      "File": "orbit-core.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "c26c2f078331e56fe4c8c5cc8fa84b018d804f84e1fdebce38d7cab8ecb4b22d"
+    },
+    {
+      "File": "orbit-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "f69281677e8897d441ed3bda98da188a6b75c72757278db815c038db054b48dc"
+    },
+    {
+      "File": "orbit-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "5f388691f99328713f68ddf5ed3b6e2abe2b9895108289787f3f22c5bbf6fd65"
+    },
+    {
+      "File": "prism-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "0297100314f909fec85572cae0e52c9cea390ab788727c2bbf10886738c96d09"
+    },
+    {
+      "File": "prism-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "3af4203d247ba27608514a9a482af7d18f9d6242b0357e6f5aa0139256fc82a3"
+    },
+    {
+      "File": "prism-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "5ccc033161ac4a37b11e208b396647d9e9714e8ee68f6e540da9bbbaed2c23cf"
+    },
+    {
+      "File": "puff-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "21ea5c34bfa5fbe5d6545beb8b8ad3f230d8d4d297345f3c42ee218246ce5482"
+    },
+    {
+      "File": "puff-poses.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "cf1d6bb3b6da7210e026c8265361f1b605ee503cc1b6ef5712ab20e25864193d"
+    },
+    {
+      "File": "puff-variants.png",
+      "Width": 1254,
+      "Height": 1254,
+      "SHA256": "a2c9a9446049ef016168051a1785f022a6035b514ac8fad8d824a45dac80f946"
+    },
+    {
+      "File": "wink-holiday-bodies.png",
+      "Width": 1182,
+      "Height": 1330,
+      "SHA256": "e165e8accadde6ade0cad8764d434e2b3bd501a33112b0e8b80e8c55b0cbb6f0"
+    },
+    {
+      "File": "wink-motion.png",
+      "Width": 1024,
+      "Height": 1536,
+      "SHA256": "d2d0baae0bfc5421dc8680110b4baf103a52611249f2b77c4a2b4dd141b8dd98"
+    },
+    {
+      "File": "wink-variants.png",
+      "Width": 1774,
+      "Height": 887,
+      "SHA256": "31d718baddf1c31d53e1dddaf97be1d7fdc0ef89dfb0f8827676aeadf6641dc4"
+    }
+  ],
+  "Profiles": [
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-limbless.png",
+      "NormalBounds": [
+        27,
+        45,
+        245,
+        256
+      ],
+      "ClosedFile": "moonblob-limbless.png",
+      "ClosedBounds": [
+        781,
+        532,
+        996,
+        738
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            87.0,
+            140.5,
+            23.0,
+            23.5
+          ],
+          "Sample": [
+            841,
+            611,
+            853,
+            617
+          ]
+        },
+        {
+          "Ellipse": [
+            180.0,
+            136.0,
+            24.0,
+            24.0
+          ],
+          "Sample": [
+            930,
+            609,
+            942,
+            615
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-variants.png",
+      "NormalBounds": [
+        19,
+        42,
+        230,
+        239
+      ],
+      "ClosedFile": "moonblob-variants.png",
+      "ClosedBounds": [
+        683,
+        43,
+        891,
+        241
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            80.5,
+            137.0,
+            22.5,
+            23.0
+          ],
+          "Sample": [
+            738,
+            125,
+            750,
+            131
+          ]
+        },
+        {
+          "Ellipse": [
+            168.5,
+            135.0,
+            22.5,
+            23.0
+          ],
+          "Sample": [
+            825,
+            125,
+            837,
+            131
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-variants.png",
+      "NormalBounds": [
+        20,
+        245,
+        231,
+        444
+      ],
+      "ClosedFile": "moonblob-variants.png",
+      "ClosedBounds": [
+        683,
+        246,
+        891,
+        444
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            81.5,
+            340.5,
+            22.5,
+            22.5
+          ],
+          "Sample": [
+            738,
+            329,
+            750,
+            335
+          ]
+        },
+        {
+          "Ellipse": [
+            169.0,
+            337.5,
+            23.0,
+            22.5
+          ],
+          "Sample": [
+            826,
+            328,
+            838,
+            334
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-variants.png",
+      "NormalBounds": [
+        18,
+        452,
+        231,
+        654
+      ],
+      "ClosedFile": "moonblob-variants.png",
+      "ClosedBounds": [
+        683,
+        454,
+        892,
+        655
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            80.5,
+            547.0,
+            22.5,
+            23.0
+          ],
+          "Sample": [
+            738,
+            540,
+            750,
+            546
+          ]
+        },
+        {
+          "Ellipse": [
+            168.5,
+            545.5,
+            22.5,
+            22.5
+          ],
+          "Sample": [
+            826,
+            541,
+            838,
+            547
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-variants.png",
+      "NormalBounds": [
+        17,
+        659,
+        233,
+        867
+      ],
+      "ClosedFile": "moonblob-variants.png",
+      "ClosedBounds": [
+        684,
+        661,
+        894,
+        865
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            80.5,
+            756.5,
+            22.5,
+            23.5
+          ],
+          "Sample": [
+            739,
+            748,
+            751,
+            754
+          ]
+        },
+        {
+          "Ellipse": [
+            169.0,
+            753.0,
+            23.0,
+            22.0
+          ],
+          "Sample": [
+            828,
+            748,
+            840,
+            754
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-motion.png",
+      "NormalBounds": [
+        9,
+        35,
+        250,
+        239
+      ],
+      "ClosedFile": "wink-motion.png",
+      "ClosedBounds": [
+        778,
+        526,
+        1003,
+        718
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            163.5,
+            125.5,
+            47.1,
+            39.68
+          ],
+          "Sample": [
+            914,
+            597,
+            926,
+            603
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-variants.png",
+      "NormalBounds": [
+        11,
+        25,
+        230,
+        229
+      ],
+      "ClosedFile": "wink-variants.png",
+      "ClosedBounds": [
+        674,
+        34,
+        880,
+        230
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            141,
+            114,
+            42,
+            32
+          ],
+          "Sample": [
+            790,
+            97,
+            802,
+            103
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-variants.png",
+      "NormalBounds": [
+        10,
+        244,
+        230,
+        445
+      ],
+      "ClosedFile": "wink-variants.png",
+      "ClosedBounds": [
+        673,
+        251,
+        879,
+        445
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            144,
+            333,
+            42,
+            32
+          ],
+          "Sample": [
+            792,
+            312,
+            804,
+            318
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-variants.png",
+      "NormalBounds": [
+        12,
+        463,
+        230,
+        663
+      ],
+      "ClosedFile": "wink-variants.png",
+      "ClosedBounds": [
+        674,
+        470,
+        879,
+        665
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            143,
+            552,
+            42,
+            32
+          ],
+          "Sample": [
+            791,
+            546,
+            803,
+            552
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-variants.png",
+      "NormalBounds": [
+        10,
+        674,
+        230,
+        879
+      ],
+      "ClosedFile": "wink-variants.png",
+      "ClosedBounds": [
+        674,
+        685,
+        879,
+        879
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            143,
+            766,
+            42,
+            32
+          ],
+          "Sample": [
+            792,
+            758,
+            804,
+            764
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-motion.png",
+      "NormalBounds": [
+        23,
+        21,
+        243,
+        238
+      ],
+      "ClosedFile": "nova-motion.png",
+      "ClosedBounds": [
+        779,
+        519,
+        1002,
+        731
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            130.0,
+            131.0,
+            20.47,
+            19.45
+          ],
+          "Sample": [
+            880,
+            613,
+            892,
+            619
+          ]
+        },
+        {
+          "Ellipse": [
+            192.5,
+            111.5,
+            15.53,
+            18.54
+          ],
+          "Sample": [
+            944,
+            600,
+            956,
+            606
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-variants.png",
+      "NormalBounds": [
+        20,
+        16,
+        229,
+        215
+      ],
+      "ClosedFile": "nova-variants.png",
+      "ClosedBounds": [
+        677,
+        23,
+        880,
+        212
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            109.0,
+            115.0,
+            18.01,
+            19.07
+          ],
+          "Sample": [
+            761,
+            111,
+            773,
+            117
+          ]
+        },
+        {
+          "Ellipse": [
+            169.5,
+            105.5,
+            16.5,
+            18.64
+          ],
+          "Sample": [
+            820,
+            106,
+            832,
+            112
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-variants.png",
+      "NormalBounds": [
+        19,
+        238,
+        229,
+        439
+      ],
+      "ClosedFile": "nova-variants.png",
+      "ClosedBounds": [
+        677,
+        243,
+        881,
+        435
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            109.5,
+            338.5,
+            16.5,
+            16.5
+          ],
+          "Sample": [
+            762,
+            335,
+            774,
+            341
+          ]
+        },
+        {
+          "Ellipse": [
+            170.0,
+            326.5,
+            16.13,
+            17.65
+          ],
+          "Sample": [
+            820,
+            330,
+            832,
+            336
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-variants.png",
+      "NormalBounds": [
+        19,
+        457,
+        229,
+        659
+      ],
+      "ClosedFile": "nova-variants.png",
+      "ClosedBounds": [
+        677,
+        464,
+        881,
+        658
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            109.5,
+            560.0,
+            16.5,
+            16.0
+          ],
+          "Sample": [
+            762,
+            555,
+            774,
+            561
+          ]
+        },
+        {
+          "Ellipse": [
+            170.0,
+            549.5,
+            15.0,
+            15.5
+          ],
+          "Sample": [
+            820,
+            551,
+            832,
+            557
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-variants.png",
+      "NormalBounds": [
+        19,
+        670,
+        229,
+        874
+      ],
+      "ClosedFile": "nova-variants.png",
+      "ClosedBounds": [
+        677,
+        680,
+        881,
+        874
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            109.5,
+            774.0,
+            16.5,
+            16.0
+          ],
+          "Sample": [
+            762,
+            773,
+            774,
+            779
+          ]
+        },
+        {
+          "Ellipse": [
+            169.5,
+            762.0,
+            16.51,
+            18.11
+          ],
+          "Sample": [
+            820,
+            767,
+            832,
+            773
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-poses.png",
+      "NormalBounds": [
+        27,
+        68,
+        311,
+        306
+      ],
+      "ClosedFile": "mochi-poses.png",
+      "ClosedBounds": [
+        639,
+        67,
+        921,
+        306
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            106.0,
+            196.5,
+            36.71,
+            33.03
+          ],
+          "Sample": [
+            709,
+            201,
+            721,
+            207
+          ]
+        },
+        {
+          "Ellipse": [
+            234.0,
+            197.5,
+            36.31,
+            33.64
+          ],
+          "Sample": [
+            840,
+            202,
+            852,
+            208
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-variants.png",
+      "NormalBounds": [
+        22,
+        81,
+        240,
+        272
+      ],
+      "ClosedFile": "mochi-variants.png",
+      "ClosedBounds": [
+        674,
+        81,
+        889,
+        273
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.5,
+            185.0,
+            27.76,
+            25.13
+          ],
+          "Sample": [
+            726,
+            185,
+            738,
+            191
+          ]
+        },
+        {
+          "Ellipse": [
+            179.5,
+            185.5,
+            27.59,
+            25.5
+          ],
+          "Sample": [
+            823,
+            184,
+            835,
+            190
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-variants.png",
+      "NormalBounds": [
+        22,
+        276,
+        241,
+        470
+      ],
+      "ClosedFile": "mochi-variants.png",
+      "ClosedBounds": [
+        676,
+        281,
+        890,
+        473
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.5,
+            382.0,
+            27.61,
+            25.0
+          ],
+          "Sample": [
+            727,
+            383,
+            739,
+            389
+          ]
+        },
+        {
+          "Ellipse": [
+            180.5,
+            381.5,
+            28.22,
+            26.08
+          ],
+          "Sample": [
+            824,
+            381,
+            836,
+            387
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-variants.png",
+      "NormalBounds": [
+        21,
+        478,
+        240,
+        674
+      ],
+      "ClosedFile": "mochi-variants.png",
+      "ClosedBounds": [
+        677,
+        480,
+        891,
+        674
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            83.5,
+            586.0,
+            27.25,
+            25.7
+          ],
+          "Sample": [
+            728,
+            587,
+            740,
+            593
+          ]
+        },
+        {
+          "Ellipse": [
+            178.5,
+            587.0,
+            27.56,
+            26.0
+          ],
+          "Sample": [
+            824,
+            585,
+            836,
+            591
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-variants.png",
+      "NormalBounds": [
+        22,
+        676,
+        239,
+        865
+      ],
+      "ClosedFile": "mochi-variants.png",
+      "ClosedBounds": [
+        674,
+        678,
+        891,
+        866
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            83.0,
+            779.0,
+            27.15,
+            25.06
+          ],
+          "Sample": [
+            727,
+            779,
+            739,
+            785
+          ]
+        },
+        {
+          "Ellipse": [
+            177.5,
+            778.5,
+            27.5,
+            25.42
+          ],
+          "Sample": [
+            823,
+            777,
+            835,
+            783
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-poses.png",
+      "NormalBounds": [
+        13,
+        43,
+        303,
+        279
+      ],
+      "ClosedFile": "puff-poses.png",
+      "ClosedBounds": [
+        640,
+        44,
+        929,
+        279
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            108.0,
+            190.5,
+            27.68,
+            28.21
+          ],
+          "Sample": [
+            726,
+            190,
+            738,
+            196
+          ]
+        },
+        {
+          "Ellipse": [
+            208.0,
+            191.5,
+            27.71,
+            28.25
+          ],
+          "Sample": [
+            828,
+            180,
+            840,
+            186
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-variants.png",
+      "NormalBounds": [
+        6,
+        46,
+        317,
+        295
+      ],
+      "ClosedFile": "puff-variants.png",
+      "ClosedBounds": [
+        321,
+        45,
+        631,
+        295
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            111.5,
+            200.5,
+            29.1,
+            25.92
+          ],
+          "Sample": [
+            421,
+            197,
+            433,
+            203
+          ]
+        },
+        {
+          "Ellipse": [
+            214.0,
+            200.5,
+            30.38,
+            26.57
+          ],
+          "Sample": [
+            522,
+            191,
+            534,
+            197
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-variants.png",
+      "NormalBounds": [
+        5,
+        353,
+        319,
+        606
+      ],
+      "ClosedFile": "puff-variants.png",
+      "ClosedBounds": [
+        320,
+        354,
+        633,
+        606
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            111,
+            512,
+            30,
+            31
+          ],
+          "Sample": [
+            422,
+            506,
+            434,
+            512
+          ]
+        },
+        {
+          "Ellipse": [
+            214.5,
+            511.5,
+            30.5,
+            30.5
+          ],
+          "Sample": [
+            522,
+            506,
+            534,
+            512
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-variants.png",
+      "NormalBounds": [
+        3,
+        656,
+        319,
+        913
+      ],
+      "ClosedFile": "puff-variants.png",
+      "ClosedBounds": [
+        319,
+        656,
+        633,
+        913
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            111.5,
+            813.5,
+            28.87,
+            28.87
+          ],
+          "Sample": [
+            420,
+            811,
+            432,
+            817
+          ]
+        },
+        {
+          "Ellipse": [
+            214.0,
+            813.0,
+            29.53,
+            29.53
+          ],
+          "Sample": [
+            521,
+            811,
+            533,
+            817
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-variants.png",
+      "NormalBounds": [
+        5,
+        964,
+        318,
+        1222
+      ],
+      "ClosedFile": "puff-variants.png",
+      "ClosedBounds": [
+        318,
+        964,
+        632,
+        1222
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            112.0,
+            1124.0,
+            28.45,
+            27.4
+          ],
+          "Sample": [
+            420,
+            1120,
+            432,
+            1126
+          ]
+        },
+        {
+          "Ellipse": [
+            214.0,
+            1125.0,
+            29.92,
+            27.78
+          ],
+          "Sample": [
+            521,
+            1118,
+            533,
+            1124
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-core.png",
+      "NormalBounds": [
+        32,
+        45,
+        286,
+        303
+      ],
+      "ClosedFile": "orbit-core.png",
+      "ClosedBounds": [
+        659,
+        45,
+        911,
+        303
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            89,
+            169.5,
+            29,
+            31.5
+          ],
+          "Sample": [
+            698,
+            184,
+            710,
+            190
+          ]
+        },
+        {
+          "Ellipse": [
+            198,
+            162,
+            32,
+            31
+          ],
+          "Sample": [
+            826,
+            161,
+            838,
+            167
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-variants.png",
+      "NormalBounds": [
+        26,
+        32,
+        222,
+        226
+      ],
+      "ClosedFile": "orbit-variants.png",
+      "ClosedBounds": [
+        681,
+        30,
+        877,
+        227
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            78.5,
+            130.0,
+            28.52,
+            29.13
+          ],
+          "Sample": [
+            726,
+            137,
+            738,
+            143
+          ]
+        },
+        {
+          "Ellipse": [
+            167.5,
+            126.5,
+            27.5,
+            27.5
+          ],
+          "Sample": [
+            807,
+            131,
+            819,
+            137
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-variants.png",
+      "NormalBounds": [
+        24,
+        240,
+        222,
+        439
+      ],
+      "ClosedFile": "orbit-variants.png",
+      "ClosedBounds": [
+        681,
+        241,
+        878,
+        440
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            77.5,
+            339.5,
+            29.5,
+            28.23
+          ],
+          "Sample": [
+            725,
+            348,
+            737,
+            354
+          ]
+        },
+        {
+          "Ellipse": [
+            168.0,
+            339.0,
+            27.14,
+            26.0
+          ],
+          "Sample": [
+            807,
+            343,
+            819,
+            349
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-variants.png",
+      "NormalBounds": [
+        26,
+        451,
+        223,
+        650
+      ],
+      "ClosedFile": "orbit-variants.png",
+      "ClosedBounds": [
+        681,
+        452,
+        877,
+        651
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            78.5,
+            551.5,
+            28.5,
+            27.28
+          ],
+          "Sample": [
+            725,
+            559,
+            737,
+            565
+          ]
+        },
+        {
+          "Ellipse": [
+            167.5,
+            549.5,
+            27.5,
+            27.5
+          ],
+          "Sample": [
+            806,
+            555,
+            818,
+            561
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-variants.png",
+      "NormalBounds": [
+        26,
+        665,
+        223,
+        862
+      ],
+      "ClosedFile": "orbit-variants.png",
+      "ClosedBounds": [
+        680,
+        665,
+        878,
+        863
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            78.0,
+            765.5,
+            29.06,
+            28.45
+          ],
+          "Sample": [
+            725,
+            772,
+            737,
+            778
+          ]
+        },
+        {
+          "Ellipse": [
+            168,
+            764,
+            28,
+            25.5
+          ],
+          "Sample": [
+            807,
+            768,
+            819,
+            774
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-poses.png",
+      "NormalBounds": [
+        44,
+        37,
+        304,
+        303
+      ],
+      "ClosedFile": "ember-poses.png",
+      "ClosedBounds": [
+        657,
+        38,
+        918,
+        304
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            119.0,
+            196.5,
+            29.13,
+            29.65
+          ],
+          "Sample": [
+            725,
+            202,
+            737,
+            208
+          ]
+        },
+        {
+          "Ellipse": [
+            224.5,
+            197.0,
+            29.48,
+            30.0
+          ],
+          "Sample": [
+            834,
+            200,
+            846,
+            206
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-variants.png",
+      "NormalBounds": [
+        30,
+        26,
+        318,
+        314
+      ],
+      "ClosedFile": "ember-variants.png",
+      "ClosedBounds": [
+        348,
+        25,
+        632,
+        314
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            116.5,
+            210.0,
+            31.55,
+            30.0
+          ],
+          "Sample": [
+            424,
+            208,
+            436,
+            214
+          ]
+        },
+        {
+          "Ellipse": [
+            226.0,
+            209.0,
+            32.12,
+            30.04
+          ],
+          "Sample": [
+            534,
+            210,
+            546,
+            216
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-variants.png",
+      "NormalBounds": [
+        31,
+        328,
+        318,
+        618
+      ],
+      "ClosedFile": "ember-variants.png",
+      "ClosedBounds": [
+        347,
+        328,
+        632,
+        618
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            118.5,
+            516.5,
+            32.73,
+            29.5
+          ],
+          "Sample": [
+            426,
+            517,
+            438,
+            523
+          ]
+        },
+        {
+          "Ellipse": [
+            227.0,
+            516.0,
+            32.66,
+            29.38
+          ],
+          "Sample": [
+            536,
+            517,
+            548,
+            523
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-variants.png",
+      "NormalBounds": [
+        31,
+        624,
+        320,
+        921
+      ],
+      "ClosedFile": "ember-variants.png",
+      "ClosedBounds": [
+        346,
+        626,
+        633,
+        922
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            119.0,
+            819.0,
+            31.04,
+            30.0
+          ],
+          "Sample": [
+            428,
+            817,
+            440,
+            823
+          ]
+        },
+        {
+          "Ellipse": [
+            228.0,
+            818.5,
+            30.88,
+            30.37
+          ],
+          "Sample": [
+            538,
+            818,
+            550,
+            824
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-variants.png",
+      "NormalBounds": [
+        29,
+        927,
+        323,
+        1225
+      ],
+      "ClosedFile": "ember-variants.png",
+      "ClosedBounds": [
+        345,
+        927,
+        635,
+        1225
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            117.0,
+            1124.0,
+            31.21,
+            30.2
+          ],
+          "Sample": [
+            424,
+            1124,
+            436,
+            1130
+          ]
+        },
+        {
+          "Ellipse": [
+            228.0,
+            1123.5,
+            32.0,
+            30.45
+          ],
+          "Sample": [
+            537,
+            1123,
+            549,
+            1129
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-poses.png",
+      "NormalBounds": [
+        47,
+        49,
+        294,
+        298
+      ],
+      "ClosedFile": "prism-poses.png",
+      "ClosedBounds": [
+        657,
+        50,
+        907,
+        298
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            110.5,
+            166.5,
+            30.92,
+            33.01
+          ],
+          "Sample": [
+            716,
+            174,
+            728,
+            180
+          ]
+        },
+        {
+          "Ellipse": [
+            217.0,
+            166.5,
+            32.36,
+            32.88
+          ],
+          "Sample": [
+            824,
+            173,
+            836,
+            179
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-variants.png",
+      "NormalBounds": [
+        24,
+        42,
+        235,
+        248
+      ],
+      "ClosedFile": "prism-variants.png",
+      "ClosedBounds": [
+        674,
+        41,
+        886,
+        248
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.0,
+            145.0,
+            26.99,
+            24.91
+          ],
+          "Sample": [
+            724,
+            147,
+            736,
+            153
+          ]
+        },
+        {
+          "Ellipse": [
+            170.5,
+            145.0,
+            26.49,
+            24.93
+          ],
+          "Sample": [
+            812,
+            147,
+            824,
+            153
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-variants.png",
+      "NormalBounds": [
+        23,
+        250,
+        236,
+        462
+      ],
+      "ClosedFile": "prism-variants.png",
+      "ClosedBounds": [
+        675,
+        252,
+        886,
+        462
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.0,
+            357.5,
+            26.78,
+            26.27
+          ],
+          "Sample": [
+            725,
+            361,
+            737,
+            367
+          ]
+        },
+        {
+          "Ellipse": [
+            171.5,
+            356.5,
+            26.78,
+            26.78
+          ],
+          "Sample": [
+            813,
+            360,
+            825,
+            366
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-variants.png",
+      "NormalBounds": [
+        23,
+        465,
+        236,
+        671
+      ],
+      "ClosedFile": "prism-variants.png",
+      "ClosedBounds": [
+        675,
+        466,
+        886,
+        673
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.0,
+            570.5,
+            26.71,
+            25.16
+          ],
+          "Sample": [
+            724,
+            574,
+            736,
+            580
+          ]
+        },
+        {
+          "Ellipse": [
+            170.5,
+            569.0,
+            26.59,
+            26.07
+          ],
+          "Sample": [
+            812,
+            575,
+            824,
+            581
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-variants.png",
+      "NormalBounds": [
+        24,
+        672,
+        237,
+        879
+      ],
+      "ClosedFile": "prism-variants.png",
+      "ClosedBounds": [
+        675,
+        673,
+        885,
+        879
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            84.5,
+            775.0,
+            26.62,
+            26.1
+          ],
+          "Sample": [
+            724,
+            777,
+            736,
+            783
+          ]
+        },
+        {
+          "Ellipse": [
+            171.5,
+            774.0,
+            27.12,
+            26.58
+          ],
+          "Sample": [
+            812,
+            778,
+            824,
+            784
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        21,
+        149,
+        138
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        450,
+        21,
+        589,
+        139
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            48.5,
+            80.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            483,
+            61,
+            495,
+            67
+          ]
+        },
+        {
+          "Ellipse": [
+            106.5,
+            80.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            542,
+            61,
+            554,
+            67
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        144,
+        152,
+        285
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        149,
+        592,
+        285
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.5,
+            217.5,
+            15.5,
+            15.5
+          ],
+          "Sample": [
+            486,
+            213,
+            498,
+            219
+          ]
+        },
+        {
+          "Ellipse": [
+            108.0,
+            217.5,
+            16.0,
+            15.5
+          ],
+          "Sample": [
+            544,
+            214,
+            556,
+            220
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        290,
+        151,
+        419
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        290,
+        592,
+        419
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            50.0,
+            356.0,
+            15.0,
+            14.0
+          ],
+          "Sample": [
+            489,
+            351,
+            501,
+            357
+          ]
+        },
+        {
+          "Ellipse": [
+            107.5,
+            356.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            542,
+            350,
+            554,
+            356
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        3,
+        427,
+        155,
+        558
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        447,
+        424,
+        594,
+        558
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.5,
+            492.5,
+            15.5,
+            15.5
+          ],
+          "Sample": [
+            484,
+            489,
+            496,
+            495
+          ]
+        },
+        {
+          "Ellipse": [
+            108.0,
+            492.0,
+            16.0,
+            15.0
+          ],
+          "Sample": [
+            544,
+            487,
+            556,
+            493
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        3,
+        560,
+        153,
+        712
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        449,
+        560,
+        593,
+        712
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.0,
+            639.5,
+            15.0,
+            14.5
+          ],
+          "Sample": [
+            486,
+            635,
+            498,
+            641
+          ]
+        },
+        {
+          "Ellipse": [
+            106.5,
+            639.0,
+            14.5,
+            14.0
+          ],
+          "Sample": [
+            544,
+            633,
+            556,
+            639
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        6,
+        720,
+        153,
+        870
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        720,
+        590,
+        869
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.5,
+            792.0,
+            15.5,
+            16.0
+          ],
+          "Sample": [
+            486,
+            791,
+            498,
+            797
+          ]
+        },
+        {
+          "Ellipse": [
+            108.5,
+            791.0,
+            15.5,
+            15.0
+          ],
+          "Sample": [
+            542,
+            789,
+            554,
+            795
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        3,
+        881,
+        154,
+        1003
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        447,
+        881,
+        594,
+        1002
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.0,
+            944.5,
+            15.0,
+            14.5
+          ],
+          "Sample": [
+            486,
+            926,
+            498,
+            932
+          ]
+        },
+        {
+          "Ellipse": [
+            107.5,
+            944.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            544,
+            927,
+            556,
+            933
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        5,
+        1007,
+        151,
+        1154
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        1010,
+        590,
+        1155
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.5,
+            1091.0,
+            15.5,
+            15.0
+          ],
+          "Sample": [
+            486,
+            1087,
+            498,
+            1093
+          ]
+        },
+        {
+          "Ellipse": [
+            108.0,
+            1090.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            544,
+            1088,
+            556,
+            1094
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Moonblob",
+      "NormalFile": "moonblob-holiday-bodies.png",
+      "NormalBounds": [
+        6,
+        1160,
+        152,
+        1316
+      ],
+      "ClosedFile": "moonblob-holiday-bodies.png",
+      "ClosedBounds": [
+        448,
+        1160,
+        591,
+        1316
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            49.5,
+            1255.0,
+            15.5,
+            15.0
+          ],
+          "Sample": [
+            490,
+            1246,
+            502,
+            1252
+          ]
+        },
+        {
+          "Ellipse": [
+            107.5,
+            1253.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            540,
+            1246,
+            552,
+            1252
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        9,
+        154,
+        153
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        18,
+        597,
+        153
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            96.0,
+            82.0,
+            29.0,
+            24.0
+          ],
+          "Sample": [
+            534,
+            72,
+            546,
+            78
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        157,
+        156,
+        290
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        454,
+        159,
+        600,
+        290
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            97.0,
+            221.5,
+            28.0,
+            21.5
+          ],
+          "Sample": [
+            536,
+            211,
+            548,
+            217
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        294,
+        157,
+        429
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        456,
+        296,
+        600,
+        427
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            95.5,
+            354.0,
+            28.5,
+            22.0
+          ],
+          "Sample": [
+            535,
+            341,
+            547,
+            347
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        6,
+        434,
+        157,
+        560
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        458,
+        430,
+        602,
+        559
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            95.0,
+            489.5,
+            29.0,
+            21.5
+          ],
+          "Sample": [
+            537,
+            476,
+            549,
+            482
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        5,
+        561,
+        158,
+        709
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        457,
+        561,
+        602,
+        706
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            93.5,
+            633.0,
+            28.5,
+            22.0
+          ],
+          "Sample": [
+            535,
+            621,
+            547,
+            627
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        712,
+        151,
+        857
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        459,
+        711,
+        598,
+        853
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            94.5,
+            774.0,
+            28.5,
+            23.0
+          ],
+          "Sample": [
+            536,
+            761,
+            548,
+            767
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        860,
+        155,
+        994
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        457,
+        859,
+        599,
+        991
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            95.0,
+            918.0,
+            29.0,
+            22.0
+          ],
+          "Sample": [
+            535,
+            900,
+            547,
+            906
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        6,
+        999,
+        155,
+        1158
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        1011,
+        596,
+        1159
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            97.0,
+            1084.5,
+            29.0,
+            21.5
+          ],
+          "Sample": [
+            534,
+            1080,
+            546,
+            1086
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Wink",
+      "NormalFile": "wink-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        1159,
+        156,
+        1321
+      ],
+      "ClosedFile": "wink-holiday-bodies.png",
+      "ClosedBounds": [
+        455,
+        1164,
+        600,
+        1318
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            96.5,
+            1243.0,
+            29.5,
+            22.0
+          ],
+          "Sample": [
+            536,
+            1233,
+            548,
+            1239
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        12,
+        158,
+        148
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        445,
+        18,
+        589,
+        148
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            73.5,
+            82.0,
+            12.5,
+            11.0
+          ],
+          "Sample": [
+            502,
+            77,
+            514,
+            83
+          ]
+        },
+        {
+          "Ellipse": [
+            116.0,
+            76.5,
+            11.0,
+            10.5
+          ],
+          "Sample": [
+            537,
+            74,
+            549,
+            80
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        150,
+        163,
+        297
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        159,
+        594,
+        297
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            73.0,
+            225.0,
+            12.0,
+            11.0
+          ],
+          "Sample": [
+            506,
+            226,
+            518,
+            232
+          ]
+        },
+        {
+          "Ellipse": [
+            116.0,
+            218.5,
+            11.0,
+            11.5
+          ],
+          "Sample": [
+            546,
+            221,
+            558,
+            227
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        9,
+        297,
+        158,
+        439
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        450,
+        305,
+        593,
+        438
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            73.5,
+            369.5,
+            12.5,
+            11.5
+          ],
+          "Sample": [
+            506,
+            367,
+            518,
+            373
+          ]
+        },
+        {
+          "Ellipse": [
+            116.5,
+            362.0,
+            11.5,
+            11.0
+          ],
+          "Sample": [
+            540,
+            363,
+            552,
+            369
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        439,
+        161,
+        587
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        456,
+        447,
+        603,
+        588
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            74.5,
+            511.5,
+            12.5,
+            11.5
+          ],
+          "Sample": [
+            512,
+            512,
+            524,
+            518
+          ]
+        },
+        {
+          "Ellipse": [
+            118.5,
+            503.5,
+            11.5,
+            11.5
+          ],
+          "Sample": [
+            554,
+            507,
+            566,
+            513
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        589,
+        163,
+        735
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        449,
+        597,
+        593,
+        734
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            74.5,
+            664.5,
+            12.5,
+            10.5
+          ],
+          "Sample": [
+            505,
+            664,
+            517,
+            670
+          ]
+        },
+        {
+          "Ellipse": [
+            117.0,
+            657.0,
+            11.0,
+            11.0
+          ],
+          "Sample": [
+            543,
+            659,
+            555,
+            665
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        737,
+        161,
+        885
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        744,
+        596,
+        882
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            73.5,
+            814.0,
+            12.5,
+            11.0
+          ],
+          "Sample": [
+            506,
+            808,
+            518,
+            814
+          ]
+        },
+        {
+          "Ellipse": [
+            116.5,
+            807.0,
+            11.5,
+            12.0
+          ],
+          "Sample": [
+            547,
+            803,
+            559,
+            809
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        14,
+        886,
+        165,
+        1026
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        454,
+        891,
+        596,
+        1026
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            81.5,
+            956.0,
+            12.5,
+            11.0
+          ],
+          "Sample": [
+            506,
+            953,
+            518,
+            959
+          ]
+        },
+        {
+          "Ellipse": [
+            124.5,
+            949.0,
+            11.5,
+            11.0
+          ],
+          "Sample": [
+            542,
+            950,
+            554,
+            956
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        1026,
+        160,
+        1170
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        1034,
+        596,
+        1170
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            75.5,
+            1098.0,
+            12.5,
+            11.0
+          ],
+          "Sample": [
+            508,
+            1098,
+            520,
+            1104
+          ]
+        },
+        {
+          "Ellipse": [
+            118.0,
+            1092.5,
+            11.0,
+            12.5
+          ],
+          "Sample": [
+            549,
+            1094,
+            561,
+            1100
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Nova",
+      "NormalFile": "nova-holiday-bodies.png",
+      "NormalBounds": [
+        13,
+        1170,
+        162,
+        1321
+      ],
+      "ClosedFile": "nova-holiday-bodies.png",
+      "ClosedBounds": [
+        459,
+        1173,
+        600,
+        1321
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            76.5,
+            1251.0,
+            12.5,
+            12.0
+          ],
+          "Sample": [
+            514,
+            1247,
+            526,
+            1253
+          ]
+        },
+        {
+          "Ellipse": [
+            119.5,
+            1242.5,
+            11.5,
+            11.5
+          ],
+          "Sample": [
+            550,
+            1242,
+            562,
+            1248
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        32,
+        152,
+        149
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        36,
+        593,
+        149
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.5,
+            93.5,
+            15.5,
+            13.5
+          ],
+          "Sample": [
+            490,
+            90,
+            502,
+            96
+          ]
+        },
+        {
+          "Ellipse": [
+            111.5,
+            93.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            546,
+            88,
+            558,
+            94
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        165,
+        150,
+        277
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        166,
+        591,
+        279
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.0,
+            221.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            490,
+            219,
+            502,
+            225
+          ]
+        },
+        {
+          "Ellipse": [
+            110.0,
+            220.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            547,
+            219,
+            559,
+            225
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        293,
+        153,
+        414
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        450,
+        296,
+        595,
+        416
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.0,
+            357.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            489,
+            355,
+            501,
+            361
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            357.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            547,
+            346,
+            559,
+            352
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        427,
+        154,
+        546
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        450,
+        434,
+        596,
+        547
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.0,
+            483.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            489,
+            482,
+            501,
+            488
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            483.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            547,
+            481,
+            559,
+            487
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        554,
+        154,
+        682
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        554,
+        596,
+        683
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.0,
+            626.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            490,
+            621,
+            502,
+            627
+          ]
+        },
+        {
+          "Ellipse": [
+            110.5,
+            626.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            547,
+            620,
+            559,
+            626
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        13,
+        688,
+        150,
+        844
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        457,
+        691,
+        593,
+        845
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.0,
+            760.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            492,
+            759,
+            504,
+            765
+          ]
+        },
+        {
+          "Ellipse": [
+            112.0,
+            760.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            546,
+            759,
+            558,
+            765
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        853,
+        156,
+        976
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        449,
+        854,
+        597,
+        977
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.5,
+            908.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            490,
+            909,
+            502,
+            915
+          ]
+        },
+        {
+          "Ellipse": [
+            110.5,
+            908.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            544,
+            908,
+            556,
+            914
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        987,
+        153,
+        1128
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        989,
+        594,
+        1129
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            1053.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            490,
+            1051,
+            502,
+            1057
+          ]
+        },
+        {
+          "Ellipse": [
+            110.0,
+            1052.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            542,
+            1050,
+            554,
+            1056
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Mochi",
+      "NormalFile": "mochi-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        1138,
+        153,
+        1296
+      ],
+      "ClosedFile": "mochi-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        1138,
+        597,
+        1296
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.0,
+            1226.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            490,
+            1229,
+            502,
+            1235
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            1226.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            546,
+            1228,
+            558,
+            1234
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        9,
+        13,
+        155,
+        155
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        14,
+        594,
+        156
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.5,
+            100.0,
+            13.6,
+            13.06
+          ],
+          "Sample": [
+            496,
+            94,
+            508,
+            100
+          ]
+        },
+        {
+          "Ellipse": [
+            100.5,
+            100.0,
+            13.6,
+            13.06
+          ],
+          "Sample": [
+            536,
+            94,
+            548,
+            100
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        161,
+        153,
+        284
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        162,
+        594,
+        284
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            59.0,
+            231.5,
+            13.49,
+            12.97
+          ],
+          "Sample": [
+            498,
+            224,
+            510,
+            230
+          ]
+        },
+        {
+          "Ellipse": [
+            102.0,
+            232.5,
+            13.4,
+            12.89
+          ],
+          "Sample": [
+            538,
+            222,
+            550,
+            228
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        291,
+        154,
+        409
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        293,
+        594,
+        410
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.0,
+            357.5,
+            13.55,
+            13.03
+          ],
+          "Sample": [
+            498,
+            354,
+            510,
+            360
+          ]
+        },
+        {
+          "Ellipse": [
+            101.0,
+            356.5,
+            14.1,
+            13.56
+          ],
+          "Sample": [
+            534,
+            353,
+            546,
+            359
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        7,
+        421,
+        156,
+        548
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        425,
+        594,
+        548
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            490.0,
+            14.02,
+            12.93
+          ],
+          "Sample": [
+            496,
+            487,
+            508,
+            493
+          ]
+        },
+        {
+          "Ellipse": [
+            100.0,
+            489.5,
+            14.1,
+            13.56
+          ],
+          "Sample": [
+            536,
+            485,
+            548,
+            491
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        9,
+        551,
+        154,
+        676
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        456,
+        553,
+        595,
+        678
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.5,
+            623.0,
+            13.51,
+            12.97
+          ],
+          "Sample": [
+            497,
+            619,
+            509,
+            625
+          ]
+        },
+        {
+          "Ellipse": [
+            99.5,
+            623.5,
+            13.5,
+            12.41
+          ],
+          "Sample": [
+            536,
+            618,
+            548,
+            624
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        12,
+        685,
+        150,
+        837
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        460,
+        688,
+        593,
+        838
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.5,
+            764.0,
+            13.51,
+            12.97
+          ],
+          "Sample": [
+            496,
+            761,
+            508,
+            767
+          ]
+        },
+        {
+          "Ellipse": [
+            100.0,
+            764.0,
+            13.06,
+            12.05
+          ],
+          "Sample": [
+            537,
+            759,
+            549,
+            765
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        5,
+        844,
+        156,
+        976
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        450,
+        844,
+        599,
+        976
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            920.0,
+            14.02,
+            12.93
+          ],
+          "Sample": [
+            496,
+            912,
+            508,
+            918
+          ]
+        },
+        {
+          "Ellipse": [
+            99.0,
+            920.5,
+            14.01,
+            13.47
+          ],
+          "Sample": [
+            535,
+            912,
+            547,
+            918
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        6,
+        989,
+        160,
+        1138
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        453,
+        997,
+        598,
+        1138
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.0,
+            1078.5,
+            14.0,
+            13.46
+          ],
+          "Sample": [
+            499,
+            1081,
+            511,
+            1087
+          ]
+        },
+        {
+          "Ellipse": [
+            99.5,
+            1079.0,
+            14.05,
+            13.52
+          ],
+          "Sample": [
+            539,
+            1079,
+            551,
+            1085
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Puff",
+      "NormalFile": "puff-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        1151,
+        157,
+        1306
+      ],
+      "ClosedFile": "puff-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        1151,
+        598,
+        1305
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.0,
+            1240.0,
+            14.04,
+            14.04
+          ],
+          "Sample": [
+            496,
+            1233,
+            508,
+            1239
+          ]
+        },
+        {
+          "Ellipse": [
+            100.0,
+            1240.5,
+            14.1,
+            13.56
+          ],
+          "Sample": [
+            536,
+            1233,
+            548,
+            1239
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        14,
+        158,
+        146
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        448,
+        13,
+        589,
+        145
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            71.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            483,
+            59,
+            495,
+            65
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            70.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            540,
+            57,
+            552,
+            63
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        152,
+        159,
+        290
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        447,
+        155,
+        587,
+        290
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.5,
+            217.5,
+            15.5,
+            13.5
+          ],
+          "Sample": [
+            482,
+            214,
+            494,
+            220
+          ]
+        },
+        {
+          "Ellipse": [
+            112.0,
+            217.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            537,
+            214,
+            549,
+            220
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        294,
+        158,
+        426
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        448,
+        301,
+        588,
+        427
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            352.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            487,
+            352,
+            499,
+            358
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            352.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            537,
+            355,
+            549,
+            361
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        437,
+        158,
+        569
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        446,
+        441,
+        589,
+        570
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.5,
+            493.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            483,
+            492,
+            495,
+            498
+          ]
+        },
+        {
+          "Ellipse": [
+            112.0,
+            493.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            538,
+            493,
+            550,
+            499
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        573,
+        158,
+        709
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        444,
+        577,
+        586,
+        708
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            636.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            480,
+            633,
+            492,
+            639
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            635.5,
+            16.0,
+            13.5
+          ],
+          "Sample": [
+            536,
+            636,
+            548,
+            642
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        14,
+        709,
+        154,
+        869
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        451,
+        711,
+        583,
+        869
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.5,
+            787.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            481,
+            782,
+            493,
+            788
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            787.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            537,
+            782,
+            549,
+            788
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        872,
+        156,
+        1007
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        448,
+        873,
+        587,
+        1007
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            934.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            483,
+            926,
+            495,
+            932
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            934.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            538,
+            924,
+            550,
+            930
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        1010,
+        158,
+        1155
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        444,
+        1011,
+        586,
+        1154
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            1080.0,
+            15.5,
+            14.0
+          ],
+          "Sample": [
+            487,
+            1070,
+            499,
+            1076
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            1080.5,
+            16.0,
+            14.5
+          ],
+          "Sample": [
+            526,
+            1069,
+            538,
+            1075
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Orbit",
+      "NormalFile": "orbit-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        1161,
+        158,
+        1311
+      ],
+      "ClosedFile": "orbit-holiday-bodies.png",
+      "ClosedBounds": [
+        447,
+        1161,
+        591,
+        1310
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            54.5,
+            1232.5,
+            15.5,
+            14.5
+          ],
+          "Sample": [
+            488,
+            1227,
+            500,
+            1233
+          ]
+        },
+        {
+          "Ellipse": [
+            111.0,
+            1232.0,
+            16.0,
+            14.0
+          ],
+          "Sample": [
+            533,
+            1227,
+            545,
+            1233
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        13,
+        149,
+        143
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        446,
+        12,
+        586,
+        141
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.5,
+            95.0,
+            12.5,
+            13.0
+          ],
+          "Sample": [
+            484,
+            94,
+            496,
+            100
+          ]
+        },
+        {
+          "Ellipse": [
+            103.0,
+            94.0,
+            13.0,
+            13.0
+          ],
+          "Sample": [
+            532,
+            92,
+            544,
+            98
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        149,
+        150,
+        279
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        446,
+        148,
+        587,
+        278
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            229.0,
+            13.0,
+            13.0
+          ],
+          "Sample": [
+            484,
+            225,
+            496,
+            231
+          ]
+        },
+        {
+          "Ellipse": [
+            103.5,
+            228.0,
+            13.5,
+            13.0
+          ],
+          "Sample": [
+            536,
+            217,
+            548,
+            223
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        283,
+        149,
+        420
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        445,
+        283,
+        587,
+        420
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.0,
+            369.5,
+            13.0,
+            12.5
+          ],
+          "Sample": [
+            484,
+            371,
+            496,
+            377
+          ]
+        },
+        {
+          "Ellipse": [
+            102.5,
+            369.5,
+            12.5,
+            12.5
+          ],
+          "Sample": [
+            533,
+            369,
+            545,
+            375
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        426,
+        149,
+        559
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        445,
+        427,
+        587,
+        558
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            56.5,
+            514.5,
+            12.5,
+            12.5
+          ],
+          "Sample": [
+            484,
+            512,
+            496,
+            518
+          ]
+        },
+        {
+          "Ellipse": [
+            102.5,
+            513.5,
+            12.5,
+            12.5
+          ],
+          "Sample": [
+            535,
+            504,
+            547,
+            510
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        567,
+        149,
+        702
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        444,
+        566,
+        587,
+        702
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            657.0,
+            13.0,
+            13.0
+          ],
+          "Sample": [
+            484,
+            654,
+            496,
+            660
+          ]
+        },
+        {
+          "Ellipse": [
+            102.5,
+            657.0,
+            12.5,
+            13.0
+          ],
+          "Sample": [
+            536,
+            647,
+            548,
+            653
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        12,
+        709,
+        149,
+        860
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        449,
+        710,
+        587,
+        859
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.0,
+            802.5,
+            13.0,
+            12.5
+          ],
+          "Sample": [
+            487,
+            803,
+            499,
+            809
+          ]
+        },
+        {
+          "Ellipse": [
+            104.5,
+            802.5,
+            12.5,
+            12.5
+          ],
+          "Sample": [
+            535,
+            800,
+            547,
+            806
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        867,
+        151,
+        1004
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        445,
+        866,
+        589,
+        1004
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            954.5,
+            13.0,
+            12.5
+          ],
+          "Sample": [
+            485,
+            952,
+            497,
+            958
+          ]
+        },
+        {
+          "Ellipse": [
+            102.0,
+            953.5,
+            12.0,
+            12.5
+          ],
+          "Sample": [
+            534,
+            952,
+            546,
+            958
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        1011,
+        151,
+        1157
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        444,
+        1010,
+        591,
+        1154
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            55.5,
+            1105.0,
+            11.5,
+            13.0
+          ],
+          "Sample": [
+            485,
+            1101,
+            497,
+            1107
+          ]
+        },
+        {
+          "Ellipse": [
+            103.0,
+            1104.0,
+            13.0,
+            13.0
+          ],
+          "Sample": [
+            536,
+            1093,
+            548,
+            1099
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Ember",
+      "NormalFile": "ember-holiday-bodies.png",
+      "NormalBounds": [
+        9,
+        1162,
+        152,
+        1312
+      ],
+      "ClosedFile": "ember-holiday-bodies.png",
+      "ClosedBounds": [
+        444,
+        1159,
+        588,
+        1311
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            57.0,
+            1263.0,
+            13.0,
+            13.0
+          ],
+          "Sample": [
+            484,
+            1263,
+            496,
+            1269
+          ]
+        },
+        {
+          "Ellipse": [
+            104.0,
+            1263.0,
+            12.0,
+            13.0
+          ],
+          "Sample": [
+            535,
+            1254,
+            547,
+            1260
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        12,
+        15,
+        162,
+        139
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        18,
+        592,
+        139
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.0,
+            81.0,
+            18.01,
+            18.01
+          ],
+          "Sample": [
+            496,
+            77,
+            508,
+            83
+          ]
+        },
+        {
+          "Ellipse": [
+            114.5,
+            82.0,
+            18.17,
+            17.65
+          ],
+          "Sample": [
+            543,
+            77,
+            555,
+            83
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        16,
+        140,
+        161,
+        294
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        460,
+        143,
+        595,
+        294
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            63.5,
+            212.5,
+            16.6,
+            16.6
+          ],
+          "Sample": [
+            498,
+            207,
+            510,
+            213
+          ]
+        },
+        {
+          "Ellipse": [
+            116.0,
+            212.0,
+            17.01,
+            17.01
+          ],
+          "Sample": [
+            547,
+            208,
+            559,
+            214
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        294,
+        162,
+        426
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        455,
+        297,
+        597,
+        426
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            58.0,
+            357.5,
+            18.05,
+            18.58
+          ],
+          "Sample": [
+            498,
+            356,
+            510,
+            362
+          ]
+        },
+        {
+          "Ellipse": [
+            115.0,
+            358.0,
+            18.39,
+            17.36
+          ],
+          "Sample": [
+            546,
+            356,
+            558,
+            362
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        430,
+        169,
+        567
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        456,
+        439,
+        600,
+        567
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            61.0,
+            492.5,
+            19.03,
+            18.5
+          ],
+          "Sample": [
+            496,
+            495,
+            508,
+            501
+          ]
+        },
+        {
+          "Ellipse": [
+            120.0,
+            493.5,
+            19.19,
+            18.66
+          ],
+          "Sample": [
+            548,
+            495,
+            560,
+            501
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        11,
+        568,
+        165,
+        711
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        461,
+        573,
+        600,
+        707
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            61.0,
+            643.0,
+            17.27,
+            16.25
+          ],
+          "Sample": [
+            498,
+            634,
+            510,
+            640
+          ]
+        },
+        {
+          "Ellipse": [
+            115.5,
+            641.5,
+            17.6,
+            17.6
+          ],
+          "Sample": [
+            550,
+            628,
+            562,
+            634
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        18,
+        714,
+        155,
+        866
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        459,
+        717,
+        591,
+        866
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            61.5,
+            792.5,
+            17.6,
+            17.6
+          ],
+          "Sample": [
+            494,
+            798,
+            506,
+            804
+          ]
+        },
+        {
+          "Ellipse": [
+            115.5,
+            792.5,
+            17.69,
+            17.69
+          ],
+          "Sample": [
+            544,
+            797,
+            556,
+            803
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        8,
+        867,
+        165,
+        1006
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        455,
+        870,
+        595,
+        1006
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            60.5,
+            941.0,
+            17.89,
+            17.38
+          ],
+          "Sample": [
+            496,
+            938,
+            508,
+            944
+          ]
+        },
+        {
+          "Ellipse": [
+            116.5,
+            940.0,
+            18.03,
+            17.51
+          ],
+          "Sample": [
+            545,
+            938,
+            557,
+            944
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        14,
+        1007,
+        163,
+        1154
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        458,
+        1016,
+        600,
+        1156
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            62.0,
+            1096.5,
+            18.09,
+            17.55
+          ],
+          "Sample": [
+            498,
+            1097,
+            510,
+            1103
+          ]
+        },
+        {
+          "Ellipse": [
+            117.5,
+            1097.5,
+            17.6,
+            17.6
+          ],
+          "Sample": [
+            550,
+            1097,
+            562,
+            1103
+          ]
+        }
+      ]
+    },
+    {
+      "Avatar": "Prism",
+      "NormalFile": "prism-holiday-bodies.png",
+      "NormalBounds": [
+        10,
+        1156,
+        162,
+        1321
+      ],
+      "ClosedFile": "prism-holiday-bodies.png",
+      "ClosedBounds": [
+        452,
+        1160,
+        597,
+        1320
+      ],
+      "Eyes": [
+        {
+          "Ellipse": [
+            59.0,
+            1242.0,
+            18.09,
+            18.09
+          ],
+          "Sample": [
+            498,
+            1241,
+            510,
+            1247
+          ]
+        },
+        {
+          "Ellipse": [
+            115.0,
+            1243.0,
+            18.19,
+            18.19
+          ],
+          "Sample": [
+            543,
+            1241,
+            555,
+            1247
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -109,6 +109,10 @@ establish them. None is marked passed until observed.
   Puff billow, plus Orbit's layered rotating/tilting rings with movement off/on
   and speed 0.2/1/3. Disabling animation must freeze them.
 - Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
+  Check eye-only blinks on all eight original companions, all everyday looks and
+  all holiday bodies while resting and moving. The normal body texture and shape
+  must remain stable. Verify blink off, animation off, Fourier Wink and fitting
+  freeze, plus rolling/mirrored/deformed eyes without displaced lids.
   Bodies must retain their identity, source aspect and stable scale; no separate
   body pieces should jiggle or detach. Compare idle with movement and reactions.
   Stop, turn, pause, resize and move a supporting frame; those movements must
@@ -144,6 +148,24 @@ establish them. None is marked passed until observed.
   shape or movement. Pick up near different object edges and confirm the object
   eases under the centered hand; hand scaling must not shift it. Comments must
   not trigger AI requests, microphone capture or speech.
+- Open Fit accessories. The real companion, nap phase, physics and animation
+  clocks must freeze; the editor must show one still body in the center. At
+  minimum size and scales 1/1.5/2, open all three selectors and test accessory
+  drag, horizontal/vertical corner resize and Size. The body must not rescale
+  during dragging. Save multiple fits, change selectors, close/reopen, resize
+  the game and mirror/roll the companion; placement must follow its head rather
+  than screen coordinates. Cancel preserves saved fits; Reset is draft-only
+  until Save. Fit view changes only preview zoom. Check extreme saved scales
+  and offsets, failed-save handling and JSON export/import.
+- Pick an everyday look while a holiday body is active: it must leave holiday
+  mode and show that look. Enable a named Body theme and verify the everyday
+  selection remains saved. Change body/companion while sleeping: the appearance
+  must update immediately without moving or restarting the nap. Automatic
+  rotation still waits. Inspect all 72 distinct holiday transformations.
+- Enable automatic companion rotation and Companion poof. The outgoing body
+  must remain until the opaque peak; the new body appears once and fades into
+  view without teleporting or resetting gait. Test poof off, magic off, animation
+  off, manual appearance changes, pickup/nap deferral and interrupted transitions.
   Select Default, Crystal Pod, Cloud Cushion, Lantern Hut and each holiday home;
   disable Use holiday homes when testing a manual style. Check Random home/hand
   choice, all five hand designs, continuous grip contact and a retained hand from

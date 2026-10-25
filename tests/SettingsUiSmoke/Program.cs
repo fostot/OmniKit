@@ -588,6 +588,9 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             {
                 if (appearanceMenuBounds == null || !Equals(config.GetType().GetField(appearanceSelection.Field)!.GetValue(config), appearanceSelection.Value))
                     throw new InvalidOperationException("Selecting an appearance option did not save the expected fixture choice: " + name);
+                if (appearanceSelection.Field == "CompanionVariant"
+                    && (bool)config.GetType().GetField("CompanionHolidayBodiesEnabled")!.GetValue(config)!)
+                    throw new InvalidOperationException("Selecting an everyday look must leave holiday-body mode.");
             }
         }
         if(targetControl != null && clickedFrame<0) throw new InvalidOperationException("Control was not reachable: "+targetControl+" in "+name);

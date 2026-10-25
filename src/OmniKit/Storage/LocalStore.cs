@@ -15,7 +15,8 @@ public sealed record VoiceBinding(string Phrase, string ActionId);
 /// <summary>Local settings only. Credentials, conversations and audio are not stored here.</summary>
 public sealed class LocalStore
 {
-    private const int SchemaVersion = 9;
+    private const int SchemaVersion = 10;
+    private const int MaximumAccessoryFits = 1024;
     private const int MaximumJsonBytes = 256 * 1024;
     private readonly string connectionString;
     private readonly object gate = new();
@@ -131,7 +132,10 @@ public sealed class LocalStore
         var settings = Settings.From(configuration);
         UpgradeLegacy(settings);
         Validate(settings);
-        return JsonSerializer.Serialize(new Snapshot { Settings = settings }, JsonOptions);
+        var json = JsonSerializer.Serialize(new Snapshot { Settings = settings }, JsonOptions);
+        if (Encoding.UTF8.GetByteCount(json) > MaximumJsonBytes)
+            throw new InvalidOperationException("Settings JSON must be no larger than 256 KiB.");
+        return json;
     }
 
     /// <summary>Upgrade the legacy Dalamud configuration fallback without changing its source object.</summary>
@@ -180,7 +184,18 @@ public sealed class LocalStore
             if (schemaVersion < 7) fields = fields.Except(VersionSevenFields);
             if (schemaVersion < 8) fields = fields.Except(VersionEightFields);
             if (schemaVersion < 9) fields = fields.Except(VersionNineFields);
+            if (schemaVersion < 10) fields = fields.Except(VersionTenFields);
             RequireFields(settingsElement, fields);
+            if (schemaVersion >= 10)
+            {
+                var fits = settingsElement.GetProperty(nameof(Settings.CompanionAccessoryFits));
+                if (fits.ValueKind != JsonValueKind.Array || fits.GetArrayLength() > MaximumAccessoryFits)
+                    throw new InvalidOperationException("Accessory fits must be an array containing at most 1024 entries.");
+                foreach (var fit in fits.EnumerateArray())
+                    RequireFields(fit, [nameof(CompanionAccessoryAdjustment.Avatar), nameof(CompanionAccessoryAdjustment.Look),
+                        nameof(CompanionAccessoryAdjustment.Theme), nameof(CompanionAccessoryAdjustment.OffsetX),
+                        nameof(CompanionAccessoryAdjustment.OffsetY), nameof(CompanionAccessoryAdjustment.Scale)]);
+            }
             var bindings = settingsElement.GetProperty(nameof(Settings.VoiceBindings));
             if (bindings.ValueKind != JsonValueKind.Array || bindings.GetArrayLength() > 100)
                 throw new InvalidOperationException("Voice bindings must be an array containing at most 100 entries.");
@@ -307,6 +322,12 @@ public sealed class LocalStore
             settings.CompanionOrbitRingsEnabled = true;
             settings.CompanionOrbitRingSpeed = 1f;
         }
+        if (settings.Version < 10)
+        {
+            settings.CompanionHolidayBody = "Auto";
+            settings.CompanionAccessoryFits = [];
+            settings.CompanionTransitionEffectsEnabled = true;
+        }
         // Web commands now always use the in-game browser, including imported
         // settings that still contain the former external-browser preference.
         settings.WikiInGame = true;
@@ -318,6 +339,9 @@ public sealed class LocalStore
 
     private static readonly string[] VersionNineFields =
         [nameof(Settings.CompanionVariant), nameof(Settings.CompanionLookAutoRotateEnabled), nameof(Settings.CompanionLookInterval), nameof(Settings.LauncherHeight), nameof(Settings.CompanionHomeStyle), nameof(Settings.CompanionHolidayHomeEnabled), nameof(Settings.CompanionHolidayBodiesEnabled), nameof(Settings.CompanionHandStyle), nameof(Settings.CompanionGroundedEnabled), nameof(Settings.CompanionAutoHopEnabled), nameof(Settings.CompanionOrbitRingsEnabled), nameof(Settings.CompanionOrbitRingSpeed)];
+
+    private static readonly string[] VersionTenFields =
+        [nameof(Settings.CompanionHolidayBody), nameof(Settings.CompanionAccessoryFits), nameof(Settings.CompanionTransitionEffectsEnabled)];
 
     private static readonly string[] VersionEightFields =
         [nameof(Settings.NextActionEnabled), nameof(Settings.NextActionLocked), nameof(Settings.NextActionX), nameof(Settings.NextActionY), nameof(Settings.QuestItemsBarEnabled), nameof(Settings.QuestItemsBarLocked), nameof(Settings.QuestItemsBarX), nameof(Settings.QuestItemsBarY), nameof(Settings.QuestItemsButtonSize), nameof(Settings.CompanionFourierBlinkEnabled), nameof(Settings.CompanionSeasonalEnabled), nameof(Settings.CompanionSeasonalTheme), nameof(Settings.CompanionAutoRotateEnabled), nameof(Settings.CompanionRotationInterval), nameof(Settings.LauncherWidth), nameof(Settings.LauncherTextScale), nameof(Settings.LauncherResultCount), nameof(Settings.LauncherCenterX), nameof(Settings.LauncherTop)];
@@ -378,6 +402,24 @@ public sealed class LocalStore
         if (!Configuration.SeasonalThemeNames.Contains(settings.CompanionSeasonalTheme) ||
             !FiniteRange(settings.CompanionRotationInterval, 30, 3600))
             throw new InvalidOperationException("Choose a supported seasonal look and companion rotation interval.");
+        if (!Configuration.SeasonalThemeNames.Contains(settings.CompanionHolidayBody))
+            throw new InvalidOperationException("Choose a supported holiday body.");
+        if (settings.CompanionAccessoryFits is null || settings.CompanionAccessoryFits.Count > MaximumAccessoryFits)
+            throw new InvalidOperationException("At most 1024 accessory fits are supported.");
+        var fitKeys = new HashSet<(string Avatar, string Look, string Theme)>();
+        foreach (var fit in settings.CompanionAccessoryFits)
+        {
+            if (fit is null || !Configuration.AvatarNames.Contains(fit.Avatar) ||
+                !Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Theme) ||
+                !(fit.Look is "Default" or "Look1" or "Look2" or "Look3" or "Look4" ||
+                    (fit.Look is not null && fit.Look.StartsWith("Holiday", StringComparison.Ordinal) &&
+                     Configuration.SeasonalThemeNames.Skip(1).Contains(fit.Look[7..]))) ||
+                !FiniteRange(fit.OffsetX, -1f, 1f) || !FiniteRange(fit.OffsetY, -1f, 1f) ||
+                !FiniteRange(fit.Scale, .25f, 3f))
+                throw new InvalidOperationException("Accessory fits need supported avatar, look and theme keys with bounded offsets and scale.");
+            if (!fitKeys.Add((fit.Avatar, fit.Look, fit.Theme)))
+                throw new InvalidOperationException("Accessory fit keys must be unique.");
+        }
         if (!Configuration.CompanionVariantNames.Contains(settings.CompanionVariant) ||
             !Configuration.HomeStyleNames.Contains(settings.CompanionHomeStyle) ||
             !Configuration.HandStyleNames.Contains(settings.CompanionHandStyle))
@@ -473,6 +515,7 @@ public sealed class LocalStore
     {
         // All potentially failing validation/allocation happens before assignments.
         var voiceBindings = value.VoiceBindings.Select(binding => new VoiceBinding(binding.Phrase, binding.ActionId)).ToList();
+        var accessoryFits = value.CompanionAccessoryFits.Select(fit => fit with { }).ToList();
         target.Version = value.Version;
         target.SetupCompleted = value.SetupCompleted;
         target.LauncherEnabled = value.LauncherEnabled;
@@ -509,6 +552,9 @@ public sealed class LocalStore
         target.CompanionHomeStyle = value.CompanionHomeStyle;
         target.CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled;
         target.CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled;
+        target.CompanionHolidayBody = value.CompanionHolidayBody;
+        target.CompanionAccessoryFits = accessoryFits;
+        target.CompanionTransitionEffectsEnabled = value.CompanionTransitionEffectsEnabled;
         target.CompanionHandStyle = value.CompanionHandStyle;
         target.CompanionGroundedEnabled = value.CompanionGroundedEnabled;
         target.CompanionAutoHopEnabled = value.CompanionAutoHopEnabled;
@@ -626,6 +672,9 @@ public sealed class LocalStore
         public string CompanionHomeStyle = "Default";
         public bool CompanionHolidayHomeEnabled = true;
         public bool CompanionHolidayBodiesEnabled = true;
+        public string CompanionHolidayBody = "Auto";
+        public List<CompanionAccessoryAdjustment> CompanionAccessoryFits = [];
+        public bool CompanionTransitionEffectsEnabled = true;
         public string CompanionHandStyle = "Default";
         public bool CompanionGroundedEnabled = true;
         public bool CompanionAutoHopEnabled = true;
@@ -732,6 +781,9 @@ public sealed class LocalStore
             CompanionHomeStyle = value.CompanionHomeStyle,
             CompanionHolidayHomeEnabled = value.CompanionHolidayHomeEnabled,
             CompanionHolidayBodiesEnabled = value.CompanionHolidayBodiesEnabled,
+            CompanionHolidayBody = value.CompanionHolidayBody,
+            CompanionAccessoryFits = value.CompanionAccessoryFits?.Select(fit => fit is null ? null! : fit with { }).ToList()!,
+            CompanionTransitionEffectsEnabled = value.CompanionTransitionEffectsEnabled,
             CompanionHandStyle = value.CompanionHandStyle,
             CompanionGroundedEnabled = value.CompanionGroundedEnabled,
             CompanionAutoHopEnabled = value.CompanionAutoHopEnabled,
