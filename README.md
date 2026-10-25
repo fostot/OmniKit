@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0025`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0026`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.

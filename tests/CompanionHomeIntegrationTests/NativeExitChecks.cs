@@ -21,7 +21,7 @@ internal static class NativeExitChecks
         var painterType = f.Type("Ui.CompanionHomeRenderer");
         var homeDraw = painterType.GetMethod("DrawHouse", Static)!;
         var indoorScale = (float)f.Type("Ui.CompanionHomeRoutine").GetField("IndoorScale", Static)!.GetRawConstantValue()!;
-        f.Check(Math.Abs(indoorScale - .558f) < .00001f, "Indoor art is ten percent smaller than the previous .62 scale.");
+        f.Check(indoorScale > 0 && indoorScale < .558f, "Indoor art uses the smaller shared cap before adapting to each measured doorway.");
         var variants = f.New("Ui.CompanionVariantLibrary", Path.GetFullPath("assets"));
         var authoredLook = Call(variants, "Find", "Wink", "Look1")!;
         f.Check(authoredLook != null, "The authored nap path has an actual selected look.");
@@ -90,8 +90,21 @@ internal static class NativeExitChecks
                     // Seed only the already-sleeping boundary. All departure states and travel use production code.
                     Call(routine, "Update", 0f, true, false, destination, mirrored, layout, house, mirrored, 15f, 5f,
                         Vector2.Zero, viewport, true, frame, navigator);
+                    // Let the real entry boundary choose this style's adaptive indoor scale.
+                    Set(routine, "<State>k__BackingField", Enum.Parse(f.Type("Ui.CompanionHomeState"), "Approaching"));
+                    Set(routine, "approachLeg", 1);
+                    Set(routine, "<Position>k__BackingField", Call(frame, "OutsidePosition", sprite, 4f, true));
+                    Call(routine, "Update", 1f / 60, true, false, destination, mirrored, layout, house, mirrored, 15f, 5f,
+                        Vector2.Zero, viewport, true, frame, navigator);
+                    f.Check(Get(routine, "State").ToString() == "Entering", "The actual front threshold initializes the adaptive scale.");
+                    var targetIndoorScale = (float)Get(routine, "TargetIndoorScale");
+                    var opening = (Vector2)Get(frame, "OpeningMaximum") - (Vector2)Get(frame, "OpeningMinimum");
+                    f.Check(targetIndoorScale > 0 && targetIndoorScale <= indoorScale
+                        && targetIndoorScale * size <= opening.X * .78f + .001f && targetIndoorScale * size <= opening.Y * .75f + .001f,
+                        "The actual indoor target obeys the smaller cap and fits this measured doorway before departure.");
+                    Set(routine, "<State>k__BackingField", Enum.Parse(f.Type("Ui.CompanionHomeState"), "Sleeping"));
                     Set(routine, "<Position>k__BackingField", Call(frame, "BedPosition", sprite));
-                    Set(routine, "<ArtScale>k__BackingField", indoorScale); Set(routine, "returnDestination", destination);
+                    Set(routine, "<ArtScale>k__BackingField", targetIndoorScale); Set(routine, "returnDestination", destination);
                     Call(routine, "BeginLeaving", layout, house, mirrored, frame);
                     var threshold = (Vector2)Field(routine, "leaveTarget");
                     var clearance = (Vector2)Field(routine, "leaveClearance");
@@ -109,7 +122,7 @@ internal static class NativeExitChecks
                             f.Check((bool)Get(routine, "UsesNapArt") == (leg < 3), "Nap art covers door exit, outward step and growth; ordinary travel resumes afterward.");
                             f.Check((bool)Get(routine, "InFrontOfHome") == (leg >= 1), "Only the door exit retains the wall mask.");
                             f.Check((bool)Get(routine, "AccessoriesVisible") == (leg >= 2), "Accessories stay hidden through the outward step and return at growth.");
-                            if (leg < 2) f.Check(Math.Abs(scale - indoorScale) < .00001f, "The visitor stays small through the door and outward step.");
+                            if (leg < 2) f.Check(Math.Abs(scale - targetIndoorScale) < .00001f, "The visitor stays at its adaptive indoor scale through the door and outward step.");
                             if (leg == 1)
                             {
                                 var position = (Vector2)Get(routine, "Position");
