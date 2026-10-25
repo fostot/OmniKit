@@ -3,7 +3,8 @@ namespace OmniKit.Jobs;
 /// <summary>Transient observations. Commands never imply completion without a later observation.</summary>
 internal readonly record struct JobSwitchObservation(bool SameCharacter, bool CanAct, bool InventoryBusy,
     bool EquipmentAvailable, bool OriginalReady, bool ExpectedEquipment, bool RestoreUnchanged,
-    bool TargetUnchanged, bool WeaponEquipped, bool SoulEquipped, bool SoulEmpty, bool TargetReady);
+    bool TargetUnchanged, bool WeaponEquipped, bool SoulEquipped, bool SoulEmpty, bool TargetReady,
+    bool RecommendationReady = false, bool RecommendedComplete = false);
 
 internal interface IJobSwitchRuntime
 {
@@ -13,16 +14,22 @@ internal interface IJobSwitchRuntime
     bool MoveWeapon();
     bool MoveSoul();
     bool RemoveSoul();
+    int ProvisionalCreate(NewJobGearset target);
+    bool BeginRecommended();
+    bool ApplyRecommended();
+    bool FinalizeTarget(NewJobGearset target);
 }
 
 /// <summary>A bounded one-click protocol. Every state issues at most one command, without retries.</summary>
 internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime runtime, long now)
 {
-    private enum Stage { Snapshot, Switch, WeaponWait, Soul, SoulWait, Save, ExistingWait, RestoreWait, Done }
+    private enum Stage { Snapshot, Switch, WeaponWait, Soul, SoulWait, ReserveTarget, RecommendStart,
+        RecommendReady, RecommendEquip, RecommendWait, Save, ExistingWait, RestoreWait, Done }
     private Stage stage;
-    private long deadline = now + 10000;
+    private long deadline = now + 25000;
     private int restore = plan.RestoreGearsetIndex ?? -1;
     private bool changed;
+    private bool targetCreated;
     private string failure = "";
     public bool Busy => stage != Stage.Done;
     public bool HasChanged => changed;
@@ -40,6 +47,8 @@ internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime
         if (!o.EquipmentAvailable) { Fail("Equipment is unavailable.",false,o,now); return; }
         if(stage!=Stage.RestoreWait && !o.ExpectedEquipment)
         { Fail("Equipment changed outside this class request.",false,o,now); return; }
+        if(targetCreated && stage!=Stage.RestoreWait && !o.TargetUnchanged)
+        { Fail("The new gearset changed outside this request.",false,o,now); return; }
         switch(stage)
         {
             case Stage.Snapshot:
@@ -53,7 +62,7 @@ internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime
                 stage=Stage.Switch;
                 return;
             case Stage.Switch:
-                if(!o.RestoreUnchanged) { Fail("The original gearset changed.",false,o,now); return; }
+                if(restore>=0 && !o.RestoreUnchanged) { Fail("The original gearset changed.",false,o,now); return; }
                 if(plan.ExistingGearsetIndex is int existing)
                 {
                     if(!o.TargetUnchanged) { Fail("The target gearset changed.",false,o,now); return; }
@@ -61,7 +70,7 @@ internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime
                     if(!runtime.EquipGearset(existing)) Fail("The game rejected that gearset.",true,o,now);
                     return;
                 }
-                if(plan.Weapon==null) { Done("Current class gearset saved.",true); return; }
+                if(plan.Weapon==null) { Done(plan.CurrentSnapshot!=null ? "Current class gearset saved." : "The requested class is already equipped.",true); return; }
                 if(!runtime.MoveWeapon()) { Fail("The selected weapon moved or became unavailable.",false,o,now); return; }
                 changed=true; stage=Stage.WeaponWait;
                 return;
@@ -79,14 +88,35 @@ internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime
                 stage=Stage.SoulWait;
                 return;
             case Stage.SoulWait:
-                if(o.TargetReady) stage=Stage.Save;
+                if(o.TargetReady) stage=Stage.ReserveTarget;
+                return;
+            case Stage.ReserveTarget:
+                if(!o.TargetReady) { Fail("The requested class changed before creating its gearset.",true,o,now); return; }
+                if(plan.TargetSnapshot is not { } provisional) { Fail("The target gearset plan is unavailable.",true,o,now); return; }
+                if(runtime.ProvisionalCreate(provisional)!=provisional.Index)
+                { Fail("Could not create the requested class gearset.",true,o,now); return; }
+                targetCreated=true; stage=Stage.RecommendStart;
+                return;
+            case Stage.RecommendStart:
+                if(!runtime.BeginRecommended()) { Fail("Recommended Gear could not be prepared.",true,o,now); return; }
+                stage=Stage.RecommendReady;
+                return;
+            case Stage.RecommendReady:
+                if(o.RecommendationReady) stage=Stage.RecommendEquip;
+                return;
+            case Stage.RecommendEquip:
+                if(!o.RecommendationReady || !runtime.ApplyRecommended())
+                { Fail("Recommended Gear changed or became unavailable.",true,o,now); return; }
+                stage=Stage.RecommendWait;
+                return;
+            case Stage.RecommendWait:
+                if(o.RecommendedComplete) stage=Stage.Save;
                 return;
             case Stage.Save:
-                if(!o.TargetReady) { Fail("The requested class equipment changed before saving.",true,o,now); return; }
+                if(!o.TargetReady || !o.RecommendedComplete) { Fail("The recommended equipment changed before reassignment.",true,o,now); return; }
                 if(plan.TargetSnapshot is not { } target) { Fail("The target gearset plan is unavailable.",true,o,now); return; }
-                var saved=runtime.CreateSnapshot(target);
-                if(saved!=target.Index) { Fail("The class changed, but its new gearset could not be saved.",true,o,now); return; }
-                Done("Class equipped and new gearset saved.",true);
+                if(!runtime.FinalizeTarget(target)) { Fail("The class changed, but its new gearset could not be reassigned.",true,o,now); return; }
+                Done("Recommended gear equipped and new gearset reassigned.",true);
                 return;
             case Stage.ExistingWait:
                 if(!o.TargetUnchanged) { Fail("The target gearset changed during the request.",true,o,now); return; }
@@ -106,7 +136,7 @@ internal sealed class JobSwitchCoordinator(JobSwitchPlan plan, IJobSwitchRuntime
             failure=reason; stage=Stage.RestoreWait; deadline=now+4000;
             if(runtime.EquipGearset(restore)) { Status=reason+" Restoring original equipment."; return; }
         }
-        Done(reason+(changed && restore>=0?$" Restore gearset {restore+1} manually when safe.":""));
+        Done(reason+(changed ? restore>=0 ? $" Restore gearset {restore+1} manually when safe." : " Check your equipment manually when safe." : ""));
     }
     public void Cancel() { if(Busy) Done("Class change cancelled. Any saved snapshot remains available."); }
     private void Done(string message,bool succeeded=false) { Status=message; Succeeded=succeeded; stage=Stage.Done; }

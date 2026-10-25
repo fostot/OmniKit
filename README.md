@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0029`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0031`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -47,9 +47,9 @@ small corner rounding and a footer showing the built version and **by Zero**.
   position, with a reset button. The empty launcher remains just input and gear;
   scrolling or arrow keys reach results beyond the visible count.
 - **Launcher → Character window job switcher** lets a click in Character →
-  Classes/Jobs switch jobs. Missing gearsets are created from an owned usable
-  weapon/tool and the required soul crystal, after preserving unsaved current
-  equipment in a separate class-named set. It starts off. Disable Simple Tweaks'
+  Classes/Jobs switch jobs. A current class that already has a set never gets a
+  duplicate. Missing target sets follow weapon/soul → create set → Recommended
+  Gear → Reassign Gear, with verified class naming. It starts off. Disable Simple Tweaks'
   Character Window Job Switcher or HaselTweaks' Character Class Switcher before
   enabling this replacement; the rest of those plugins can stay enabled. See
   [behavior, safeguards and sources](docs/JOB-SWITCHER.md). Native game acceptance is pending.

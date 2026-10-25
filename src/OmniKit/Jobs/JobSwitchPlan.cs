@@ -41,7 +41,9 @@ internal sealed record JobSwitchPlan(bool Allowed, string Reason, int? ExistingG
         var matchingCurrent = context.Gearsets.Where(set => set.ClassJobId == context.CurrentJobId
                 && set.Usable && set.MatchesEquipped)
             .OrderBy(set => set.Index).FirstOrDefault();
-        var needsCurrent = matchingCurrent == null;
+        // One saved set for the active class is enough. Do not manufacture a
+        // duplicate merely because equipment changed since that set was saved.
+        var needsCurrent = !context.Gearsets.Any(set => set.ClassJobId == context.CurrentJobId);
         var sameJob = context.CurrentJobId == context.TargetJobId;
         var occupied = context.Gearsets.Select(set => set.Index).ToHashSet();
         var free = context.FreeGearsetSlots.Where(slot => slot >= 0 && !occupied.Contains(slot))
@@ -59,7 +61,7 @@ internal sealed record JobSwitchPlan(bool Allowed, string Reason, int? ExistingG
             return new(true, current != null ? "Save the current class as a gearset." : "The requested class is already equipped.",
                 CurrentSnapshot: current, RestoreGearsetIndex: restoreIndex);
         if (existing != null)
-            return new(true, "Preserve the current equipment, then equip the existing gearset.",
+            return new(true, current != null ? "Save the current class, then equip the existing gearset." : "Equip the existing gearset.",
                 ExistingGearsetIndex: existing.Index, CurrentSnapshot: current, RestoreGearsetIndex: restoreIndex);
 
         var weapon = context.OwnedItems.Where(item => ValidItem(item) && !item.IsSoulCrystal
@@ -80,7 +82,8 @@ internal sealed record JobSwitchPlan(bool Allowed, string Reason, int? ExistingG
                 return Blocked("The required soul crystal is not available for that job.");
         }
 
-        return new(true, "Save the current class, equip the requested class, and save its new gearset.",
+        return new(true, current != null ? "Save the current class, equip the requested class, and save its new gearset."
+                : "Equip the requested class and save its new gearset.",
             CurrentSnapshot: current,
             TargetSnapshot: new(free[nextSlot], context.TargetJobId, context.TargetJobName),
             Weapon: weapon, SoulCrystal: soul, RestoreGearsetIndex: restoreIndex);

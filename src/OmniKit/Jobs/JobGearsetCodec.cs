@@ -1,8 +1,11 @@
+using System.Globalization;
+
 namespace OmniKit.Jobs;
 
 /// <summary>Pure native-table projection and gearset ID encoding used by the adapter.</summary>
 internal static class JobGearsetCodec
 {
+    internal static string DisplayName(string name) => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name.Trim());
     internal static int[] FreeSlots(ReadOnlySpan<byte> flags, int permittedCount, int firstEmpty)
     {
         var limit=Math.Min(flags.Length,Math.Max(0,permittedCount));
@@ -27,4 +30,3 @@ internal static class JobGearsetCodec
     }
     internal static bool SelectionTransitionAllowed(int current, int prior, int intended)
         => current==prior || current==intended;}
-

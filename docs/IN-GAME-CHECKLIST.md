@@ -26,6 +26,13 @@ establish them. None is marked passed until observed.
   linked glamour plates. During a pending change, manual gear/selection changes,
   zoning, logout, combat or disabling the feature must stop without later retries.
   Check local success/error feedback and any manual return-set instruction.
+  Change gear after saving the current class, then switch: no duplicate current
+  set may be created. For a missing target, observe weapon/crystal first, then
+  new set creation, Recommended Gear and reassignment of that same new row.
+  Check capitalization and actual class name, reload the Gearset List and plugin,
+  and verify the new set retains the recommended outfit. Existing custom-named
+  sets must retain their names and contents. Blocked recommendation/finalization
+  must stop once and leave the new minimal target set identified for review.
 - In Automations, confirm Nom Nom starts off with Automatic selected. Check food
   detection and NQ/HQ counts using bags, then remove/re-add the selected food.
   Choose an eligible +EXP food and enable both switches: with no Well Fed, one

@@ -47,13 +47,18 @@ BlockedWithoutSteps(context with { Gearsets = [new(5, 19, true)], FreeGearsetSlo
 plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 1, true, true), new(6, 19, true)], FreeGearsetSlots = [], OwnedItems = [] });
 Check(plan.Allowed && plan.ExistingGearsetIndex == 6 && plan.CurrentSnapshot == null
     && plan.RestoreGearsetIndex == 5, "matching current plus existing target needs no slots");
+plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 1, true), new(6, 19, true)], FreeGearsetSlots = [], OwnedItems = [] });
+Check(plan.Allowed && plan.ExistingGearsetIndex == 6 && plan.CurrentSnapshot == null && plan.RestoreGearsetIndex == null,
+    "dirty existing current plus existing target needs no slots and never creates a duplicate");
 plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 1, true)], FreeGearsetSlots = [2, 4] });
-Check(plan.Allowed && plan.CurrentSnapshot?.Index == 2 && plan.TargetSnapshot?.Index == 4
-    && plan.RestoreGearsetIndex == 2, "dirty current creates separate snapshot without overwriting");
-BlockedWithoutSteps(context with { Gearsets = [new(5, 1, true)], FreeGearsetSlots = [2] },
-    "dirty current plus absent target requires two slots");
+Check(plan.Allowed && plan.CurrentSnapshot == null && plan.TargetSnapshot?.Index == 2
+    && plan.RestoreGearsetIndex == null, "existing current class never creates a duplicate or pretends dirty gear is a matching restore set");
+plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 1, true)], FreeGearsetSlots = [2] });
+Check(plan.Allowed && plan.CurrentSnapshot == null && plan.TargetSnapshot?.Index == 2,
+    "existing current class plus absent target needs only one slot");
 plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 1, false, true)], FreeGearsetSlots = [2, 4] });
-Check(plan.Allowed && plan.CurrentSnapshot?.Index == 2, "unusable current match cannot serve as restore set");
+Check(plan.Allowed && plan.CurrentSnapshot == null && plan.RestoreGearsetIndex == null,
+    "broken existing current set prevents duplicates without serving as a restore set");
 plan = JobSwitchPlan.Build(context with { Gearsets = [new(5, 99, true, true)], FreeGearsetSlots = [2, 4] });
 Check(plan.Allowed && plan.CurrentSnapshot?.Index == 2, "different class match cannot serve as restore set");
 BlockedWithoutSteps(context with { Gearsets = [new(5, 19, false)] }, "broken target set never overwritten");
@@ -77,8 +82,8 @@ Check(plan.Allowed && plan.CurrentSnapshot?.Index == 2 && plan.TargetSnapshot ==
     "current class creates one snapshot without equipment changes");
 plan = JobSwitchPlan.Build(context with { TargetJobId = 1, TargetJobName = "Gladiator", OwnedItems = [],
     Gearsets = [new(5, 1, true)], FreeGearsetSlots = [2] });
-Check(plan.Allowed && plan.CurrentSnapshot?.Index == 2 && plan.ExistingGearsetIndex == null
-    && plan.RestoreGearsetIndex == 2, "current class dirty existing set snapshots without equipping old gear");
+Check(plan.Allowed && plan.CurrentSnapshot == null && plan.ExistingGearsetIndex == null
+    && plan.RestoreGearsetIndex == null, "current class dirty existing set is a no-op without creating or overwriting anything");
 plan = JobSwitchPlan.Build(context with { TargetJobId = 1, TargetJobName = "Gladiator", OwnedItems = [],
     Gearsets = [new(5, 1, true, true)], FreeGearsetSlots = [] });
 Check(plan.Allowed && plan.CurrentSnapshot == null && plan.ExistingGearsetIndex == null

@@ -16,21 +16,29 @@ gearset errors.
 
 - A usable gearset that exactly matches the current class and physical equipment
   can serve as the return point. A linked glamour plate is excluded from reuse.
-- Otherwise, OmniKit creates a separate snapshot named after the current class.
-  An existing set is never overwritten, even when its class matches.
+- If any gearset already exists for the current class, OmniKit does not create
+  another one, even if the currently equipped items differ or that set has missing
+  items. Only a class with no set receives a new class-named snapshot. Existing
+  sets are not overwritten. An unmatched current outfit has no automatic return
+  snapshot; save your changes manually if you want to retain it in an existing set.
 - An existing usable set for the requested job is equipped directly. An existing
   broken set is left unchanged and reported; there is no silent parent-class
   substitution.
 - If the requested set is missing, OmniKit selects an owned, equippable main-hand
   weapon or tool, preferring item level, then HQ, then stable bag position. It
-  requires the exact soul crystal for an advanced job. It waits for the actual
-  weapon, crystal and job before saving a new class-named set.
+  requires the exact soul crystal for an advanced job. The order is weapon/soul
+  crystal → confirm actual class → **+ create gearset** → **Recommended Gear** →
+  observe the recommended equipment → **Reassign Gear** on that new set.
+  Native class naming is retained when correct; only the request-created row may
+  receive a corrected, localized display name. Its class, outfit and name are
+  verified before and after saving.
 
 Preflight requires all needed items, the unlocked job and enough free gearset
 slots before changing equipment. Two missing sets need two free slots. The
 inventory search covers personal bags, main-hand/soul-crystal Armoury Chest
 sections and the currently equipped main hand/crystal. It does not buy items,
-withdraw from retainers or choose a complete recommended armor outfit.
+withdraw from retainers. Recommended Gear uses the game's own recommendations
+from currently available equipment; it does not acquire missing equipment.
 
 ## Failure handling
 
@@ -43,7 +51,9 @@ stop the request. No delayed retry is queued.
 A failed request may attempt one restoration to the unchanged saved return set
 when the character remains safe and the equipment still matches the expected
 transition. Otherwise the local message identifies the gearset for manual
-restoration. Created snapshots are retained. A native gearset operation can have
+restoration when an exact saved return set exists. A new target set created before
+recommendation is retained if later steps fail; the message identifies it for
+review. Created snapshots are retained. A native gearset operation can have
 partial effects; cancellation cannot promise that the game restores everything.
 Strict equipment checks can stop when a linked glamour plate changes cosmetics.
 Facewear is not independently compared by the physical-equipment guard.
