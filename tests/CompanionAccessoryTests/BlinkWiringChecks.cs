@@ -39,8 +39,10 @@ internal static class BlinkWiringChecks
             var io = ImGui.GetIO(); io.DisplaySize = new Vector2(480, 360); io.DeltaTime = 1f / 60;
             io.IniFilename = null; io.LogFilename = null; io.Fonts.AddFontDefault(); io.Fonts.Build();
             var variants = Activator.CreateInstance(Type("Ui.CompanionVariantLibrary"), [assets])!;
+            var wardrobe = Activator.CreateInstance(Type("Ui.CompanionWardrobeLibrary"), [assets])!;
             var blinks = Activator.CreateInstance(Type("Ui.CompanionBlinkLibrary"), [assets])!;
-            var profiles = ((IEnumerable)Property(blinks, "Profiles")!).Cast<object>().ToArray();
+            var profiles = ((IEnumerable)Property(blinks, "Profiles")!).Cast<object>()
+                .Concat(((IEnumerable)Property(wardrobe, "BlinkProfiles")!).Cast<object>()).ToArray();
             var allowedFiles = profiles.SelectMany(profile => new[] { (string)Property(profile, "NormalFile")!, (string)Property(profile, "ClosedFile")! })
                 .Select(file => Path.GetFullPath(Path.Combine(assets, file))).ToHashSet(StringComparer.OrdinalIgnoreCase);
             Check(profiles.Length > 0, "Reviewed public blink profiles load from their hash-bound source artwork.");
@@ -65,6 +67,7 @@ internal static class BlinkWiringChecks
             var roamerType = Type("Ui.RoamingCompanion"); var roamer = RuntimeHelpers.GetUninitializedObject(roamerType);
             roamerType.GetFields(instance).Single(field => field.FieldType == configType).SetValue(roamer, config);
             Set(roamer, "assetDirectory", assets); Set(roamer, "variants", variants); Set(roamer, "blinks", blinks);
+            Set(roamer, "wardrobe", wardrobe);
             var gait = Activator.CreateInstance(Type("Ui.CompanionGait"))!; Set(gait, "<Phase>k__BackingField", .31f); Set(roamer, "gait", gait);
             var motion = Activator.CreateInstance(Type("Ui.CompanionBodyMotion"))!; Set(roamer, "bodyMotion", motion);
             motion.GetType().GetMethod("Update")!.Invoke(motion, [.03f, true, true]);
@@ -75,14 +78,17 @@ internal static class BlinkWiringChecks
             var bodyType = Type("Ui.SeasonalBodyTransform");
             var poseType = Type("Ui.CompanionPose");
             var warp = motion.GetType().GetMethod("WarpAttachment")!;
-            var avatars = new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism" };
+            var supports = motion.GetType().GetMethod("Supports")!;
+            var avatars = new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism", "Nib", "Echo", "Fizz", "Glim", "Rune" };
             foreach (var avatar in avatars)
             {
-                var look = variants.GetType().GetMethod("Find")!.Invoke(variants, [avatar, "Look1"])!;
+                var look = variants.GetType().GetMethod("Find")!.Invoke(variants, [avatar, "Look1"])
+                    ?? wardrobe.GetType().GetMethod("FindDefault")!.Invoke(wardrobe, [avatar]);
                 Check(look != null, "Each avatar has one representative public everyday look.");
                 var normal = Property(look!, "Normal")!;
                 var file = (string)Property(normal, "File")!; var bounds = (Vector4)Property(normal, "Bounds")!;
                 var profile = blinks.GetType().GetMethod("Find")!.Invoke(blinks, [file, bounds])
+                    ?? wardrobe.GetType().GetMethod("FindBlink")!.Invoke(wardrobe, [file, bounds])
                     ?? throw new InvalidOperationException("Runtime blink profile is missing.");
                 Check((string)Property(profile, "Avatar")! == avatar, "Runtime lookup selects the exact avatar and normal crop.");
                 var eyes = ((IEnumerable)Property(profile, "Eyes")!).Cast<object>().ToArray();
@@ -95,7 +101,7 @@ internal static class BlinkWiringChecks
                     var position = new Vector2(100, 80); var size = new Vector2(edge);
                     var frame = normal.GetType().GetMethod("GetFrame")!.Invoke(normal, [position, size, mirrored])!;
                     var body = bodyType.GetMethod("FromFrame")!.Invoke(null, [bounds, (float)Property(normal, "SourceScale")!, frame, mirrored])!;
-                    var deform = avatar is "Ember" or "Mochi" or "Puff";
+                    var deform = (bool)supports.Invoke(null, [avatar])!;
                     Vector2 Map(Vector2 point)
                     {
                         var mapped = (Vector2)bodyType.GetMethod("Map")!.Invoke(body, [point])!;
@@ -161,6 +167,21 @@ internal static class BlinkWiringChecks
                         var open = Paint(0); var closed = Paint(1);
                         Check(open.Length > 0 && closed.Length > open.Length && closed.Take(open.Length).SequenceEqual(open),
                             label + " " + pose + ": full closure adds eyes without replacing or moving any underlying body/ring vertices or UVs.");
+                        if (deform)
+                        {
+                            var atlas = Property(look!, "NormalAtlas")!;
+                            var floating = atlas.GetType().GetMethod("GetFloat")!.Invoke(atlas, [.31f, mirrored, position, size])!;
+                            var actualBody = Activator.CreateInstance(bodyType, [bounds, (float)Property(normal, "SourceScale")!,
+                                Property(floating, "A")!, Property(floating, "B")!, Property(floating, "D")!])!;
+                            ImGui.NewFrame(); var expectedDraw = ImGui.GetForegroundDrawList();
+                            blink.Invoke(roamer, [expectedDraw, file, actualBody, 1f, 0xFFFFFFFFu, position, size, mirrored, true]);
+                            var expected = new (Vector2 Position, Vector2 Uv)[expectedDraw.VtxBuffer.Size];
+                            for (var index = 0; index < expected.Length; index++)
+                            { var vertex = expectedDraw.VtxBuffer[index]; expected[index] = (vertex.Pos, vertex.Uv); }
+                            ImGui.Render();
+                            Check(closed.Skip(open.Length).Select(vertex => (vertex.Position, vertex.Uv)).SequenceEqual(expected),
+                                label + " " + pose + ": actual eyelids follow the same bounded body-warp callback as the displayed mesh.");
+                        }
                     }
                 }
             }

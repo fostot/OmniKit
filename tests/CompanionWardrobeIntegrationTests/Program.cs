@@ -102,7 +102,7 @@ try
             var first = draw.VtxBuffer.Size; object?[] values = [draw, position, new Vector2(size), mirror, EnumValue("Ui.CompanionPose", pose), 0f, null];
             Check((bool)Call(roamer, "TryDrawLook", values)!, "Actual runtime paints every bare/costume body.");
             var file = (string)Get(Get(look, "Normal"), "File"); var ids = Vertices(draw, file, first);
-            Check(ids.Length == (pose == "Walk" && avatar is "Ember" or "Mochi" or "Puff" ? 256 : 4), "One runtime body quad or continuous mesh, without duplicate body art.");
+            Check(ids.Length == (pose == "Walk" && avatar is not ("Moonblob" or "Orbit") ? 256 : 4), "One runtime body quad or continuous mesh, without duplicate body art.");
             Check(requested.SequenceEqual(new[] { file }), "Painted costumes do not request a separate hat piece.");
             if (avatar == "Orbit") Check(ids.Min() > first && ids.Max() < draw.VtxBuffer.Size - 1, "Orbit rings remain behind and in front of its ringless core.");
             if (pose == "Carry") Check(Vector2.Distance((Vector2)Field(roamer, "visualGrip")!, position + new Vector2(size * .5f)) < .001f, "Carried painted bodies keep the hand grip pinned.");

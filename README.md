@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0021`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0023`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -104,7 +104,7 @@ small corner rounding and a footer showing the built version and **by Zero**.
   complete body, with no separate limb rig. Moonblob rolls continuously; the
   others float using stable body images. Four extra looks for each original companion add 32
   everyday choices, with Random and an optional look timer. Ember flickers and
-  curls, Mochi squashes, Puff billows, and Orbit's rings rotate and tilt around a
+  curls, Mochi squashes, Puff billows, Nib ripples, Echo curls, Fizz wobbles, Glim flexes, Rune rocks, and Wink/Nova/Prism have gentle body motion. Orbit and his hat sway together while his rings rotate and tilt around a
   steady core. Ring movement and speed have their own controls. Six aura palettes remain available:
   Moonlight, Aurora, Nebula, Rose, Ember and Starlight. In **Companion → Appearance**,
   draw a roaming area, preview an animation, or turn off magic accents, animation
@@ -158,7 +158,7 @@ small corner rounding and a footer showing the built version and **by Zero**.
   text only, with no model request or microphone use.
 - All thirteen companions have entrance, settling and sleeping art. Normal
   roaming stays inside the drawn area; nap trips can reach a house outside it at
-  about twice the usual walking speed, enter through the front doorway, then
+  about twice the usual walking speed, shrink in front of the doorstep, pass through the measured front doorway, then
   return continuously. They shrink another 10% inside, step outward while small,
   then grow in front of the house. Painted hats switch to the same character's
   bare pose on entry and return outside. Bows hide on entry and return outside

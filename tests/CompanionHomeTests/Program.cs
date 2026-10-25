@@ -12,6 +12,11 @@ if (args.Contains("--rotation-only"))
 var checks = RotationChecks.Run();
 var failures = new List<string>();
 var root = Path.GetFullPath(args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal)) ?? ".");
+if (args.Contains("--entry-after"))
+{
+    EntryRender.Run(root, "after");
+    return;
+}
 if (args.Contains("--styles-only"))
 {
     void Verify(bool passed, string reason) { if (!passed) throw new InvalidOperationException(reason); checks++; }
@@ -164,7 +169,14 @@ void Cycle(Vector2 anchor, CompanionHomeRect home)
         if (routine.State == CompanionHomeState.Leaving && routine.ArtScale > CompanionHomeRoutine.IndoorScale + .0001f)
             Check(routine.InFrontOfHome && routine.AccessoriesVisible,
                 "Growth and restored accessories paint in front of the house at " + anchor);
-        if (routine.State is CompanionHomeState.Entering or CompanionHomeState.Settling or CompanionHomeState.Sleeping or CompanionHomeState.Waking)
+        if (routine.State == CompanionHomeState.Entering)
+        {
+            Check(!routine.AccessoriesVisible, "Entry hides accessories at the threshold.");
+            if (!routine.InFrontOfHome)
+                Check(routine.ArtScale <= CompanionHomeRoutine.IndoorScale + .0001f,
+                    "The default arch never masks a full-size visitor during entry.");
+        }
+        if (routine.State is CompanionHomeState.Settling or CompanionHomeState.Sleeping or CompanionHomeState.Waking)
             Check(!routine.AccessoriesVisible && !routine.InFrontOfHome, "Indoor poses hide accessories and retain the wall mask.");
         var overlapsHouse = routine.Position.X < home.Maximum.X && routine.Position.X + layout.SpriteSize.X > home.Minimum.X &&
             routine.Position.Y < home.Maximum.Y && routine.Position.Y + layout.SpriteSize.Y > home.Minimum.Y;
@@ -178,8 +190,8 @@ void Cycle(Vector2 anchor, CompanionHomeRect home)
     Check(Vector2.Distance(routine.Position, current) < .1f, "Nap trip returns to its original roaming position at " + anchor);
     Check(doorwayAligned, "Masked entry and exit move only along the verified doorway centre at " + anchor);
     Check(foregroundOnly, "Whole companions cross the house footprint only in the visible front threshold lane at " + anchor);
-    Check(Math.Abs((opening.Minimum.X + opening.Maximum.X) * .5f - (door.X + layout.SpriteSize.X * .5f)) < .01f,
-        "The measured aperture and nap baseline have the same mirrored horizontal centre.");
+    Check(door.X + layout.SpriteSize.X * .5f > opening.Minimum.X && door.X + layout.SpriteSize.X * .5f < opening.Maximum.X,
+        "The measured nap baseline stays inside the asymmetric painted aperture in both facings.");
     if (anchor.X == 1) Check(leftDrawnBox, "Only the nap trip leaves the roaming rectangle to reach a distant home.");
 }
 

@@ -31,7 +31,9 @@ internal sealed class OrbitRingRenderer
         var center = position + cellSize * .5f;
         var offset = center - normal.Map(sourceCenter, Vector2.Zero, paintedCell, mirrored);
         var frame = source.GetFrame(Vector2.Zero, paintedCell, mirrored);
-        return new(frame with { Position = frame.Position + offset }, center,
+        var poseCenter = new Vector2((source.Body.X + source.Body.Z) * .5f, (source.Body.Y + source.Body.W) * .5f);
+        var ringCenter = source.Map(poseCenter, Vector2.Zero, paintedCell, mirrored) + offset;
+        return new(frame with { Position = frame.Position + offset }, ringCenter,
             Math.Min(bodySize.X, bodySize.Y) * paintedCell.Y / normal.SourceScale * .5f);
     }
     public void Update(float elapsed, bool animate, float speed)
@@ -53,7 +55,22 @@ internal sealed class OrbitRingRenderer
     }
 
     public (Vector2 Minimum, Vector2 Maximum) Draw(ImDrawListPtr draw, Vector2 center, float coreRadius,
-        Vector4 accent, bool front, SeasonalCompanionTheme? theme = null, bool decorations = true)
+        Vector4 accent, bool front, SeasonalCompanionTheme? theme = null, bool decorations = true, bool mirrored = false)
+        => DrawPosed(draw, center, coreRadius, accent, front, theme, decorations, mirrored, Matrix3x2.Identity);
+
+    public static Matrix3x2 Movement(Vector2 center, float radius, float stride, float activity, bool mirrored, bool animate)
+    {
+        if (!animate || !float.IsFinite(activity) || activity <= 0 || !float.IsFinite(stride)
+            || !float.IsFinite(radius) || radius <= 0 || !float.IsFinite(center.X) || !float.IsFinite(center.Y)) return Matrix3x2.Identity;
+        var phase = (stride - MathF.Floor(stride)) * MathF.Tau;
+        var strength = Math.Clamp(activity, 0, 1); var facing = mirrored ? -1 : 1;
+        var angle = MathF.Sin(phase) * .055f * strength * facing;
+        var offset = new Vector2(MathF.Sin(phase) * radius * .025f * facing, MathF.Sin(phase * 2) * radius * .035f) * strength;
+        return Matrix3x2.CreateTranslation(-center) * Matrix3x2.CreateRotation(angle) * Matrix3x2.CreateTranslation(center + offset);
+    }
+
+    public (Vector2 Minimum, Vector2 Maximum) DrawPosed(ImDrawListPtr draw, Vector2 center, float coreRadius,
+        Vector4 accent, bool front, SeasonalCompanionTheme? theme, bool decorations, bool mirrored, Matrix3x2 pose)
     {
         const int segments = 128;
         var firstVertex = draw.VtxBuffer.Size;
@@ -94,6 +111,15 @@ internal sealed class OrbitRingRenderer
         for (var index = firstVertex; index < draw.VtxBuffer.Size; index++)
         {
             var point = draw.VtxBuffer[index].Pos;
+            // Reflect the completed band, outlines and motifs together, retaining
+            // their depth split and native antialiasing when the painted body turns.
+            if (mirrored)
+            {
+                point.X = center.X * 2 - point.X;
+            }
+            if (pose != Matrix3x2.Identity) point = Vector2.Transform(point, pose);
+            if (mirrored || pose != Matrix3x2.Identity)
+                unsafe { ((ImDrawVert*)draw.VtxBuffer.Data)[index].Pos = point; }
             minimum = Vector2.Min(minimum, point); maximum = Vector2.Max(maximum, point);
         }
         return (minimum, maximum);

@@ -109,6 +109,12 @@ establish them. None is marked passed until observed.
   Puff billow, plus Orbit's layered rotating/tilting rings with movement off/on
   and speed 0.2/1/3. Disabling animation must freeze them.
 - Inspect complete rolling/floating cycles and their wrap at 96/192 sizes.
+  Check each creature's connected body motion, especially Nib/Echo/Fizz/Glim/Rune
+  in tall painted hats. The hat must not cancel the deformation. Eyes and fitted
+  bows follow the same warp; animation off freezes the movement. Stop/start and
+  direction changes must settle smoothly without a detached body or limbs.
+  Orbit's whole body, hat and both ring passes must turn and sway together,
+  retaining their separate ring pitch/precession and front/back depth order.
   Check eye-only blinks on all eight original companions, all everyday looks and
   all holiday bodies while resting and moving. Orbit's rings must follow the body
   theme independently of the accessory. Verify Magic off, animation off and the
@@ -184,8 +190,13 @@ establish them. None is marked passed until observed.
   disable Use holiday homes when testing a manual style. Check Random home/hand
   choice, all five hand designs, continuous grip contact and a retained hand from
   pickup through release. Clamp actual house artwork flush to each screen edge.
-- Test naps for all thirteen companions: about 45 seconds awake and 20 asleep by default,
-  plus awake interval 15/300 and sleep duration 5/120. A nap trip can leave the
+- Test naps for all thirteen companions: about 45 seconds awake and 20 asleep by
+  default, plus awake interval 15/300 and sleep duration 5/120.
+  Check all thirteen homes at both facings: the companion first shrinks fully
+  in front of the doorstep, then passes through the actual opening. No wall may
+  cut across the full-size foreground body. Inspect Default's curved arch,
+  cancellation during foreground shrink, hats off/on, and the existing exit path.
+  A nap trip can leave the
   drawn area at about twice normal speed, enter through the front doorway rather
   than the roof/side, curl up, breathe,
   wake and return. Stay small while leaving the doorway and crossing the front

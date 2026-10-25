@@ -1,3 +1,34 @@
+# 0.1.0.0023: shared Orbit motion, doorway entry and living bodies
+
+Orbit's painted body and hat now share facing and gentle travel sway with both
+ring passes. Rings follow the measured current pose center instead of retaining
+the resting center during reactions/carry. The existing ring precession, pitch,
+colors, motifs and depth split remain; facing reflects the entire completed band
+and its markings, including native antialiasing. Eyelids and bows share the same
+rigid body transform. Turning off animation stops travel sway.
+
+Home entry first shrinks the visitor in front of the visible doorstep, then
+moves the small body through the measured opening. Wall masking starts after
+crossing the painted threshold. Default's old rectangular hole is replaced by a
+measured curved arch; the same geometry serves both facings. Entry still takes
+1.4 seconds, and the existing outward exit/growth, hat timing and return behavior
+remain. Cancelling during foreground shrink returns without forcing a path
+behind the wall. Raw house artwork is unchanged.
+
+Nib ripples with delayed tip motion; Echo curls; Fizz wobbles; Glim flexes; Rune
+rocks with weight. Wink, Nova and Prism also have distinct soft body motion.
+Existing Ember/Mochi/Puff formulas and Moonblob's roll remain. Full painted hats
+reserve deformation room, fixing the bounds limiter that could suppress motion
+for the whole costume. One connected mesh keeps each body intact, with eyes and
+bows attached to its bounded warp. Motion uses the existing continuous clock,
+distance stride and smoothed activity; no per-frame random pose switching.
+
+Focused checks cover actual-DLL Orbit alignment/sway, all supported body styles
+and costumes at96/192 in both facings, all thirteen house entry masks, compiled
+exit behavior and real eyelid/body integration. Native galleries are separate
+from live FFXIV verification. No settings migration or artwork regeneration is
+needed for this update.
+
 # 0.1.0.0021: complete painted hats, five new companions and fitting blinks
 
 The split hat artwork in 0.1.0.0019 hid parts of the visible front brim. All four

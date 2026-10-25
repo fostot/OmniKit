@@ -10,6 +10,16 @@ internal readonly record struct CompanionHomeRect(Vector2 Minimum, Vector2 Maxim
 
 internal static class CompanionHomeGeometry
 {
+    // Measured on the original cropped painting. The open arch excludes both
+    // curtains and the wooden doorstep; it is not a rectangular hole in the wall.
+    public static CompanionHomeStyle DefaultStyle { get; } = new("Default", "companion-house.png",
+        new(.08f, .035f, .925f, .9f), 1, new(.452663f, .508671f, .863166f, .873555f),
+        new(.66716f, .849169f), new(.66716f, .896134f), new(.24f, .17f),
+        [new(.452663f, .873555f), new(.452663f, .748013f), new(.471154f, .664921f),
+            new(.511834f, .596279f), new(.567308f, .541185f), new(.636649f, .510477f),
+            new(.6875f, .508671f), new(.761464f, .539379f), new(.818787f, .606214f),
+            new(.852996f, .682081f), new(.863166f, .856395f)]);
+
     public static CompanionHomeRect Bounds(CompanionLayout layout, Vector2 viewportPosition,
         Vector2 viewportSize, Vector2 anchor)
     {
@@ -23,16 +33,16 @@ internal static class CompanionHomeGeometry
     }
 
     public static Vector2 Outside(CompanionLayout layout, CompanionHomeRect home, bool facesLeft, bool grounded = false)
-        => new(home.At(facesLeft ? .3365f : .6635f, 0).X - layout.SpriteSize.X * .5f,
-            home.Maximum.Y + 4 - (grounded ? layout.SpriteSize.Y * .9f : 0));
+        => DefaultStyle.Place(home.Minimum, home.Maximum, facesLeft).OutsidePosition(layout.SpriteSize, grounded: grounded);
 
     public static Vector2 Door(CompanionHomeRect home, Vector2 sprite, bool facesLeft)
-        => home.At(facesLeft ? .3365f : .6635f, .872f) - sprite * new Vector2(.5f, .9f);
+        => DefaultStyle.Place(home.Minimum, home.Maximum, facesLeft).BedPosition(sprite);
 
-    // Measured from the original cropped house image: source x600..1040.
-    // Keep the bed and roof masking heights used by the accepted nap painter.
     public static CompanionHomeRect Opening(CompanionHomeRect home, bool facesLeft)
-        => new(home.At(facesLeft ? .133f : .46f, .55f), home.At(facesLeft ? .54f : .867f, .89f));
+    {
+        var frame = DefaultStyle.Place(home.Minimum, home.Maximum, facesLeft);
+        return new(frame.OpeningMinimum, frame.OpeningMaximum);
+    }
 
     public static Vector2 Corner(CompanionLayout layout, CompanionHomeRect home, bool facesLeft, bool grounded = false)
         => new(facesLeft ? home.Minimum.X - layout.SpriteSize.X - 4 : home.Maximum.X + 4,
@@ -50,6 +60,7 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     private float stateTime;
     private int approachLeg;
     private Vector2 entryStart;
+    private float entryThresholdY;
     private Vector2 lastHouseMinimum;
     private Vector2 lastHouseMaximum;
     private Vector2 returnDestination;
@@ -72,11 +83,15 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     internal const float NavigationStallSeconds = 8;
     internal const float NavigationTimeoutSeconds = 120;
     internal const float IndoorScale = .558f;
+    internal const float EntryShrinkSeconds = .6f;
+    internal const float EntryTravelSeconds = .8f;
     public CompanionHomeState State { get; private set; }
     public bool Active => State != CompanionHomeState.Roaming;
     public bool UsesNapArt => State is CompanionHomeState.Entering or CompanionHomeState.Settling
         or CompanionHomeState.Sleeping or CompanionHomeState.Waking || State == CompanionHomeState.Leaving && approachLeg < 3;
-    public bool InFrontOfHome => State == CompanionHomeState.Leaving && approachLeg >= 1;
+    public bool InFrontOfHome => State == CompanionHomeState.Entering
+        && (stateTime < EntryShrinkSeconds || Position.Y + spriteSize.Y * .9f > entryThresholdY + .001f)
+        || State == CompanionHomeState.Leaving && approachLeg >= 1;
     public bool AccessoriesVisible => State is CompanionHomeState.Roaming or CompanionHomeState.Approaching
         or CompanionHomeState.Returning || State == CompanionHomeState.Leaving && approachLeg >= 2;
     public bool Sleeping => State == CompanionHomeState.Sleeping;
@@ -152,16 +167,19 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
             {
                 if (approachLeg++ == 0) return;
                 entryStart = Position; FacingLeft = !facesLeft;
+                entryThresholdY = (styleFrame ?? CompanionHomeGeometry.DefaultStyle.Place(house.Minimum, house.Maximum, facesLeft)).Threshold.Y;
                 TravelPose = CompanionPose.Idle;
                 SetState(CompanionHomeState.Entering);
             }
         }
         else if (State == CompanionHomeState.Entering)
         {
-            var t = Smooth(stateTime / 1.4f);
-            ArtScale = float.Lerp(1, IndoorScale, t);
-            Position = Vector2.Lerp(entryStart, door, t);
-            if (stateTime >= 1.4f) SetState(CompanionHomeState.Settling);
+            // Become small at the visible threshold before passing behind its
+            // arch. Masking a full-size visitor here cuts its face through a wall.
+            ArtScale = float.Lerp(1, IndoorScale, Smooth(stateTime / EntryShrinkSeconds));
+            var travel = Smooth((stateTime - EntryShrinkSeconds) / EntryTravelSeconds);
+            Position = Vector2.Lerp(entryStart, door, travel);
+            if (stateTime >= EntryShrinkSeconds + EntryTravelSeconds) SetState(CompanionHomeState.Settling);
         }
         else if (State == CompanionHomeState.Settling)
         {
@@ -213,13 +231,15 @@ internal sealed class CompanionHomeRoutine(int seed = 0)
     }
     private void BeginLeaving(CompanionLayout layout, CompanionHomeRect house, bool facesLeft, CompanionHomeStyleFrame? styleFrame = null)
     {
+        var alreadyOutside = State == CompanionHomeState.Entering && InFrontOfHome;
         entryStart = Position; leaveScale = ArtScale; leaveFacesLeft = facesLeft;
         var lastPosition = Vector2.Max(viewportMinimum, viewportMaximum - spriteSize);
         leaveTarget = Vector2.Clamp(styleFrame?.OutsidePosition(layout.SpriteSize, grounded: navigator != null)
             ?? CompanionHomeGeometry.Outside(layout, house, facesLeft, navigator != null), viewportMinimum, lastPosition);
+        if (alreadyOutside) leaveTarget = Position;
         leaveCorner = Vector2.Clamp(CompanionHomeGeometry.Corner(layout, house, facesLeft, navigator != null), viewportMinimum, lastPosition);
         leaveClearance = Vector2.Clamp(leaveTarget + new Vector2((facesLeft ? -1 : 1) * spriteSize.X * .35f, 0), viewportMinimum, lastPosition);
-        approachLeg = 0; SetState(CompanionHomeState.Leaving);
+        approachLeg = alreadyOutside ? 1 : 0; SetState(CompanionHomeState.Leaving);
     }
 
     private bool WalkTo(Vector2 destination, CompanionLayout layout, CompanionHomeRect home, float dt, bool forecourt = false)

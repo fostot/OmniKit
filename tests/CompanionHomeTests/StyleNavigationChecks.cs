@@ -31,7 +31,18 @@ internal static class StyleNavigationChecks
                 if (routine.State == CompanionHomeState.Leaving && routine.ArtScale > CompanionHomeRoutine.IndoorScale + .0001f)
                     check(routine.InFrontOfHome && routine.AccessoriesVisible,
                         "Growth and restored accessories paint in front of the house: " + id);
-                if (routine.State is CompanionHomeState.Entering or CompanionHomeState.Settling or CompanionHomeState.Sleeping or CompanionHomeState.Waking)
+                if (routine.State == CompanionHomeState.Entering)
+                {
+                    check(!routine.AccessoriesVisible, "Accessories hide when the visible doorway entry starts.");
+                    if (!routine.InFrontOfHome)
+                        check(routine.ArtScale <= CompanionHomeRoutine.IndoorScale + .0001f
+                            && routine.Position.Y + size * .9f <= style.Threshold.Y + .001f,
+                            "A visitor passes behind the arch only after it fits and crosses the painted doorstep: " + id);
+                    if (routine.ArtScale > CompanionHomeRoutine.IndoorScale + .0001f)
+                        check(routine.InFrontOfHome && Vector2.Distance(routine.Position, style.OutsidePosition(new(size), grounded: true)) < .01f,
+                            "Shrinking stays outside in the foreground, without cutting the visitor through a side wall: " + id);
+                }
+                if (routine.State is CompanionHomeState.Settling or CompanionHomeState.Sleeping or CompanionHomeState.Waking)
                     check(!routine.AccessoriesVisible && !routine.InFrontOfHome, "Styled indoor poses hide accessories and retain the wall mask.");
                 if (!routine.Active) { completed = true; break; }
 

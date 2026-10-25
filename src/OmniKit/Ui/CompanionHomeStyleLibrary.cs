@@ -230,9 +230,7 @@ internal sealed class CompanionHomeStyleLibrary
 
     private void AddDefault()
     {
-        homes.Add("Default", new("Default", "companion-house.png", new(.08f, .035f, .925f, .9f), 1,
-            new(.46f, .55f, .867f, .89f), new(.6635f, .872f), new(.6635f, .872f), new(.24f, .17f),
-            [new(.46f, .55f), new(.867f, .55f), new(.867f, .89f), new(.46f, .89f)]));
+        homes.Add("Default", CompanionHomeGeometry.DefaultStyle);
         var frames = ImmutableArray.CreateBuilder<CompanionHandFrame>(4);
         for (var i = 0; i < 4; i++)
         {

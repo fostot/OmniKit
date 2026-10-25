@@ -27,7 +27,8 @@ internal static class NativeExitChecks
         f.Check(authoredLook != null, "The authored nap path has an actual selected look.");
         var seasonal = RuntimeHelpers.GetUninitializedObject(f.Type("Ui.SeasonalCompanionService"));
         var themeType = f.Type("Ui.SeasonalCompanionTheme");
-        Set(seasonal, "snapshot", f.New("Ui.SeasonalCompanionSnapshot", Enum.Parse(themeType, "AllSaintsWake"),
+        // Bows remain the independent attachment path; hats now live in complete costume art.
+        Set(seasonal, "snapshot", f.New("Ui.SeasonalCompanionSnapshot", Enum.Parse(themeType, "Valentione"),
             Enum.Parse(f.Type("Ui.SeasonalEvidence"), "Manual"), "Synthetic appearance fixture",
             Activator.CreateInstance(typeof(ImmutableArray<>).MakeGenericType(themeType)), null));
         var homes = new[] { "Default", "CrystalPod", "CloudCushion", "LanternHut", "AllSaintsWake", "Starlight", "Heavensturn", "Valentione", "LittleLadies", "HatchingTide", "MakeItRain", "MoonfireFaire", "TheRising" };
@@ -156,7 +157,11 @@ internal static class NativeExitChecks
                             Set(companion, "seasonalVisible", accessoriesEnabled);
                             var firstIndex = draw.IdxBuffer.Size;
                             object?[] arguments = [draw, layout, null];
-                            f.Check((bool)companion.GetType().GetMethod("DrawNap", Instance)!.Invoke(companion, arguments)!, "Actual nap draw produces art.");
+                            // Roaming.Draw owns this splitter around the body/attachment passes.
+                            // Directly invoking its nested painter must reproduce that caller contract.
+                            draw.ChannelsSplit(2); draw.ChannelsSetCurrent(1);
+                            try { f.Check((bool)companion.GetType().GetMethod("DrawNap", Instance)!.Invoke(companion, arguments)!, "Actual nap draw produces art."); }
+                            finally { draw.ChannelsMerge(); }
                             var drawnTextures = new List<ulong>();
                             for (var i = 0; i < draw.CmdBuffer.Size; i++)
                             {

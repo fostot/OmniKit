@@ -28,7 +28,7 @@ if (args.Contains("--editor-blink"))
 if (args.Contains("--blink-wiring"))
 {
     var blinkChecks = BlinkWiringChecks.Run(plugin, Path.GetFullPath("assets"));
-    Console.WriteLine($"Actual DLL universal-blink wiring: {blinkChecks} checks passed. Eight public looks; no personal settings, game or network calls.");
+    Console.WriteLine($"Actual DLL universal-blink wiring: {blinkChecks} checks passed. Thirteen public looks; no personal settings, game or network calls.");
     return;
 }
 var placement = Type("CompanionAccessoryPlacement");

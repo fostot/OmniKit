@@ -86,6 +86,9 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     public bool IsEditingAccessories { get; set; }
     public string DisplayAvatar => displayAvatar;
     public string CurrentLookId => currentLook?.Choice ?? "Default";
+    private float BodyVisualPadding => CurrentLookId.StartsWith("Costume", StringComparison.Ordinal)
+        ? CompanionWardrobeLibrary.VisualPaddingFraction + (displayAvatar == "Orbit" ? .08f : 0)
+        : CompanionBodyMotion.Supports(displayAvatar) ? .10f : displayAvatar == "Orbit" ? .08f : 0;
     public string AssetDirectory => assetDirectory;
     public SeasonalCompanionTheme? AccessoryTheme => seasonal?.CurrentTheme;
     public CompanionPose PreviewPose { get; set; } = CompanionPose.Automatic;
@@ -241,9 +244,9 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             seasonalVisible = fit > 0;
             layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding, SpriteSize = sprite };
         }
-        if (CurrentLookId.StartsWith("Costume", StringComparison.Ordinal))
+        if (BodyVisualPadding > 0)
         {
-            var padding = layout.SpriteSize * CompanionWardrobeLibrary.VisualPaddingFraction;
+            var padding = layout.SpriteSize * BodyVisualPadding;
             var room = layout.Maximum - layout.Minimum;
             padding = Vector2.Min(padding, Vector2.Max(Vector2.Zero, (room - layout.SpriteSize) * .5f));
             layout = layout with { Minimum = layout.Minimum + padding, Maximum = layout.Maximum - padding };
@@ -351,13 +354,12 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         var hitEnd = position + layout.SpriteSize * .82f;
         var visualPadding = !seasonalVisible ? Vector2.Zero
             : layout.SpriteSize * accessoryPadding;
-        if (CurrentLookId.StartsWith("Costume", StringComparison.Ordinal))
-            visualPadding = Vector2.Max(visualPadding, layout.SpriteSize * CompanionWardrobeLibrary.VisualPaddingFraction);
+        visualPadding = Vector2.Max(visualPadding, layout.SpriteSize * BodyVisualPadding);
         var clipMinimum = physics.Active ? physics.ClipMinimum : homeRoutine.Active ? viewport.Pos : layout.Minimum - visualPadding;
         var clipMaximum = physics.Active ? physics.ClipMaximum : homeRoutine.Active ? viewport.Pos + viewport.Size : layout.Maximum + visualPadding;
         clipMinimum = Vector2.Max(clipMinimum, viewport.Pos); clipMaximum = Vector2.Min(clipMaximum, viewport.Pos + viewport.Size);
         draw.PushClipRect(clipMinimum, clipMaximum, true);
-        // Rear hat pieces share one pass beneath the body, including deformed and nap poses.
+        // Background accents stay beneath the body; fitted bows use the foreground pass.
         draw.ChannelsSplit(2);
         try
         {
@@ -394,13 +396,13 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 {
                     // All idle/walking bodies retain frame zero; only measured eye regions blink.
                     var floating = atlas!.GetFloat(gait.Phase, facingLeft, position, layout.SpriteSize);
-                    if (displayAvatar is "Ember" or "Mochi" or "Puff")
-                        (hitStart, hitEnd) = bodyMotion.Draw(draw, artTexture.Handle, displayAvatar, floating, position,
-                            layout.SpriteSize, gait.Phase, facingLeft, config.AnimationsEnabled, tint);
+                    if (CompanionBodyMotion.Supports(displayAvatar))
+                        (hitStart, hitEnd) = bodyMotion.DrawPadded(draw, artTexture.Handle, displayAvatar, floating, position,
+                            layout.SpriteSize, gait.Phase, facingLeft, config.AnimationsEnabled, tint, BodyVisualPadding);
                     else
                         draw.AddImageQuad(artTexture.Handle, floating.A, floating.B, floating.C, floating.D,
                             floating.UvA, floating.UvB, floating.UvC, floating.UvD, tint);
-                    if (displayAvatar is not ("Ember" or "Mochi" or "Puff")) (hitStart, hitEnd) = floating.HitBounds;
+                    if (!CompanionBodyMotion.Supports(displayAvatar)) (hitStart, hitEnd) = floating.HitBounds;
                     seasonalFrame = 0;
                     body = new(atlas.Frames[0].Rect, atlas.SourceScale, floating.A, floating.B, floating.D);
                 }
@@ -413,9 +415,9 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 }
                 if (pose is CompanionPose.Walk or CompanionPose.Idle)
                     DrawBlink(draw, atlas!.File, body, blink, tint, position, layout.SpriteSize, facingLeft,
-                        displayAvatar is "Ember" or "Mochi" or "Puff");
+                        CompanionBodyMotion.Supports(displayAvatar));
                 var extra = DrawSeasonal(draw, seasonalFrame, false, body, position: position, size: layout.SpriteSize,
-                    mirrored: facingLeft, deform: (pose is CompanionPose.Walk or CompanionPose.Idle) && (displayAvatar is "Ember" or "Mochi" or "Puff"));
+                    mirrored: facingLeft, deform: (pose is CompanionPose.Walk or CompanionPose.Idle) && CompanionBodyMotion.Supports(displayAvatar));
                 if (extra is { } bounds) { hitStart = Vector2.Min(hitStart, bounds.Minimum); hitEnd = Vector2.Max(hitEnd, bounds.Maximum); }
             }
             else
@@ -649,13 +651,22 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
                 placed = placed with { Frame = placed.Frame with { Position = placed.Frame.Position + shift }, Center = placed.Center + shift };
             }
             var ringTheme = OrbitRingRenderer.ThemeForLook(currentLook?.Choice);
-            var back = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), false,
-                ringTheme, config.CompanionMagicEnabled);
-            var core = CompanionVariantRenderer.Draw(draw, texture.Handle, placed.Frame, tint);
-            var front = orbitRings.Draw(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), true,
-                ringTheme, config.CompanionMagicEnabled);
+            var movement = OrbitRingRenderer.Movement(placed.Center, placed.Radius, gait.Phase,
+                pose is CompanionPose.Walk or CompanionPose.Idle ? bodyMotion.Activity : 0, mirrored, config.AnimationsEnabled);
+            Vector2 Move(Vector2 point) => Vector2.Transform(point, movement);
+            var back = orbitRings.DrawPosed(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), false,
+                ringTheme, config.CompanionMagicEnabled, mirrored, movement);
+            var a = Move(placed.Frame.Position); var b = Move(placed.Frame.Position + new Vector2(placed.Frame.Size.X, 0));
+            var c = Move(placed.Frame.Position + placed.Frame.Size); var d = Move(placed.Frame.Position + new Vector2(0, placed.Frame.Size.Y));
+            draw.AddImageQuad(texture.Handle, a, b, c, d, placed.Frame.UvStart,
+                new Vector2(placed.Frame.UvEnd.X, placed.Frame.UvStart.Y), placed.Frame.UvEnd,
+                new Vector2(placed.Frame.UvStart.X, placed.Frame.UvEnd.Y), tint);
+            var core = (Minimum: Vector2.Min(Vector2.Min(a, b), Vector2.Min(c, d)), Maximum: Vector2.Max(Vector2.Max(a, b), Vector2.Max(c, d)));
+            var front = orbitRings.DrawPosed(draw, placed.Center, placed.Radius, ProceduralCompanion.Palette(config.CompanionPalette), true,
+                ringTheme, config.CompanionMagicEnabled, mirrored, movement);
             bounds = (Vector2.Min(core.Minimum, Vector2.Min(back.Minimum, front.Minimum)), Vector2.Max(core.Maximum, Vector2.Max(back.Maximum, front.Maximum)));
             body = SeasonalBodyTransform.FromFrame(source.Bounds, source.SourceScale, placed.Frame, mirrored);
+            body = body with { A = Move(body.A), B = Move(body.B), D = Move(body.D) };
         }
         else if (variantPose == CompanionVariantPose.Neutral && pose is CompanionPose.Walk or CompanionPose.Idle)
         {
@@ -669,10 +680,11 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
             else
             {
                 var floating = lookAtlas!.GetFloat(gait.Phase, mirrored, position, size);
-                if (displayAvatar is "Ember" or "Mochi" or "Puff")
+                if (CompanionBodyMotion.Supports(displayAvatar))
                 {
                     deformed = true;
-                    bounds = bodyMotion.Draw(draw, texture.Handle, displayAvatar, floating, position, size, gait.Phase, mirrored, config.AnimationsEnabled, tint);
+                    bounds = bodyMotion.DrawPadded(draw, texture.Handle, displayAvatar, floating, position, size, gait.Phase, mirrored,
+                        config.AnimationsEnabled, tint, BodyVisualPadding);
                 }
                 else
                 {

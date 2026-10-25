@@ -42,3 +42,19 @@ The optional navigator used here is synthetic. Real support planes, hop routing
 and physics adoption belong to the runtime integration and its separate tests.
 Passing no style and no callback retains the prior default-house path, exercised
 by the existing `--logic-only` checks.
+
+## Visible doorway entry
+
+`dotnet run --project tests/CompanionHomeTests -c Release -- --entry-after`
+renders all thirteen houses at 96/192 companion size in both directions. The
+26 ignored galleries contain 312 actual house/nap samples: approach, early and
+middle shrinking, the doorstep step, the inside pose and sleep. The visitor
+shrinks outside in front of the house, and wall masking starts only after its
+baseline crosses the painted doorstep at the smaller indoor scale. Default uses
+the measured convex arch rather than a rectangular opening. Tests check that
+foreground entry adds only the body quad, while an inside pose includes the
+house wall pass. The styled logic branch passed 11,500 checks with these entry
+conditions. Before/after diagnostics live under `.local/home-entry-audit`.
+
+These source-linked checks use a synthetic grounded travel callback. The separate
+compiled exit check verifies that the accepted departure and return still work.
