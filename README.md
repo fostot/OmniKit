@@ -3,7 +3,7 @@
 Your everyday toolkit for XIV by Zero, with thirteen moon companions.
 
 **Early preview · Dalamud API 15 · Windows x64.**
-This source batch targets `0.1.0.0031`; the base remains `0.1.0`.
+This source batch targets `0.1.0.0033`; the base remains `0.1.0`.
 Build labels use `0.1.0.NNNN (shortSHA)`, where `NNNN` is the source commit's
 reachable Git commit count, padded to at least four digits. See
 [versioning](docs/VERSIONING.md) for the exact format and release workflow.
@@ -30,10 +30,12 @@ optional AI chat. Both shortcuts are changeable. A desktop launcher can also own
 Alt + Space; change one shortcut if they overlap. Soft interaction, voice and AI
 start off until you enable them.
 
-Settings have eight tabs: **Launcher**, **Interact**, **HUD**, **Companion**, **Data**,
-**About**, **Quest Items** and **Automations**. About shows the complete version, author and
-copyable full source commit. Companion groups **Appearance**, **Voice** and **AI**;
-Appearance has **Look**, **Scene**, **Motion**, **Home** and **Seasonal** sections.
+Settings use a tree with four folders: **Game tools**, **Companion**,
+**Automations** and **Settings**. Wide windows keep the tree on the left; small
+windows open it from the **Settings** button. Focused tabs organize each pane,
+with extra controls under **More options** or hover help. Companion keeps
+**Appearance**, **Voice**, **AI** and **Sayings**, with five Appearance pages. About shows the
+complete version, author and copyable full source commit.
 Click a shortcut
 button to record it: hold Ctrl, Alt and/or Shift, press the main key, then release
 all keys. Escape cancels recording. The compact settings panel has teal controls,
@@ -41,6 +43,11 @@ small corner rounding and a footer showing the built version and **by Zero**.
 
 ## What this preview includes
 
+- **Companion → Sayings** includes 418 local lines: 80 universal sayings and 26
+  for each of the thirteen companions. Browse by creature, activity or text;
+  add, edit, disable, remove and restore lines. Optional bubbles choose matching
+  lines without recent repeats. Timing and JSON import/export are on the same
+  page. No AI requests are made. See [the sayings library](docs/SAYINGS.md).
 - Search game windows, loaded plugins, community recruitment and saved gearsets.
   Try `guild`, `community`, `free company`, `inventory` or `job paladin`.
   **Launcher** adjusts width, height, text size, visible result count and horizontal/top
@@ -53,13 +60,19 @@ small corner rounding and a footer showing the built version and **by Zero**.
   Character Window Job Switcher or HaselTweaks' Character Class Switcher before
   enabling this replacement; the rest of those plugins can stay enabled. See
   [behavior, safeguards and sources](docs/JOB-SWITCHER.md). Native game acceptance is pending.
-- **Automations → Nom Nom** detects food in your personal inventory bags.
+- **Automations → NomNom** detects food in your personal inventory bags.
   **Automatic** is the default: highest EXP bonus, then highest item level, then
   your quality preference. It skips unusable food. You can select a specific food
-  instead, with NQ/HQ preference and same-item quality fallback. Enable Nom Nom
+  instead, with NQ/HQ preference and same-item quality fallback. Enable NomNom
   and leave **Keep +EXP buff active** on to eat after Well Fed expires.
-  Nom Nom starts off, never replaces an active
-  food buff and uses no AI. See [Nom Nom details](docs/NOM-NOM.md). Native consumption requires in-game acceptance.
+  NomNom starts off, never replaces an active
+  food buff and uses no AI. See [NomNom details](docs/NOM-NOM.md). Native consumption requires in-game acceptance.
+- **Game tools → Unlocks → Aetheryte** lists major aetherytes and aethernet
+  shards with game-confirmed check marks. Current-zone and per-zone tabs include
+  an area picker. **Start unlock** uses vnavmesh ground paths to nearby eligible
+  targets and supported walking exits; **Stop**, Esc or `/omnikit unlock stop`
+  ends the run. Boats and conditional inter-zone crossings are not yet supported.
+  See [route coverage and controls](docs/UNLOCKS.md).
 - Optional camera-directed interaction: look toward an eligible nearby object
   and press the configured chord. The optional text HUD names the candidate,
   hiding during active NPC/object interactions, cutscenes and other paused states.
@@ -71,7 +84,7 @@ small corner rounding and a footer showing the built version and **by Zero**.
   **Interact → Detection distance** adjusts detection from 1–30 yalms. The default
   for new settings is 6; existing saved distances stay unchanged. This does not
   extend the game's allowed interaction reach.
-- **HUD** puts font size first, with an independent outline toggle, adjustable
+- **Soft Interact HUD** puts font size first, with an independent outline toggle, adjustable
   thickness (0.5–4, default 1) and eleven
   text effects, including rainbow, neon pulse, chromatic glitch, hologram,
   flame, frost and light sweep. Intensity, speed and animation are adjustable. Modify opens this tab at the

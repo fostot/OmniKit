@@ -30,7 +30,7 @@ internal sealed class NomNomController
         {
             settings=selected; identity=o.Identity; Busy=false; failed=false; consumed=false; attempted=false; nextAttempt=now+2000;
         }
-        if(!selected.Enabled) { Busy=false; Status="Nom Nom is off."; return; }
+        if(!selected.Enabled) { Busy=false; Status="NomNom is off."; return; }
         if(!selected.RequireExperience) { Busy=false; Status="EXP food maintenance is off."; return; }
         if(o.Identity.Character==0 || o.Identity.Object==0) { Busy=false; Status="Waiting for your character."; return; }
         if(o.WellFed)
@@ -40,7 +40,7 @@ internal sealed class NomNomController
         }
         if(Busy)
         {
-            if(!o.Safe) { Latch(o.SelectedCount,"Eating paused; change the food, toggle Nom Nom, or change its stock to try again."); return; }
+            if(!o.Safe) { Latch(o.SelectedCount,"Eating paused; change the food, toggle NomNom, or change its stock to try again."); return; }
             if(o.SelectedCount<countBefore) consumed=true;
             if(now>deadline)
                 Latch(o.SelectedCount,consumed?"Food was consumed, but Well Fed was not confirmed. Automatic eating is paused.":"The game did not confirm eating. Automatic eating is paused.");

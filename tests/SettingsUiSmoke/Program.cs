@@ -64,6 +64,10 @@ var cases = new[]
     (Name: "wardrobe-avatar-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "wardrobe-nib", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "launcher", Section: 0, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "launcher-appearance", Section: 0, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "launcher-keys", Section: 0, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "settings-group-navigation", Section: 0, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-search-jumps", Section: 2, Tab: 0, Enabled: true, Scroll: false),
     (Name: "job-switcher-off", Section: 0, Tab: 0, Enabled: false, Scroll: true),
     (Name: "job-switcher-on", Section: 0, Tab: 0, Enabled: true, Scroll: true),
     (Name: "job-switcher-conflict", Section: 0, Tab: 0, Enabled: true, Scroll: true),
@@ -77,10 +81,36 @@ var cases = new[]
     (Name: "nomnom-menu", Section: 7, Tab: 0, Enabled: true, Scroll: false),
     (Name: "nomnom-help", Section: 7, Tab: 0, Enabled: true, Scroll: true),
     (Name: "nomnom-error", Section: 7, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "settings-tree-menu", Section: 0, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "settings-tree-wide", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-wide-max", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-wide-companion", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-wide-720", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-wide-960", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-aetheryte", Section: 0, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-empty", Section: 8, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "aetheryte-missing", Section: 8, Tab: 0, Enabled: false, Scroll: false),
+    (Name: "aetheryte-ready", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-active", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-long", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-start", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-stop", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-area-menu", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-area-jump", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-browse", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-zone-change", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-all", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-start-all", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-current-unknown", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-footer-error", Section: 8, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "aetheryte-virtual", Section: 8, Tab: 0, Enabled: true, Scroll: true),
     (Name: "quest-items", Section: 6, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "quest-items-bar", Section: 6, Tab: 0, Enabled: true, Scroll: true),
     (Name: "seasonal", Section: 3, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-types", Section: 1, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "interact-people", Section: 1, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "interact-objects", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact-quest-on", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact-quest-error", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "interact-enemy-choose", Section: 1, Tab: 0, Enabled: true, Scroll: true),
@@ -88,6 +118,7 @@ var cases = new[]
     (Name: "interact-enemy-attack", Section: 1, Tab: 0, Enabled: true, Scroll: false),
     (Name: "interact-none", Section: 1, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud", Section: 2, Tab: 0, Enabled: true, Scroll: true),
+    (Name: "hud-position", Section: 2, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud-outline", Section: 2, Tab: 0, Enabled: true, Scroll: true),
     (Name: "hud-long", Section: 2, Tab: 0, Enabled: true, Scroll: false),
     (Name: "appearance", Section: 3, Tab: 0, Enabled: true, Scroll: true),
@@ -114,6 +145,28 @@ var cases = new[]
     (Name: "palette-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "pose-menu", Section: 3, Tab: 0, Enabled: true, Scroll: false),
     (Name: "voice-off", Section: 3, Tab: 1, Enabled: false, Scroll: false),
+    (Name: "sayings-library", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-empty", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-disabled", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-removed", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-more", Section: 3, Tab: 3, Enabled: true, Scroll: true),
+    (Name: "sayings-scope-menu", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-context-menu", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-add", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-add-save", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-unicode-save", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-select", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-edit", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-remove", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-restore", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-details", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-toggle", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-current", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-current-draft", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-import-preview", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-import-apply", Section: 3, Tab: 3, Enabled: true, Scroll: false),
+    (Name: "sayings-tree", Section: 3, Tab: 0, Enabled: true, Scroll: false),
+    (Name: "settings-tree-wide-sayings", Section: 3, Tab: 3, Enabled: true, Scroll: false),
     (Name: "voice-on", Section: 3, Tab: 1, Enabled: true, Scroll: true),
     (Name: "ai-off", Section: 3, Tab: 2, Enabled: false, Scroll: false),
     (Name: "ai-on", Section: 3, Tab: 2, Enabled: true, Scroll: true),
@@ -138,11 +191,13 @@ var cases = new[]
     (Name: "ai-cli-cancel", Section: 3, Tab: 2, Enabled: true, Scroll: false),
     (Name: "ai-cli-error", Section: 3, Tab: 2, Enabled: true, Scroll: true),
     (Name: "data", Section: 4, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "data-export-options", Section: 4, Tab: 0, Enabled: false, Scroll: true),
     (Name: "data-browser-capture", Section: 4, Tab: 0, Enabled: true, Scroll: true),
     (Name: "data-browser-capture-off", Section: 4, Tab: 0, Enabled: false, Scroll: true),
     (Name: "data-browser-capture-error", Section: 4, Tab: 0, Enabled: true, Scroll: true),
     (Name: "data-browser-capture-long", Section: 4, Tab: 0, Enabled: true, Scroll: true),
     (Name: "about", Section: 5, Tab: 0, Enabled: false, Scroll: true),
+    (Name: "about-links", Section: 5, Tab: 0, Enabled: false, Scroll: false),
     (Name: "conversation-local", Section: -1, Tab: 0, Enabled: false, Scroll: false),
     (Name: "conversation-ai", Section: -1, Tab: 2, Enabled: true, Scroll: false),
     (Name: "conversation-codex", Section: -1, Tab: 2, Enabled: true, Scroll: false),
@@ -281,6 +336,73 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     var ui = RuntimeHelpers.GetUninitializedObject(uiType);
     foreach (var field in uiType.GetFields(flags).Where(field => field.FieldType == typeof(string))) field.SetValue(ui, "");
     Set(ui, "config", config);
+    Set(ui, "launcherTab", name.StartsWith("job-switcher-", StringComparison.Ordinal) ? 2 : name is "launcher-help" or "launcher-keys" || measureOnly ? 1 : 0);
+    Set(ui, "interactionTab", name.Contains("gathering", StringComparison.Ordinal) ? 2 : name.StartsWith("interact-quest", StringComparison.Ordinal) ? 3
+        : name.StartsWith("interact-enemy", StringComparison.Ordinal) || name is "interact-types" or "interact-none" or "interact-people" or "interact-objects" ? 1 : 0);
+    Set(ui, "hudTab", name.StartsWith("hud-effect", StringComparison.Ordinal) || name == "hud-none" ? 1 : name == "hud-position" ? 2 : 0);
+    Set(ui, "questItemsTab", name == "quest-items-bar" ? 1 : 0);
+    Set(ui, "dataTab", name.StartsWith("data-browser", StringComparison.Ordinal) ? 2 : name == "data-plugins" ? 1 : 0);
+    Set(ui, "aboutTab", name == "about-links" ? 1 : 0);
+    if (name == "settings-search-jumps")
+    {
+        foreach (var check in new[] { (0, "gearset", "launcherTab", 2), (0, "shortcut", "launcherTab", 1),
+            (1, "gathering", "interactionTab", 2), (1, "quest emote", "interactionTab", 3), (1, "enemy targets", "interactionTab", 1),
+            (2, "font size", "hudTab", 0), (2, "effect intensity", "hudTab", 1), (2, "position offset", "hudTab", 2),
+            (4, "browser", "dataTab", 2), (4, "umbra source", "dataTab", 1), (6, "item bar", "questItemsTab", 1) })
+        {
+            Set(ui, "section", check.Item1);
+            uiType.GetMethod("SelectSettingsSubsection", flags)!.Invoke(ui, [check.Item2]);
+            if ((int)uiType.GetField(check.Item3, flags)!.GetValue(ui)! != check.Item4) throw new InvalidOperationException("Search did not select " + check.Item3);
+        }
+        Set(ui, "hudTab", 0);
+    }
+    if (name is "settings-tree-wide-max" or "settings-tree-wide-720" or "settings-tree-wide-960") Set(ui, "settingsTreeWidth", 999f);
+    var unlockStarts = 0;
+    var unlockStops = 0;
+    uint unlockScope = uint.MaxValue;
+    uint observedTerritory = name == "aetheryte-current-unknown" ? 0u : 100u;
+    var unlockBusy = name is "aetheryte-active" or "aetheryte-stop";
+    if (name.StartsWith("aetheryte-", StringComparison.Ordinal) || name.StartsWith("settings-tree-", StringComparison.Ordinal))
+    {
+        var optionType = Type("OmniKit.Unlocks.AetheryteUnlockOption");
+        var options = Array.CreateInstance(optionType, name is "aetheryte-empty" or "aetheryte-missing" ? 0 : 18);
+        for (var index = 0; index < options.Length; index++)
+        {
+            var title = name == "aetheryte-long" ? "A deliberately long synthetic aetheryte destination name to check catalogue clipping " + index : "Fixture aetheryte " + (index + 1);
+            var zoneIndex = index / 6;
+            var zoneNames = new[] { "Central Thanalan", "New Gridania", "Western Thanalan" };
+            var argsForOption = new object?[] { (uint)(index + 1), title, zoneNames[zoneIndex], index < 4, index % 3 != 0,
+                index % 3 == 0 ? "This synthetic destination is gated by an unsupported connection." : "Reachable by a supported route." };
+            var constructor = optionType.GetConstructors().OrderByDescending(value => value.GetParameters().Length).First();
+            var parameters = constructor.GetParameters();
+            var values = new object?[parameters.Length];
+            Array.Copy(argsForOption, values, argsForOption.Length);
+            for (var extra = argsForOption.Length; extra < values.Length; extra++)
+                values[extra] = parameters[extra].Name == "TerritoryId" ? (uint)(100 + zoneIndex)
+                    : parameters[extra].Name == "IsVirtual" ? index == 17 : parameters[extra].DefaultValue;
+            options.SetValue(constructor.Invoke(values), index);
+        }
+        var property = uiType.GetProperty("Aetherytes", flags)!;
+        property.SetValue(ui, System.Linq.Expressions.Expression.Lambda(property.PropertyType,
+            System.Linq.Expressions.Expression.Convert(System.Linq.Expressions.Expression.Constant(options), property.PropertyType.GetMethod("Invoke")!.ReturnType)).Compile());
+        uiType.GetProperty("AetheryteUnlockBusy", flags)!.SetValue(ui, (Func<bool>)(() => unlockBusy));
+        uiType.GetProperty("AetheryteUnlockProgress", flags)!.SetValue(ui, (Func<(int, int)>)(() => unlockBusy ? (2, 6) : (0, 0)));
+        uiType.GetProperty("AetheryteUnlockStatus", flags)!.SetValue(ui, (Func<string>)(() => name == "aetheryte-missing"
+            ? "vnavmesh is unavailable. Install and enable the required navigation plugin before starting."
+            : unlockBusy ? "Routing to the next supported destination. Unsupported or gated travel will stop with a reason."
+            : "Ready to check reachable missing aetherytes."));
+        uiType.GetProperty("StartAetheryteUnlocks", flags)!.SetValue(ui, (Action)(() => { unlockStarts++; unlockBusy = true; }));
+        uiType.GetProperty("StopAetheryteUnlocks", flags)!.SetValue(ui, (Action)(() => { unlockStops++; unlockBusy = false; }));
+        uiType.GetProperty("AetheryteCurrentTerritory", flags)!.SetValue(ui, (Func<uint>)(() => observedTerritory));
+        uiType.GetProperty("StartAetheryteZoneUnlocks", flags)!.SetValue(ui, (Action<uint>)(territory => { unlockStarts++; unlockScope = territory; unlockBusy = true; }));
+        if (name is "aetheryte-browse" or "aetheryte-zone-change")
+        {
+            Set(ui, "aetheryteView", 2);
+            Set(ui, "aetheryteBrowseTerritory", 101u);
+            Set(ui, "selectAetheryteZoneTab", true);
+        }
+        if (name is "aetheryte-all" or "aetheryte-start-all" or "aetheryte-virtual") { Set(ui, "aetheryteView", 1); Set(ui, "selectAetheryteZoneTab", true); }
+    }
     if (name.StartsWith("job-switcher-", StringComparison.Ordinal))
     {
         Set(config, "CharacterJobSwitcherEnabled", enabled);
@@ -310,7 +432,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
         uiType.GetProperty("NomNomAutomaticFoodId", flags)!.SetValue(ui, (Func<uint>)(() => name == "nomnom-empty" ? 0u : 1001u));
         uiType.GetProperty("NomNomStatus", flags)!.SetValue(ui, (Func<string>)(() => name switch
         {
-            "nomnom-off" => "Nom Nom is off.",
+            "nomnom-off" => "NomNom is off.",
             "nomnom-empty" => "No food detected in personal bags.",
             "nomnom-missing" => "Selected food is not in your personal bags.",
             "nomnom-error" => "The game rejected the food request. Synthetic detail remains readable on hover without expanding this compact settings pane or hiding its controls.",
@@ -319,7 +441,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     }
     Set(ui, "providerEndpoint", config.GetType().GetField("AiEndpoint")!.GetValue(config));
     Set(ui, "settingsOpen", true);
-    if(name=="status-error") Set(ui,"status","Could not save settings. Synthetic failure details remain available here instead of being erased by a routine Saved message.");
+    if(name is "status-error" or "aetheryte-footer-error") Set(ui,"status","Could not save settings. Synthetic failure details remain available here instead of being erased by a routine Saved message.");
     if(name=="data-confirm") Set(ui,"confirmImport",true);
     if(name=="hud-none") Set(config,"InteractionHudEffect",Enum.Parse(Type("OmniKit.Interaction.HudTextEffect"),"None"));
     if(name=="hud-outline")
@@ -364,6 +486,40 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     Set(fixtureRoaming, "assetDirectory", Path.GetFullPath("assets"));
     if (wardrobeCase) fixtureRoaming.GetType().GetFields(flags).Single(field => field.FieldType == config.GetType()).SetValue(fixtureRoaming, config);
     Set(ui, "roaming", fixtureRoaming);
+    object? fixtureSayings = null;
+    if (name.StartsWith("sayings-", StringComparison.Ordinal) || name == "settings-tree-wide-sayings")
+    {
+        System.Runtime.InteropServices.NativeLibrary.Load(Path.Combine(Path.GetDirectoryName(pluginPath)!, "e_sqlite3.dll"));
+        var libraryType = Type("OmniKit.Companions.SayingLibrary");
+        var fixtureDirectory = Path.Combine(output, "synthetic-sayings-" + Guid.NewGuid().ToString("N"));
+        fixtureSayings = Activator.CreateInstance(libraryType, fixtureDirectory, null)!;
+        var synthetic = Enumerable.Range(0, name == "sayings-empty" ? 0 : 24).Select(index => new
+        {
+            id = "fixture:" + index.ToString("00"), companion = index < 16 ? "Universal" : index < 20 ? "Moonblob" : "Orbit", context = index % 2 == 0 ? "Any" : "Walking",
+            text = "Fixture saying " + index.ToString("00") + (index == 0 ? ": literal ## and ### stay visible in this synthetic row." : ": a local synthetic sentence for browsing without reading real player data."),
+            enabled = index != 1 && index != 3, deleted = index == 2, builtIn = false,
+        }).ToArray();
+        var json = System.Text.Json.JsonSerializer.Serialize(new { schemaVersion = 1, revision = 1, entries = synthetic });
+        libraryType.GetMethod("MergeImport")!.Invoke(fixtureSayings, [json]);
+        uiType.GetProperty("SayingsLibrary", flags)!.SetValue(ui, fixtureSayings);
+        if (name is "sayings-current" or "sayings-current-draft")
+        {
+            Set(ui, "sayingScope", "Current companion");
+            Set(fixtureRoaming, "displayAvatar", "Orbit");
+        }
+        if (name == "sayings-disabled") Set(ui, "sayingState", 1);
+        if (name == "sayings-removed") Set(ui, "sayingState", 2);
+        if (name is "sayings-details" or "sayings-edit" or "sayings-remove" or "sayings-restore")
+        {
+            Set(ui, "selectedSayingId", name == "sayings-restore" ? "fixture:02" : "fixture:00");
+            Set(ui, "openSayingDetails", true);
+        }
+        if (name.StartsWith("sayings-import-", StringComparison.Ordinal))
+        {
+            var incoming = new[] { new { id = "fixture:imported", companion = "Universal", context = "Idle", text = "One synthetic imported saying.", enabled = true, deleted = false, builtIn = false } };
+            Set(ui, "sayingJson", System.Text.Json.JsonSerializer.Serialize(new { schemaVersion = 1, revision = 1, entries = incoming }));
+        }
+    }
     var interactionType = Type("OmniKit.Interaction.SoftInteractionService");
     var interaction = RuntimeHelpers.GetUninitializedObject(interactionType);
     if (name == "interact-quest-error")
@@ -481,7 +637,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             throw new InvalidOperationException("Completed model refresh was not cleared.");
     }
     var popupCase = name.EndsWith("-menu", StringComparison.Ordinal) || name.EndsWith("-tooltip", StringComparison.Ordinal);
-    var navigationCase = name == "companion-navigation";
+    var navigationCase = name is "companion-navigation" or "settings-tree-aetheryte" or "sayings-tree";
+    var groupNavigationCase = name == "settings-group-navigation";
     var providerSwitch = name == "ai-provider-switch";
     var entriesField = uiType.GetField("entries", flags)!;
     entriesField.SetValue(ui, Array.CreateInstance(entriesField.FieldType.GetElementType()!, 0));
@@ -489,7 +646,9 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
     try
     {
         var io = ImGui.GetIO();
-        io.DisplaySize = new Vector2(560, 410) * scale;
+        var logicalWidth = name == "settings-tree-wide-720" ? 720 : name == "settings-tree-wide-960" ? 960
+            : name.StartsWith("settings-tree-wide", StringComparison.Ordinal) ? 860 : 480;
+        io.DisplaySize = new Vector2(logicalWidth + 80, 410) * scale;
         io.FontGlobalScale = scale;
         io.DeltaTime = 1f / 60;
         io.IniFilename = null; io.LogFilename = null;
@@ -510,14 +669,23 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "ai-endpoint" => "Other provider or local AI server", "ai-cli-cancel" => "Cancel connection",
             "launcher-help" => "Shortcut help", "launcher-examples" => "Search examples", "hud-help" => "HUD help",
             "job-switcher-help" => "Job switcher help",
-            "nomnom-menu" or "nomnom-auto-menu" => "##nomnom-food", "nomnom-help" => "Nom Nom help",
+            "nomnom-menu" or "nomnom-auto-menu" => "##nomnom-food", "nomnom-help" => "NomNom help",
+            "launcher-appearance" => "More options", "hud-position" => "Fine-tune position",
+            "interact-people" => "People & places", "interact-objects" => "Objects", "data-export-options" => "More export options",
+            "settings-tree-menu" => "Settings", "aetheryte-start" or "aetheryte-start-all" => "Start unlock", "aetheryte-stop" => "Stop",
+            "aetheryte-area-menu" or "aetheryte-area-jump" => "##aetheryte-area-picker",
             "hud-effects" or "hud-effects-static" => "Effect settings", "interact-gathering" => "Gathering outfits", "interact-fine" => "Fine-tune targeting",
             "hud-effect-menu" or "hud-effect-bottom-menu" => "Text effect",
             "home" or "home-only" or "home-off" or "home-wink" or "home-wink-off" => null,
             "seasonal" => null,
             "interact-enemy-help" => "Enemy behavior", "frame-help" or "scene13-motion-help" => "Frame behavior", "voice-help" => "Voice shortcut help",
-            "ai-cli-help" => "CLI privacy & limits", "data-import" => "Import settings", "data-plugins" => "Plugins & Umbra",
-            "data-browser" => "In-game browser", "about-source" => "Source details", "about-credits" => "Credits",
+            "ai-cli-help" => "CLI privacy & limits", "data-import" => "Import settings", "data-plugins" => "Umbra setup",
+            "data-browser" => null, "about-source" => "Source details", "about-credits" => "Credits",
+            "sayings-more" or "sayings-import-preview" or "sayings-import-apply" => "More options##sayings",
+            "sayings-scope-menu" => "##sayings-scope", "sayings-context-menu" => "##sayings-context",
+            "sayings-add" or "sayings-add-save" or "sayings-unicode-save" or "sayings-current-draft" => "Add", "sayings-edit" => "Edit", "sayings-remove" => "Remove", "sayings-restore" => "Restore",
+            "sayings-select" => "##saying-fixture:00",
+            "sayings-toggle" => "saying-enabled-fixture:00",
             "conversation-help" => "Connection choices",
             "conversation-busy" or "conversation-codex" or "conversation-claude" => "Ask companion", _ => null,
         };
@@ -536,13 +704,29 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
             if(scrollTo)
             {
-                io.AddMousePosEvent(280*scale,250*scale);
+                io.AddMousePosEvent((navigationCase ? 160 : 280)*scale,250*scale);
                 var direction = key != null && measured[key].Max.Y < io.DisplaySize.Y * .5f ? 1 : -1;
                 io.AddMouseWheelEvent(0, direction);
             }
             return false;
         }
         var clickedFrame = -1;
+        var treeStep = 0;
+        var treePhase = 0;
+        var treePhaseFrame = 0;
+        var groupStep = 0;
+        var groupPhase = 0;
+        var groupPhaseFrame = 0;
+        var groupChoices = new[] {
+            (0,"Keys","launcherTab",1),(0,"Jobs","launcherTab",2),(0,"Search","launcherTab",0),
+            (1,"Targets","interactionTab",1),(1,"Gathering","interactionTab",2),(1,"Quest actions","interactionTab",3),(1,"General","interactionTab",0),
+            (2,"Effects","hudTab",1),(2,"Position","hudTab",2),(2,"Text","hudTab",0),
+            (6,"Item bar","questItemsTab",1),(6,"Next action","questItemsTab",0),
+            (4,"Sources","dataTab",1),(4,"Browser","dataTab",2),(4,"Settings","dataTab",0),
+            (5,"Links","aboutTab",1),(5,"Info","aboutTab",0),
+            (3,"Voice","companionTab",1),(3,"AI","companionTab",2),(3,"Appearance","companionTab",0),
+            (3,"Sayings","companionTab",3),(3,"Appearance","companionTab",0),
+            (3,"Motion","companionAppearanceSection",2),(3,"Look","companionAppearanceSection",0) };
         var appearanceReady = -1; var appearanceScrolled = false;
         var wardrobeChoices = new HashSet<string>(StringComparer.Ordinal);
         var wardrobeExpected = name == "wardrobe-avatar-menu" ? new[] { "Moonblob", "Wink", "Nova", "Mochi", "Puff", "Orbit", "Ember", "Prism", "Nib", "Echo", "Fizz", "Glim", "Rune" }
@@ -560,9 +744,26 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             "appearance15-hand-style-menu" => (Field: "CompanionHandStyle", Value: "HologramMitt", Label: "Hologram mitt"),
             _ => (Field: "", Value: "", Label: ""),
         };
-        var totalFrames = appearance15 ? 80 : providerSwitch ? 40 : navigationCase ? 28 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
+        var totalFrames = groupNavigationCase ? 220 : appearance15 ? 80 : providerSwitch ? 40 : navigationCase ? 180 : targetControl != null ? 60 : name == "data-browser-capture-long" ? 12 : 8;
         for (var frame = 0; frame < totalFrames; frame++)
         {
+            if (name == "aetheryte-zone-change" && frame == 4) observedTerritory = 102;
+            if (groupNavigationCase && groupStep < groupChoices.Length && frame >= 3)
+            {
+                var choice = groupChoices[groupStep];
+                if (groupPhase == 0) { Set(ui, "section", choice.Item1); groupPhase = 1; groupPhaseFrame = frame; }
+                else if (groupPhase == 1 && frame > groupPhaseFrame + 1 && PointAt("tab:" + choice.Item2, true)) { groupPhase = 2; groupPhaseFrame = frame; }
+                else if (groupPhase == 2 && frame > groupPhaseFrame) { io.AddMouseButtonEvent(0, false); groupPhase = 3; groupPhaseFrame = frame; }
+                else if (groupPhase == 3 && frame > groupPhaseFrame + 1)
+                {
+                    if ((int)uiType.GetField(choice.Item3, flags)!.GetValue(ui)! != choice.Item4)
+                    {
+                        renderer.Save(ImGui.GetDrawData(), Path.Combine(output, "group-navigation-failure.png"));
+                        throw new InvalidOperationException($"Grouped tab did not select {choice.Item2}; actual {uiType.GetField(choice.Item3, flags)!.GetValue(ui)}, frame {frame}, step {groupStep}.");
+                    }
+                    groupStep++; groupPhase = 0;
+                }
+            }
             if (appearance15 && frame >= 3)
             {
                 if (appearanceHeader != null && clickedFrame < 0)
@@ -616,13 +817,29 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             }
             if (navigationCase)
             {
-                if (frame is 3 or 7 or 11 or 15)
+                var destinations = name == "settings-tree-aetheryte" ? new[] { "Aetheryte" } : name == "sayings-tree" ? new[] { "Sayings" } : new[] { "AI", "Look", "Voice", "AI" };
+                if (treeStep < destinations.Length && frame >= 3)
                 {
-                    var label=frame==7 ? "Appearance" : frame==11 ? "Voice" : "AI";
-                    if(!PointAt("tab:"+label,true)) throw new InvalidOperationException("Companion tab is not visible: "+label);
+                    if (treePhase == 0 && PointAt("Settings", true)) { treePhase = 1; treePhaseFrame = frame; }
+                    else if (treePhase == 1 && frame > treePhaseFrame) { io.AddMouseButtonEvent(0, false); treePhase = 2; treePhaseFrame = frame; }
+                    else if (treePhase == 2 && frame > treePhaseFrame + 1)
+                    {
+                        if (destinations[treeStep] == "Look" && !measured.ContainsKey("Look##settings-tree") && PointAt("tree:Appearance", true))
+                        { treePhase = 5; treePhaseFrame = frame; }
+                        else if (PointAt(destinations[treeStep] + "##settings-tree", true)) { treePhase = 3; treePhaseFrame = frame; }
+                    }
+                    else if (treePhase == 5 && frame > treePhaseFrame) { io.AddMouseButtonEvent(0, false); treePhase = 2; treePhaseFrame = frame; }
+                    else if (treePhase == 3 && frame > treePhaseFrame) { io.AddMouseButtonEvent(0, false); treePhase = 4; treePhaseFrame = frame; }
+                    else if (treePhase == 4 && frame > treePhaseFrame + 1)
+                    {
+                        var actualSection = (int)uiType.GetField("section", flags)!.GetValue(ui)!;
+                        var actualTab = (int)uiType.GetField("companionTab", flags)!.GetValue(ui)!;
+                        var expectedTab = destinations[treeStep] == "Sayings" ? 3 : destinations[treeStep] == "AI" ? 2 : destinations[treeStep] == "Voice" ? 1 : 0;
+                        if (actualSection != (name == "settings-tree-aetheryte" ? 8 : 3) || name != "settings-tree-aetheryte" && actualTab != expectedTab)
+                            throw new InvalidOperationException("Tree navigation did not select " + destinations[treeStep]);
+                        treeStep++; treePhase = 0;
+                    }
                 }
-                if (frame is 4 or 8 or 12 or 16) io.AddMouseButtonEvent(0,false);
-                if (frame is 19 or 23) Set(ui,"companionTab",frame==19 ? 0 : 2);
             }
             if(targetControl != null && frame>=3)
             {
@@ -630,6 +847,23 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 else if (name == "job-switcher-help" && clickedFrame < 0)
                 { io.AddMousePosEvent(280 * scale, 250 * scale); io.AddMouseWheelEvent(0, -2); }
                 else if(frame==clickedFrame+1) io.AddMouseButtonEvent(0,false);
+                if (name == "sayings-current-draft" && frame == clickedFrame + 2) Set(fixtureRoaming, "displayAvatar", "Mochi");
+                if (name is "sayings-add-save" or "sayings-edit" or "sayings-unicode-save" or "sayings-current-draft" && frame == clickedFrame + 3)
+                {
+                    Set(ui, "sayingEditingText", name == "sayings-unicode-save" ? string.Concat(Enumerable.Repeat("\U0001F600", 240)) : "A synthetic saying saved through the actual editor.");
+                    if (!PointAt("Save saying", true)) throw new InvalidOperationException("The saying editor Save action is not reachable.");
+                }
+                if (name is "sayings-add-save" or "sayings-edit" or "sayings-unicode-save" or "sayings-current-draft" && frame == clickedFrame + 4) io.AddMouseButtonEvent(0, false);
+                if (name.StartsWith("sayings-import-", StringComparison.Ordinal))
+                {
+                    if (frame == clickedFrame + 3 && !PointAt("Import JSON", true)) throw new InvalidOperationException("Import JSON is not reachable.");
+                    if (frame is var importRelease && (importRelease == clickedFrame + 4 || importRelease == clickedFrame + 7 || importRelease == clickedFrame + 10)) io.AddMouseButtonEvent(0, false);
+                    if (frame == clickedFrame + 6 && !PointAt("Preview", true)) throw new InvalidOperationException("Import preview is not reachable.");
+                    if (name == "sayings-import-apply" && frame == clickedFrame + 9 && !PointAt("Apply", true)) throw new InvalidOperationException("Import Apply is not reachable.");
+                }
+                if (name == "aetheryte-area-jump" && frame == clickedFrame + 3 && !PointAt("New Gridania##pick-zone-101", true))
+                    throw new InvalidOperationException("The searchable area picker did not expose New Gridania.");
+                if (name == "aetheryte-area-jump" && frame == clickedFrame + 4) io.AddMouseButtonEvent(0, false);
                 if(clickedFrame>=0 && frame>=clickedFrame+2 && name.EndsWith("-tooltip",StringComparison.Ordinal))
                     PointAt(name=="ai-account-tooltip" ? "##fixture-account-a" : "##fixture-model-a",false,false);
                 if(name=="hud-effect-bottom-menu" && frame==clickedFrame+3 && PointAt("None",false,false))
@@ -638,7 +872,12 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 { io.AddMousePosEvent(280*scale,250*scale); io.AddMouseWheelEvent(0,-15); }
             }
             if(scroll && frame>=3 && targetControl==null && !(name == "data-browser-capture-long" && frame >= 5))
-            { io.AddMousePosEvent(io.DisplaySize.X/2,io.DisplaySize.Y/2); io.AddMouseWheelEvent(0,-15); }
+            {
+                if (name == "aetheryte-virtual" && measured.TryGetValue("aetheryte-catalogue", out var catalogue))
+                    io.AddMousePosEvent((catalogue.Min.X + catalogue.Max.X) / 2, (catalogue.Min.Y + catalogue.Max.Y) / 2);
+                else io.AddMousePosEvent(io.DisplaySize.X/2,io.DisplaySize.Y/2);
+                io.AddMouseWheelEvent(0,-15);
+            }
             else if(name is "ai-middle" or "ai-chatgpt-middle" && frame==3)
             { io.AddMousePosEvent(io.DisplaySize.X/2,io.DisplaySize.Y/2); io.AddMouseWheelEvent(0,-1); }
             else if(section==1 && frame==3 && name!="interact" && targetControl==null)
@@ -649,7 +888,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 io.AddMousePosEvent(capturePosition.X + 60 * scale, capturePosition.Y + 8 * scale);
             measured.Clear();
             ImGui.NewFrame();
-            if (frame > 0) ImGui.SetWindowSize(section == -1 ? "Moon companion###OmniKit.Companion.Minimal" : "OmniKit Settings###OmniKit.Settings.Minimal", new Vector2(480, 330) * scale);
+            if (frame > 0) ImGui.SetWindowSize(section == -1 ? "Moon companion###OmniKit.Companion.Minimal" : "OmniKit Settings###OmniKit.Settings.Minimal", new Vector2(logicalWidth, 330) * scale);
             ImGui.SetNextWindowPos(new Vector2(40, 40) * scale);
             theme.Invoke(null, null);
             try
@@ -702,19 +941,65 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                 renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"ai-provider-switch-{expected}-scale{scale:0.0}.png"));
             }
             if (name == "ai-cli-cancel") uiType.GetMethod("UpdateConnection", flags)!.Invoke(ui, null);
-            if (navigationCase && frame is 6 or 10 or 14 or 18 or 22 or 26)
-            {
-                var expected = frame is 10 or 22 ? 0 : frame == 14 ? 1 : 2;
-                var actual = (int)uiType.GetField("shownCompanionTab", flags)!.GetValue(ui)!;
-                renderer.Save(ImGui.GetDrawData(), Path.Combine(output, $"companion-navigation-{frame}-scale{scale:0.0}.png"));
-                if (actual != expected)
-                    throw new InvalidOperationException($"Companion tab navigation at frame {frame}: expected {expected}, actual {actual}, scale {scale}.");
-            }
         }
         observer.SetValue(null,null);
+        if (groupNavigationCase && groupStep != groupChoices.Length) throw new InvalidOperationException("Grouped tabs were not all reachable.");
+        if (navigationCase && treeStep != (name is "settings-tree-aetheryte" or "sayings-tree" ? 1 : 4))
+        {
+            renderer.Save(ImGui.GetDrawData(), Path.Combine(output, name + "-navigation-failure.png"));
+            throw new InvalidOperationException($"Tree navigation did not finish every requested selection: {name}, step {treeStep}, phase {treePhase}, section {uiType.GetField("section", flags)!.GetValue(ui)}.");
+        }
+        if (fixtureSayings != null)
+        {
+            if (name == "sayings-more" && scroll)
+                foreach (var label in new[] { "Comment interval", "Copy sayings JSON", "Import JSON" })
+                    if (!measured.TryGetValue(label, out var control) || !control.Visible)
+                        throw new InvalidOperationException("Sayings option is not reachable: " + label);
+            var snapshot = ((System.Collections.IEnumerable)fixtureSayings.GetType().GetMethod("GetAll")!.Invoke(fixtureSayings, null)!).Cast<object>().ToArray();
+            object? Entry(string id) => snapshot.FirstOrDefault(entry => (string)entry.GetType().GetProperty("Id")!.GetValue(entry)! == id);
+            if (name == "sayings-add-save" && snapshot.Length != 25) throw new InvalidOperationException("Adding a saying did not preserve all existing entries.");
+            if (name == "sayings-current" && (!measured.TryGetValue("##saying-fixture:20", out var visibleSaying) || !visibleSaying.Visible || measured.ContainsKey("##saying-fixture:16")))
+                throw new InvalidOperationException("Current companion did not filter the actually visible Orbit.");
+            if (name == "sayings-current-draft" && !snapshot.Any(entry => (string)entry.GetType().GetProperty("Text")!.GetValue(entry)! == "A synthetic saying saved through the actual editor."
+                && (string)entry.GetType().GetProperty("Companion")!.GetValue(entry)! == "Orbit"))
+                throw new InvalidOperationException("Auto-rotation moved the open editor to another companion.");
+            if (name == "sayings-unicode-save" && !snapshot.Any(entry => (string)entry.GetType().GetProperty("Text")!.GetValue(entry)! == string.Concat(Enumerable.Repeat("\U0001F600", 240))))
+                throw new InvalidOperationException("The editor did not preserve all 240 Unicode scalar characters.");
+            if (name == "sayings-edit" && (string)Entry("fixture:00")!.GetType().GetProperty("Text")!.GetValue(Entry("fixture:00"))! != "A synthetic saying saved through the actual editor.")
+                throw new InvalidOperationException("The saying edit was not saved.");
+            if (name == "sayings-toggle" && (bool)Entry("fixture:00")!.GetType().GetProperty("Enabled")!.GetValue(Entry("fixture:00"))!) throw new InvalidOperationException("The saying checkbox did not disable its entry.");
+            if (name == "sayings-remove" && (!(bool)Entry("fixture:00")!.GetType().GetProperty("Deleted")!.GetValue(Entry("fixture:00"))! || snapshot.Length != 24)) throw new InvalidOperationException("Remove did not preserve the soft-deleted saying.");
+            if (name == "sayings-restore" && (bool)Entry("fixture:02")!.GetType().GetProperty("Deleted")!.GetValue(Entry("fixture:02"))!) throw new InvalidOperationException("Restore did not recover its saying.");
+            if (name == "sayings-import-preview" && snapshot.Length != 24) throw new InvalidOperationException("Preview modified the sayings library.");
+            if (name == "sayings-import-apply" && (snapshot.Length != 25 || Entry("fixture:00") == null)) throw new InvalidOperationException("Import did not merge while preserving existing sayings.");
+            if (name is "sayings-add" or "sayings-details" or "sayings-select" or "sayings-import-preview")
+            {
+                foreach (var label in name == "sayings-add" ? new[] { "Save saying", "Cancel" } : name is "sayings-details" or "sayings-select" ? new[] { "Edit", "Remove", "Close" } : new[] { "Preview", "Apply", "Cancel" })
+                    if (!measured.TryGetValue(label, out var item) || !item.Visible || item.Min.X < 8 * scale || item.Max.X > io.DisplaySize.X - 8 * scale || item.Min.Y < 8 * scale || item.Max.Y > io.DisplaySize.Y - 8 * scale)
+                        throw new InvalidOperationException("Sayings dialog action escaped the viewport gutter: " + label);
+            }
+        }
+        if (name.StartsWith("aetheryte-", StringComparison.Ordinal) || name.StartsWith("settings-tree-wide", StringComparison.Ordinal) && section == 8)
+        {
+            foreach (var label in new[] { "Start unlock", "Stop" })
+                if (!measured.TryGetValue(label, out var item) || !item.Visible || item.Min.X < 8 * scale || item.Max.X > io.DisplaySize.X - 8 * scale)
+                    throw new InvalidOperationException("Unlock action is not reachable outside the catalogue: " + label);
+            if (name == "aetheryte-start" && (unlockStarts != 1 || unlockStops != 0)) throw new InvalidOperationException("Start did not queue exactly one synthetic request.");
+            if (name == "aetheryte-start" && unlockScope != 100) throw new InvalidOperationException("Current zone Start did not preserve its scope.");
+            if (name == "aetheryte-start-all" && (unlockStarts != 1 || unlockScope != 0)) throw new InvalidOperationException("All areas Start did not request the global scope.");
+            if (name == "aetheryte-stop" && (unlockStops != 1 || unlockStarts != 0)) throw new InvalidOperationException("Stop did not queue exactly one synthetic request.");
+            if (name is "aetheryte-browse" or "aetheryte-zone-change" or "aetheryte-area-jump")
+                if ((uint)uiType.GetField("aetheryteBrowseTerritory", flags)!.GetValue(ui)! != 101 || (int)uiType.GetField("aetheryteView", flags)!.GetValue(ui)! != 2)
+                    throw new InvalidOperationException("Manual zone browsing was not preserved.");
+            if (name == "aetheryte-current-unknown" && unlockStarts != 0) throw new InvalidOperationException("Unknown current zone queued an unlock request.");
+            if (name == "aetheryte-virtual" && scroll && (!measured.TryGetValue("travel-exit-18", out var exitRow) || !exitRow.Visible))
+                throw new InvalidOperationException("Virtual travel exit was not reachable in the catalogue scroll.");
+        }
+        if (name.StartsWith("settings-tree-wide", StringComparison.Ordinal) && (float)uiType.GetField("settingsTreeWidth", flags)!.GetValue(ui)! > 220)
+            throw new InvalidOperationException("Tree resizing did not preserve the minimum content width.");
         if (name.StartsWith("nomnom-", StringComparison.Ordinal))
         {
-            foreach (var label in scroll ? new[] { "Refresh food", "Nom Nom help" }
+            foreach (var label in scroll ? new[] { "Refresh food", "NomNom help" }
                          : name is "nomnom-menu" or "nomnom-auto-menu" ? Array.Empty<string>() : new[] { "##nomnom-food" })
                 if (!measured.TryGetValue(label, out var item) || !item.Visible)
                     throw new InvalidOperationException("Nom Nom control is not reachable: " + label);
@@ -774,7 +1059,7 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
             if (!Equals(config.GetType().GetField("BrowserInterceptLinks")!.GetValue(config), enabled))
                 throw new InvalidOperationException("Rendering browser capture status changed its setting.");
             if (scroll)
-                foreach (var label in new[] { "Open browser", "Browser controls", "Open setup again" })
+                foreach (var label in new[] { "Open browser", "Browser controls" })
                     if (!measured.TryGetValue(label, out var item) || !item.Visible)
                         throw new InvalidOperationException("Expanded browser control is not reachable: " + label);
         }
@@ -817,7 +1102,8 @@ unsafe void Render(string name, int section, int tab, bool enabled, float scale,
                     || item.Max.X > io.DisplaySize.X - 8 * scale || item.Max.Y > io.DisplaySize.Y - 8 * scale)
                     throw new InvalidOperationException("Import confirmation button escaped the viewport gutter: " + label);
         }
-        else if (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= io.DisplaySize.X - 2 || bounds.Bottom >= io.DisplaySize.Y - 2)
+        else if (name is not ("sayings-add" or "sayings-details" or "sayings-select" or "sayings-import-preview")
+            && (bounds.Left < 2 || bounds.Top < 2 || bounds.Right >= io.DisplaySize.X - 2 || bounds.Bottom >= io.DisplaySize.Y - 2))
             throw new InvalidOperationException(id + " reaches the viewport edge.");
         if (name == "wardrobe-avatar-menu") WardrobeHeaderChecks.Draw(assembly, ui, renderer, scale, output);
         renders++;

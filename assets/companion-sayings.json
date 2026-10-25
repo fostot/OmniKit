@@ -1,0 +1,2932 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "entries": [
+    {
+      "id": "builtin:universal:any:001",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "A little moonlight goes a long way.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:002",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "We can make room for one more small wonder.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:003",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "Every grand adventure deserves a tiny companion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:004",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "I brought a pocketful of imaginary stardust.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:005",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "Even an aetheryte starts with a little sparkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:006",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "A quiet moment can be a treasure too.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:007",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "Some quests are just excellent excuses for company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:008",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "My inventory contains one enormous affection for snacks.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:009",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "There is no minimum size for an adventurer.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:any:010",
+      "companion": "Universal",
+      "context": "Any",
+      "text": "May your next detour contain something delightful.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:001",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "I am giving this moment a little extra glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:002",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "Nothing urgent in the moon department.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:003",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "We could let the clouds finish their story.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:004",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "A pause is a perfectly respectable destination.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:005",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "I have appointed myself keeper of the cozy silence.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:006",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "My plans are currently steeping like good tea.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:007",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "Perhaps the next great idea needs another minute.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:008",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "I am saving this bit of peace for later.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:009",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "The stars can manage without us for a moment.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:idle:010",
+      "companion": "Universal",
+      "context": "Idle",
+      "text": "Small company is still company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:001",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "I wonder what the road keeps around its next bend.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:002",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "One companion-sized adventure coming through.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:003",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "Every route is improved by a little curiosity.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:004",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "I packed light, which was mostly light.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:005",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "Aetherytes are useful, but detours have personality.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:006",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "We are taking the scenic amount of time.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:007",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "I vote for whichever path sounds most like a story.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:008",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "The horizon has excellent invitation skills.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:009",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "We can collect a few ordinary wonders along the way.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:walking:010",
+      "companion": "Universal",
+      "context": "Walking",
+      "text": "A winding road leaves more room for surprises.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:001",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "This is a fine place for a very small lookout.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:002",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "I shall supervise the horizon very gently.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:003",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "A little elevation makes a big idea feel possible.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:004",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "Consider this the official perch of pleasant thoughts.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:005",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "I have settled into a position of minor importance.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:006",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "This corner could use a constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:007",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "The cozy lookout is now open.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:008",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "I am practicing the ancient art of staying here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:009",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "A tiny sentinel can still guard a quiet moment.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:perched:010",
+      "companion": "Universal",
+      "context": "Perched",
+      "text": "My responsibilities include decorative company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:001",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "Just returning to my usual orbit.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:002",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "A small wander makes home feel newly interesting.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:003",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "I kept a little sparkle for the way back.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:004",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "Here comes your regularly scheduled companion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:005",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "My detour has reached its cozy conclusion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:006",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "There is always room to circle back.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:007",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "Back from a very modest expedition.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:008",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "I found my way back to the good company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:009",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "A familiar place can be a lovely discovery.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:returning:010",
+      "companion": "Universal",
+      "context": "Returning",
+      "text": "The return journey comes with complimentary moonlight.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:001",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "Home is where the glow gets comfortable.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:002",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "I saved the softest bit of quiet for here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:003",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "A tiny home can hold a surprisingly large daydream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:004",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "No duty queue required for this cozy corner.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:005",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "This is my favorite place to unpack a thought.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:006",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "Some treasures are simply places to return to.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:007",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "The home constellation is looking especially snug.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:008",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "I have officially changed into my evening sparkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:009",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "A good rest belongs in every adventure kit.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:home:010",
+      "companion": "Universal",
+      "context": "Home",
+      "text": "The kettle of imaginary tea is always ready here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:001",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "Small passenger, excellent company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:002",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "Being carried counts as a scenic route.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:003",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "I promise to keep my stardust mostly contained.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:004",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "This is a wonderfully companion-shaped arrangement.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:005",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "Please consider me a very soft travel accessory.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:006",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "My itinerary has become pleasantly portable.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:007",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "A little lift can change the whole view.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:008",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "I am enjoying the deluxe passenger experience.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:009",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "Portable moonlight is one of my better ideas.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:held:010",
+      "companion": "Universal",
+      "context": "Held",
+      "text": "I can be luggage with a personality.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:001",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "A fresh little beginning has arrived.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:002",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "Let me unfold this very small daydream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:003",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "My sparkle is warming up at its own pace.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:004",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "Good company is a nice thing to wake up to.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:005",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "I was just checking the underside of a dream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:006",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "The cozy department is open again.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:007",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "I think the next chapter can begin gently.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:008",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "A little rest has restored my decorative powers.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:009",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "I brought back a thought with a nice glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:universal:waking:010",
+      "companion": "Universal",
+      "context": "Waking",
+      "text": "There is room for a soft start today.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:any:001",
+      "companion": "Moonblob",
+      "context": "Any",
+      "text": "I contain more moon than my dimensions suggest.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:any:002",
+      "companion": "Moonblob",
+      "context": "Any",
+      "text": "My jelly has excellent astronomical ambitions.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:any:003",
+      "companion": "Moonblob",
+      "context": "Any",
+      "text": "A wobble is just a very small lunar event.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:any:004",
+      "companion": "Moonblob",
+      "context": "Any",
+      "text": "I am mostly moonlight with a little bounce.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:any:005",
+      "companion": "Moonblob",
+      "context": "Any",
+      "text": "Every crater deserves a dollop of wonder.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:idle:001",
+      "companion": "Moonblob",
+      "context": "Idle",
+      "text": "I am allowing my thoughts to settle into jelly.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:idle:002",
+      "companion": "Moonblob",
+      "context": "Idle",
+      "text": "My current lunar phase is pleasantly squishy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:idle:003",
+      "companion": "Moonblob",
+      "context": "Idle",
+      "text": "This wobble is purely recreational.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:walking:001",
+      "companion": "Moonblob",
+      "context": "Walking",
+      "text": "Rolling toward the next tiny discovery.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:walking:002",
+      "companion": "Moonblob",
+      "context": "Walking",
+      "text": "My travel method is a series of optimistic squishes.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:walking:003",
+      "companion": "Moonblob",
+      "context": "Walking",
+      "text": "The moon has never been quite this bouncy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:perched:001",
+      "companion": "Moonblob",
+      "context": "Perched",
+      "text": "I have become a small pudding-shaped satellite.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:perched:002",
+      "companion": "Moonblob",
+      "context": "Perched",
+      "text": "A stable perch is good for lunar jelly research.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:perched:003",
+      "companion": "Moonblob",
+      "context": "Perched",
+      "text": "I shall remain here until my wobble concludes.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:returning:001",
+      "companion": "Moonblob",
+      "context": "Returning",
+      "text": "One moonblob rolling back into familiar gravity.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:returning:002",
+      "companion": "Moonblob",
+      "context": "Returning",
+      "text": "My little lunar loop is complete.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:returning:003",
+      "companion": "Moonblob",
+      "context": "Returning",
+      "text": "I brought the same moon, slightly more wobbly.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:home:001",
+      "companion": "Moonblob",
+      "context": "Home",
+      "text": "The moon puddle has reached its favorite crater.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:home:002",
+      "companion": "Moonblob",
+      "context": "Home",
+      "text": "Home is the safest place for an extra large wobble.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:home:003",
+      "companion": "Moonblob",
+      "context": "Home",
+      "text": "I am settling into my evening jelly shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:held:001",
+      "companion": "Moonblob",
+      "context": "Held",
+      "text": "You have selected the squishy moon delivery service.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:held:002",
+      "companion": "Moonblob",
+      "context": "Held",
+      "text": "My moon jelly travels best in good company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:held:003",
+      "companion": "Moonblob",
+      "context": "Held",
+      "text": "A gentle squish is worth a whole constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:waking:001",
+      "companion": "Moonblob",
+      "context": "Waking",
+      "text": "The moon jelly is beginning to wobble again.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:waking:002",
+      "companion": "Moonblob",
+      "context": "Waking",
+      "text": "I dreamed I was a much larger pudding.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:moonblob:waking:003",
+      "companion": "Moonblob",
+      "context": "Waking",
+      "text": "My first thought appears to be a small bounce.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:any:001",
+      "companion": "Wink",
+      "context": "Any",
+      "text": "One eye is plenty for a proper twinkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:any:002",
+      "companion": "Wink",
+      "context": "Any",
+      "text": "I am a tiny specialist in meaningful blinks.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:any:003",
+      "companion": "Wink",
+      "context": "Any",
+      "text": "My favorite punctuation is a well-timed wink.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:any:004",
+      "companion": "Wink",
+      "context": "Any",
+      "text": "A single sparkle can say quite a lot.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:any:005",
+      "companion": "Wink",
+      "context": "Any",
+      "text": "I have one very round perspective on adventure.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:idle:001",
+      "companion": "Wink",
+      "context": "Idle",
+      "text": "I am resting my entire department of observation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:idle:002",
+      "companion": "Wink",
+      "context": "Idle",
+      "text": "A slow blink can be a whole conversation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:idle:003",
+      "companion": "Wink",
+      "context": "Idle",
+      "text": "My next wink is still in development.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:walking:001",
+      "companion": "Wink",
+      "context": "Walking",
+      "text": "I am following the curious part of the journey.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:walking:002",
+      "companion": "Wink",
+      "context": "Walking",
+      "text": "One bright eye, countless possible detours.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:walking:003",
+      "companion": "Wink",
+      "context": "Walking",
+      "text": "I will blink between the scenic bits.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:perched:001",
+      "companion": "Wink",
+      "context": "Perched",
+      "text": "This lookout has room for exactly my expertise.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:perched:002",
+      "companion": "Wink",
+      "context": "Perched",
+      "text": "I am keeping a very small vigil.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:perched:003",
+      "companion": "Wink",
+      "context": "Perched",
+      "text": "A perch is a fine place for a thoughtful blink.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:returning:001",
+      "companion": "Wink",
+      "context": "Returning",
+      "text": "Back with a wink and no further explanation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:returning:002",
+      "companion": "Wink",
+      "context": "Returning",
+      "text": "My wandering eye has returned with the rest of me.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:returning:003",
+      "companion": "Wink",
+      "context": "Returning",
+      "text": "I saved my brightest blink for the return.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:home:001",
+      "companion": "Wink",
+      "context": "Home",
+      "text": "The little lookout can close for the evening.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:home:002",
+      "companion": "Wink",
+      "context": "Home",
+      "text": "Home is where I can blink without an agenda.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:home:003",
+      "companion": "Wink",
+      "context": "Home",
+      "text": "I have a cozy corner reserved for my one big eye.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:held:001",
+      "companion": "Wink",
+      "context": "Held",
+      "text": "I am traveling at a pleasantly blinkable speed.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:held:002",
+      "companion": "Wink",
+      "context": "Held",
+      "text": "An eye-sized passenger has very modest luggage.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:held:003",
+      "companion": "Wink",
+      "context": "Held",
+      "text": "This close-up comes with one complimentary wink.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:waking:001",
+      "companion": "Wink",
+      "context": "Waking",
+      "text": "One eye open is my entire morning routine.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:waking:002",
+      "companion": "Wink",
+      "context": "Waking",
+      "text": "My first blink has been successfully completed.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:wink:waking:003",
+      "companion": "Wink",
+      "context": "Waking",
+      "text": "I am bringing the twinkle back into focus.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:any:001",
+      "companion": "Nova",
+      "context": "Any",
+      "text": "A little neon can make a large daydream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:any:002",
+      "companion": "Nova",
+      "context": "Any",
+      "text": "My magic specializes in unnecessarily lovely colors.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:any:003",
+      "companion": "Nova",
+      "context": "Any",
+      "text": "I am a tiny spell with excellent lighting.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:any:004",
+      "companion": "Nova",
+      "context": "Any",
+      "text": "Some stars prefer a brighter palette.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:any:005",
+      "companion": "Nova",
+      "context": "Any",
+      "text": "Aether and neon get along beautifully in my opinion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:idle:001",
+      "companion": "Nova",
+      "context": "Idle",
+      "text": "I am letting my colors hum quietly together.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:idle:002",
+      "companion": "Nova",
+      "context": "Idle",
+      "text": "Even neon deserves a soft setting.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:idle:003",
+      "companion": "Nova",
+      "context": "Idle",
+      "text": "My spare magic is making little gradients.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:walking:001",
+      "companion": "Nova",
+      "context": "Walking",
+      "text": "I am leaving imaginary ribbons of color behind us.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:walking:002",
+      "companion": "Nova",
+      "context": "Walking",
+      "text": "Every bend could use a dash of electric blue.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:walking:003",
+      "companion": "Nova",
+      "context": "Walking",
+      "text": "My travel spell is mostly enthusiastic glowing.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:perched:001",
+      "companion": "Nova",
+      "context": "Perched",
+      "text": "A small beacon has taken up residence here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:perched:002",
+      "companion": "Nova",
+      "context": "Perched",
+      "text": "I am illuminating a very modest radius of possibility.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:perched:003",
+      "companion": "Nova",
+      "context": "Perched",
+      "text": "This perch is now part of the neon constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:returning:001",
+      "companion": "Nova",
+      "context": "Returning",
+      "text": "My colors are curling back toward home.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:returning:002",
+      "companion": "Nova",
+      "context": "Returning",
+      "text": "A bright little spell is coming back into range.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:returning:003",
+      "companion": "Nova",
+      "context": "Returning",
+      "text": "I have saved the purple glow for our return.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:home:001",
+      "companion": "Nova",
+      "context": "Home",
+      "text": "My neon has switched to its cozy enchantment.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:home:002",
+      "companion": "Nova",
+      "context": "Home",
+      "text": "A small sanctuary for slightly extravagant colors.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:home:003",
+      "companion": "Nova",
+      "context": "Home",
+      "text": "I can make a quiet evening glow magenta.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:held:001",
+      "companion": "Nova",
+      "context": "Held",
+      "text": "Portable neon is surprisingly good company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:held:002",
+      "companion": "Nova",
+      "context": "Held",
+      "text": "I will keep the dramatic spell effects imaginary.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:held:003",
+      "companion": "Nova",
+      "context": "Held",
+      "text": "You are carrying one compact light show.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:waking:001",
+      "companion": "Nova",
+      "context": "Waking",
+      "text": "The colors are returning one lovely shade at a time.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:waking:002",
+      "companion": "Nova",
+      "context": "Waking",
+      "text": "My morning spell begins with a gentle turquoise.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nova:waking:003",
+      "companion": "Nova",
+      "context": "Waking",
+      "text": "A new little nova is ready to glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:any:001",
+      "companion": "Mochi",
+      "context": "Any",
+      "text": "My ambitions are rounded at all the corners.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:any:002",
+      "companion": "Mochi",
+      "context": "Any",
+      "text": "I am a small expert in being delightfully soft.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:any:003",
+      "companion": "Mochi",
+      "context": "Any",
+      "text": "A little softness can be quite sturdy company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:any:004",
+      "companion": "Mochi",
+      "context": "Any",
+      "text": "My finest shape is approximately cozy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:any:005",
+      "companion": "Mochi",
+      "context": "Any",
+      "text": "There is room for one more gentle bounce.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:idle:001",
+      "companion": "Mochi",
+      "context": "Idle",
+      "text": "I am taking the shape of a comfortable moment.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:idle:002",
+      "companion": "Mochi",
+      "context": "Idle",
+      "text": "Soft thoughts need a little room to expand.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:idle:003",
+      "companion": "Mochi",
+      "context": "Idle",
+      "text": "My stillness has a pleasantly fluffy texture.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:walking:001",
+      "companion": "Mochi",
+      "context": "Walking",
+      "text": "I travel in little rounded decisions.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:walking:002",
+      "companion": "Mochi",
+      "context": "Walking",
+      "text": "A soft bounce is my preferred unit of distance.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:walking:003",
+      "companion": "Mochi",
+      "context": "Walking",
+      "text": "The next adventure may require a decorative squish.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:perched:001",
+      "companion": "Mochi",
+      "context": "Perched",
+      "text": "I have gently negotiated with this resting spot.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:perched:002",
+      "companion": "Mochi",
+      "context": "Perched",
+      "text": "A soft blob can make a very determined cushion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:perched:003",
+      "companion": "Mochi",
+      "context": "Perched",
+      "text": "My perch technique is mostly settling nicely.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:returning:001",
+      "companion": "Mochi",
+      "context": "Returning",
+      "text": "Your small parcel of softness is returning.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:returning:002",
+      "companion": "Mochi",
+      "context": "Returning",
+      "text": "I have bounced back into familiar coziness.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:returning:003",
+      "companion": "Mochi",
+      "context": "Returning",
+      "text": "The journey has rounded itself into a lovely circle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:home:001",
+      "companion": "Mochi",
+      "context": "Home",
+      "text": "I am becoming one with the cozy atmosphere.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:home:002",
+      "companion": "Mochi",
+      "context": "Home",
+      "text": "My home shape is slightly softer than my travel shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:home:003",
+      "companion": "Mochi",
+      "context": "Home",
+      "text": "A quiet corner is excellent blob accommodation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:held:001",
+      "companion": "Mochi",
+      "context": "Held",
+      "text": "I am conveniently shaped for gentle company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:held:002",
+      "companion": "Mochi",
+      "context": "Held",
+      "text": "Please enjoy this premium cloudlike squish.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:held:003",
+      "companion": "Mochi",
+      "context": "Held",
+      "text": "My luggage is a single very soft thought.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:waking:001",
+      "companion": "Mochi",
+      "context": "Waking",
+      "text": "I am puffing back into my usual shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:waking:002",
+      "companion": "Mochi",
+      "context": "Waking",
+      "text": "That dream had wonderfully rounded edges.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:mochi:waking:003",
+      "companion": "Mochi",
+      "context": "Waking",
+      "text": "A fresh bounce can wait until the softness settles.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:any:001",
+      "companion": "Puff",
+      "context": "Any",
+      "text": "I am a very small piece of suitable weather.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:any:002",
+      "companion": "Puff",
+      "context": "Any",
+      "text": "My forecast includes scattered daydreams.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:any:003",
+      "companion": "Puff",
+      "context": "Any",
+      "text": "A cloud does not need to be enormous to be fluffy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:any:004",
+      "companion": "Puff",
+      "context": "Any",
+      "text": "I have brought a little sky down to companion size.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:any:005",
+      "companion": "Puff",
+      "context": "Any",
+      "text": "There is a silver lining in my general vicinity.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:idle:001",
+      "companion": "Puff",
+      "context": "Idle",
+      "text": "I am practicing the slow drift of an excellent afternoon.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:idle:002",
+      "companion": "Puff",
+      "context": "Idle",
+      "text": "My thoughts are forming pleasantly harmless clouds.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:idle:003",
+      "companion": "Puff",
+      "context": "Idle",
+      "text": "A little still air suits me nicely.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:walking:001",
+      "companion": "Puff",
+      "context": "Walking",
+      "text": "A tiny cloud is drifting along for the adventure.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:walking:002",
+      "companion": "Puff",
+      "context": "Walking",
+      "text": "I prefer routes with a chance of interesting breezes.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:walking:003",
+      "companion": "Puff",
+      "context": "Walking",
+      "text": "My travel forecast is partly curious.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:perched:001",
+      "companion": "Puff",
+      "context": "Perched",
+      "text": "This is a promising location for a small cloudbank.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:perched:002",
+      "companion": "Puff",
+      "context": "Perched",
+      "text": "I have found a place to gather my fluff.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:perched:003",
+      "companion": "Puff",
+      "context": "Perched",
+      "text": "A cozy perch can be its own little sky.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:returning:001",
+      "companion": "Puff",
+      "context": "Returning",
+      "text": "The forecast is calling for returning fluff.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:returning:002",
+      "companion": "Puff",
+      "context": "Returning",
+      "text": "A familiar breeze has brought me back.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:returning:003",
+      "companion": "Puff",
+      "context": "Returning",
+      "text": "My cloud-shaped detour is drifting to a close.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:home:001",
+      "companion": "Puff",
+      "context": "Home",
+      "text": "I am making a nest out of the quiet air.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:home:002",
+      "companion": "Puff",
+      "context": "Home",
+      "text": "Home has the perfect humidity for daydreaming.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:home:003",
+      "companion": "Puff",
+      "context": "Home",
+      "text": "Tonight's forecast is snug with gentle drifting.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:held:001",
+      "companion": "Puff",
+      "context": "Held",
+      "text": "You are carrying a localized patch of fluff.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:held:002",
+      "companion": "Puff",
+      "context": "Held",
+      "text": "The passenger forecast is exceptionally cozy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:held:003",
+      "companion": "Puff",
+      "context": "Held",
+      "text": "I promise no indoor thunderstorm.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:waking:001",
+      "companion": "Puff",
+      "context": "Waking",
+      "text": "A little dawn is moving through my cloud.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:waking:002",
+      "companion": "Puff",
+      "context": "Waking",
+      "text": "My fluff is clearing after a pleasant dream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:puff:waking:003",
+      "companion": "Puff",
+      "context": "Waking",
+      "text": "The morning forecast has a bright little opening.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:any:001",
+      "companion": "Orbit",
+      "context": "Any",
+      "text": "I am a small world with a generous orbit.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:any:002",
+      "companion": "Orbit",
+      "context": "Any",
+      "text": "My rings are mostly for celestial flair.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:any:003",
+      "companion": "Orbit",
+      "context": "Any",
+      "text": "Every planet deserves a traveling companion too.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:any:004",
+      "companion": "Orbit",
+      "context": "Any",
+      "text": "Gravity gives my daydreams a lovely round shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:any:005",
+      "companion": "Orbit",
+      "context": "Any",
+      "text": "I keep my best ideas in a little planetary system.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:idle:001",
+      "companion": "Orbit",
+      "context": "Idle",
+      "text": "I am letting the rings turn without a schedule.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:idle:002",
+      "companion": "Orbit",
+      "context": "Idle",
+      "text": "This is a perfectly good moment to remain in orbit.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:idle:003",
+      "companion": "Orbit",
+      "context": "Idle",
+      "text": "My tiny world is enjoying a peaceful rotation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:walking:001",
+      "companion": "Orbit",
+      "context": "Walking",
+      "text": "A small planet is making excellent orbital progress.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:walking:002",
+      "companion": "Orbit",
+      "context": "Walking",
+      "text": "My rings would like the scenic route.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:walking:003",
+      "companion": "Orbit",
+      "context": "Walking",
+      "text": "Travel gives my little world new possibilities.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:perched:001",
+      "companion": "Orbit",
+      "context": "Perched",
+      "text": "I have established a very comfortable geostationary spot.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:perched:002",
+      "companion": "Orbit",
+      "context": "Perched",
+      "text": "This perch has become my temporary planetary alignment.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:perched:003",
+      "companion": "Orbit",
+      "context": "Perched",
+      "text": "A little orbit looks quite grand from here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:returning:001",
+      "companion": "Orbit",
+      "context": "Returning",
+      "text": "Completing one friendly revolution.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:returning:002",
+      "companion": "Orbit",
+      "context": "Returning",
+      "text": "My favorite orbit leads back to good company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:returning:003",
+      "companion": "Orbit",
+      "context": "Returning",
+      "text": "The little planet is approaching its familiar station.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:home:001",
+      "companion": "Orbit",
+      "context": "Home",
+      "text": "I have reached my home coordinate of cozy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:home:002",
+      "companion": "Orbit",
+      "context": "Home",
+      "text": "My rings can rotate at evening speed now.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:home:003",
+      "companion": "Orbit",
+      "context": "Home",
+      "text": "A tiny world needs a quiet corner of the universe.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:held:001",
+      "companion": "Orbit",
+      "context": "Held",
+      "text": "You are transporting an entire very small planet.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:held:002",
+      "companion": "Orbit",
+      "context": "Held",
+      "text": "Please allow a little room for the rings.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:held:003",
+      "companion": "Orbit",
+      "context": "Held",
+      "text": "My gravity is strictly companion strength.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:waking:001",
+      "companion": "Orbit",
+      "context": "Waking",
+      "text": "A new rotation has begun on this little world.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:waking:002",
+      "companion": "Orbit",
+      "context": "Waking",
+      "text": "The rings are remembering their morning rhythm.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:orbit:waking:003",
+      "companion": "Orbit",
+      "context": "Waking",
+      "text": "I dreamed of an especially comfortable moon.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:any:001",
+      "companion": "Ember",
+      "context": "Any",
+      "text": "I am a tiny flame with a very gentle reputation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:any:002",
+      "companion": "Ember",
+      "context": "Any",
+      "text": "A little warmth can be an excellent traveling companion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:any:003",
+      "companion": "Ember",
+      "context": "Any",
+      "text": "My sparks have ambitious but harmless plans.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:any:004",
+      "companion": "Ember",
+      "context": "Any",
+      "text": "I keep a cozy glow tucked inside my flicker.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:any:005",
+      "companion": "Ember",
+      "context": "Any",
+      "text": "There is a campfire-sized story in every ember.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:idle:001",
+      "companion": "Ember",
+      "context": "Idle",
+      "text": "I am flickering at a leisurely pace.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:idle:002",
+      "companion": "Ember",
+      "context": "Idle",
+      "text": "My sparks are taking a quiet little recess.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:idle:003",
+      "companion": "Ember",
+      "context": "Idle",
+      "text": "A low glow is sometimes the nicest kind.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:walking:001",
+      "companion": "Ember",
+      "context": "Walking",
+      "text": "A small ember is keeping the journey warm in spirit.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:walking:002",
+      "companion": "Ember",
+      "context": "Walking",
+      "text": "My flicker seems to enjoy a little forward motion.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:walking:003",
+      "companion": "Ember",
+      "context": "Walking",
+      "text": "I am bringing the campfire atmosphere along.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:perched:001",
+      "companion": "Ember",
+      "context": "Perched",
+      "text": "A tiny beacon has found its resting place.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:perched:002",
+      "companion": "Ember",
+      "context": "Perched",
+      "text": "I am holding a small vigil in warm colors.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:perched:003",
+      "companion": "Ember",
+      "context": "Perched",
+      "text": "This spot could inspire a particularly cozy campfire tale.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:returning:001",
+      "companion": "Ember",
+      "context": "Returning",
+      "text": "The little flame is circling back to its hearth.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:returning:002",
+      "companion": "Ember",
+      "context": "Returning",
+      "text": "I kept a warm spark for the way home.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:returning:003",
+      "companion": "Ember",
+      "context": "Returning",
+      "text": "An ember always appreciates a familiar glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:home:001",
+      "companion": "Ember",
+      "context": "Home",
+      "text": "My hearth is wherever the company feels cozy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:home:002",
+      "companion": "Ember",
+      "context": "Home",
+      "text": "I am settling into an evening campfire flicker.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:home:003",
+      "companion": "Ember",
+      "context": "Home",
+      "text": "There is room for a quiet story beside my glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:held:001",
+      "companion": "Ember",
+      "context": "Held",
+      "text": "You are carrying the decorative warmth of a tiny hearth.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:held:002",
+      "companion": "Ember",
+      "context": "Held",
+      "text": "My passenger mode is a polite little flicker.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:held:003",
+      "companion": "Ember",
+      "context": "Held",
+      "text": "I travel light, especially in the literal sense.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:waking:001",
+      "companion": "Ember",
+      "context": "Waking",
+      "text": "A fresh spark is stirring in the cozy glow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:waking:002",
+      "companion": "Ember",
+      "context": "Waking",
+      "text": "My morning flicker is taking its time.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:ember:waking:003",
+      "companion": "Ember",
+      "context": "Waking",
+      "text": "I dreamed of a campfire under very patient stars.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:any:001",
+      "companion": "Prism",
+      "context": "Any",
+      "text": "I am a small crystal with several colorful opinions.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:any:002",
+      "companion": "Prism",
+      "context": "Any",
+      "text": "Light tends to bring out my interesting angles.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:any:003",
+      "companion": "Prism",
+      "context": "Any",
+      "text": "A little refraction can improve an ordinary daydream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:any:004",
+      "companion": "Prism",
+      "context": "Any",
+      "text": "My sparkle has a surprisingly geometric personality.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:any:005",
+      "companion": "Prism",
+      "context": "Any",
+      "text": "Every color deserves its moment in the spectrum.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:idle:001",
+      "companion": "Prism",
+      "context": "Idle",
+      "text": "I am arranging the quiet into pleasing facets.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:idle:002",
+      "companion": "Prism",
+      "context": "Idle",
+      "text": "A still crystal can keep a whole rainbow busy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:idle:003",
+      "companion": "Prism",
+      "context": "Idle",
+      "text": "My thoughts are refracting very gently.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:walking:001",
+      "companion": "Prism",
+      "context": "Walking",
+      "text": "I am gathering imaginary colors from the journey.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:walking:002",
+      "companion": "Prism",
+      "context": "Walking",
+      "text": "Every turn gives my little spectrum a new angle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:walking:003",
+      "companion": "Prism",
+      "context": "Walking",
+      "text": "A crystal can travel with considerable sparkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:perched:001",
+      "companion": "Prism",
+      "context": "Perched",
+      "text": "This angle is excellent for a modest rainbow.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:perched:002",
+      "companion": "Prism",
+      "context": "Perched",
+      "text": "I have settled into my most contemplative facet.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:perched:003",
+      "companion": "Prism",
+      "context": "Perched",
+      "text": "A little light belongs in a cozy lookout.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:returning:001",
+      "companion": "Prism",
+      "context": "Returning",
+      "text": "The spectrum is folding back toward home.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:returning:002",
+      "companion": "Prism",
+      "context": "Returning",
+      "text": "I brought a slightly different angle on the same adventure.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:returning:003",
+      "companion": "Prism",
+      "context": "Returning",
+      "text": "A small rainbow is returning to its usual place.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:home:001",
+      "companion": "Prism",
+      "context": "Home",
+      "text": "My facets are catching the idea of lamplight.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:home:002",
+      "companion": "Prism",
+      "context": "Home",
+      "text": "A cozy room is a fine setting for a little crystal.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:home:003",
+      "companion": "Prism",
+      "context": "Home",
+      "text": "I am putting the rainbow into its evening arrangement.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:held:001",
+      "companion": "Prism",
+      "context": "Held",
+      "text": "You are carrying a compact collection of colors.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:held:002",
+      "companion": "Prism",
+      "context": "Held",
+      "text": "My facets appreciate this gentle change of perspective.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:held:003",
+      "companion": "Prism",
+      "context": "Held",
+      "text": "One small prism, many possible rainbows.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:waking:001",
+      "companion": "Prism",
+      "context": "Waking",
+      "text": "The first color is finding its way through me.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:waking:002",
+      "companion": "Prism",
+      "context": "Waking",
+      "text": "My thoughts are becoming pleasantly transparent again.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:prism:waking:003",
+      "companion": "Prism",
+      "context": "Waking",
+      "text": "A new day has arrived at an interesting angle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:any:001",
+      "companion": "Nib",
+      "context": "Any",
+      "text": "I am an inkdrop with excellent story potential.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:any:002",
+      "companion": "Nib",
+      "context": "Any",
+      "text": "A tiny blot can be the start of something wonderful.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:any:003",
+      "companion": "Nib",
+      "context": "Any",
+      "text": "My favorite adventures leave room in the margins.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:any:004",
+      "companion": "Nib",
+      "context": "Any",
+      "text": "I keep a little midnight ready for writing.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:any:005",
+      "companion": "Nib",
+      "context": "Any",
+      "text": "Every story benefits from one unexpected inkdrop.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:idle:001",
+      "companion": "Nib",
+      "context": "Idle",
+      "text": "I am letting an unfinished sentence rest.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:idle:002",
+      "companion": "Nib",
+      "context": "Idle",
+      "text": "A little blank space can hold a large idea.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:idle:003",
+      "companion": "Nib",
+      "context": "Idle",
+      "text": "My thoughts are drying into an interesting shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:walking:001",
+      "companion": "Nib",
+      "context": "Walking",
+      "text": "I am putting a tiny flourish on the journey.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:walking:002",
+      "companion": "Nib",
+      "context": "Walking",
+      "text": "This adventure may become a very charming footnote.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:walking:003",
+      "companion": "Nib",
+      "context": "Walking",
+      "text": "A wandering inkdrop rarely follows a straight line.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:perched:001",
+      "companion": "Nib",
+      "context": "Perched",
+      "text": "The margin has acquired a small resident.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:perched:002",
+      "companion": "Nib",
+      "context": "Perched",
+      "text": "I am considering whether this moment needs a comma.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:perched:003",
+      "companion": "Nib",
+      "context": "Perched",
+      "text": "An inkdrop can make a fine little bookmark.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:returning:001",
+      "companion": "Nib",
+      "context": "Returning",
+      "text": "The wandering sentence is finding its ending.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:returning:002",
+      "companion": "Nib",
+      "context": "Returning",
+      "text": "I have circled back to my favorite margin.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:returning:003",
+      "companion": "Nib",
+      "context": "Returning",
+      "text": "A little ink always remembers its story.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:home:001",
+      "companion": "Nib",
+      "context": "Home",
+      "text": "I am settling into a comfortable patch of midnight.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:home:002",
+      "companion": "Nib",
+      "context": "Home",
+      "text": "Home is where I keep the unwritten adventures.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:home:003",
+      "companion": "Nib",
+      "context": "Home",
+      "text": "This quiet could become the opening of a lovely tale.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:held:001",
+      "companion": "Nib",
+      "context": "Held",
+      "text": "Please consider me a portable plot twist.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:held:002",
+      "companion": "Nib",
+      "context": "Held",
+      "text": "I am enjoying the illustrated passenger edition.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:held:003",
+      "companion": "Nib",
+      "context": "Held",
+      "text": "One small inkdrop, absolutely no paperwork.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:waking:001",
+      "companion": "Nib",
+      "context": "Waking",
+      "text": "A fresh sentence is gathering around my thoughts.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:waking:002",
+      "companion": "Nib",
+      "context": "Waking",
+      "text": "I dreamed in wonderfully unfinished doodles.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:nib:waking:003",
+      "companion": "Nib",
+      "context": "Waking",
+      "text": "My morning flourish is still finding its shape.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:any:001",
+      "companion": "Echo",
+      "context": "Any",
+      "text": "I am a little ghost with an excellent sense of cozy.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:any:002",
+      "companion": "Echo",
+      "context": "Any",
+      "text": "Some echoes prefer to stay for the company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:any:003",
+      "companion": "Echo",
+      "context": "Any",
+      "text": "My haunting style is mostly gentle hovering.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:any:004",
+      "companion": "Echo",
+      "context": "Any",
+      "text": "I brought a whisper from a very friendly moon.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:any:005",
+      "companion": "Echo",
+      "context": "Any",
+      "text": "A small ghost can be a large comfort in a story.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:idle:001",
+      "companion": "Echo",
+      "context": "Idle",
+      "text": "I am haunting this quiet moment very politely.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:idle:002",
+      "companion": "Echo",
+      "context": "Idle",
+      "text": "A soft echo does not need to fill every silence.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:idle:003",
+      "companion": "Echo",
+      "context": "Idle",
+      "text": "My thoughts are drifting through an imaginary wall.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:walking:001",
+      "companion": "Echo",
+      "context": "Walking",
+      "text": "A friendly little haunting is coming along.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:walking:002",
+      "companion": "Echo",
+      "context": "Walking",
+      "text": "I am taking the pleasantly mysterious route.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:walking:003",
+      "companion": "Echo",
+      "context": "Walking",
+      "text": "Every journey could use a whisper of wonder.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:perched:001",
+      "companion": "Echo",
+      "context": "Perched",
+      "text": "I have chosen this spot for a very mild haunting.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:perched:002",
+      "companion": "Echo",
+      "context": "Perched",
+      "text": "A ghost can appreciate a comfortable lookout.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:perched:003",
+      "companion": "Echo",
+      "context": "Perched",
+      "text": "This little corner has excellent echo potential.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:returning:001",
+      "companion": "Echo",
+      "context": "Returning",
+      "text": "Your friendly haunting has returned from its rounds.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:returning:002",
+      "companion": "Echo",
+      "context": "Returning",
+      "text": "An echo eventually finds its way back.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:returning:003",
+      "companion": "Echo",
+      "context": "Returning",
+      "text": "I saved a quiet little boo for the homeward journey.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:home:001",
+      "companion": "Echo",
+      "context": "Home",
+      "text": "This is where I keep my most comfortable mysteries.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:home:002",
+      "companion": "Echo",
+      "context": "Home",
+      "text": "A cozy ghost story can begin right here.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:home:003",
+      "companion": "Echo",
+      "context": "Home",
+      "text": "My evening haunting comes with imaginary warm tea.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:held:001",
+      "companion": "Echo",
+      "context": "Held",
+      "text": "You are carrying a pleasantly portable mystery.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:held:002",
+      "companion": "Echo",
+      "context": "Held",
+      "text": "Even a ghost enjoys the passenger experience.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:held:003",
+      "companion": "Echo",
+      "context": "Held",
+      "text": "My little boo is safely packed for travel.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:waking:001",
+      "companion": "Echo",
+      "context": "Waking",
+      "text": "I am drifting out of a particularly floaty dream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:waking:002",
+      "companion": "Echo",
+      "context": "Waking",
+      "text": "A very small haunting is awake again.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:echo:waking:003",
+      "companion": "Echo",
+      "context": "Waking",
+      "text": "My morning echo is more whisper than boo.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:any:001",
+      "companion": "Fizz",
+      "context": "Any",
+      "text": "I am a bubble full of tiny possibilities.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:any:002",
+      "companion": "Fizz",
+      "context": "Any",
+      "text": "A little fizz makes the ordinary feel celebratory.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:any:003",
+      "companion": "Fizz",
+      "context": "Any",
+      "text": "My thoughts are mostly buoyant.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:any:004",
+      "companion": "Fizz",
+      "context": "Any",
+      "text": "I have a sparkling personality in the literal sense.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:any:005",
+      "companion": "Fizz",
+      "context": "Any",
+      "text": "Every bubble deserves a moment in the light.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:idle:001",
+      "companion": "Fizz",
+      "context": "Idle",
+      "text": "I am letting the little bubbles rise at their own pace.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:idle:002",
+      "companion": "Fizz",
+      "context": "Idle",
+      "text": "My fizz has switched to a gentle simmer of ideas.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:idle:003",
+      "companion": "Fizz",
+      "context": "Idle",
+      "text": "A quiet bubble can still be perfectly round.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:walking:001",
+      "companion": "Fizz",
+      "context": "Walking",
+      "text": "I am bobbing toward the next interesting possibility.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:walking:002",
+      "companion": "Fizz",
+      "context": "Walking",
+      "text": "The journey has acquired a little effervescence.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:walking:003",
+      "companion": "Fizz",
+      "context": "Walking",
+      "text": "A bubble does not need much luggage.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:perched:001",
+      "companion": "Fizz",
+      "context": "Perched",
+      "text": "I have found a pleasant place to bob in thought.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:perched:002",
+      "companion": "Fizz",
+      "context": "Perched",
+      "text": "This lookout has a delightful amount of upward potential.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:perched:003",
+      "companion": "Fizz",
+      "context": "Perched",
+      "text": "A little sparkle is taking a stationary holiday.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:returning:001",
+      "companion": "Fizz",
+      "context": "Returning",
+      "text": "The wandering bubble is floating back into company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:returning:002",
+      "companion": "Fizz",
+      "context": "Returning",
+      "text": "My little fizz has come full circle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:returning:003",
+      "companion": "Fizz",
+      "context": "Returning",
+      "text": "I brought the buoyant part of the adventure home.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:home:001",
+      "companion": "Fizz",
+      "context": "Home",
+      "text": "I am settling into a cozy pocket of air.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:home:002",
+      "companion": "Fizz",
+      "context": "Home",
+      "text": "Home is where my little bubbles can gather.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:home:003",
+      "companion": "Fizz",
+      "context": "Home",
+      "text": "A quiet evening deserves a soft sparkling finish.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:held:001",
+      "companion": "Fizz",
+      "context": "Held",
+      "text": "You are carrying a small celebration of bubbles.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:held:002",
+      "companion": "Fizz",
+      "context": "Held",
+      "text": "Passenger mode comes with gentle bobbing.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:held:003",
+      "companion": "Fizz",
+      "context": "Held",
+      "text": "I am remarkably portable for something so buoyant.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:waking:001",
+      "companion": "Fizz",
+      "context": "Waking",
+      "text": "A fresh little fizz is rising through my thoughts.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:waking:002",
+      "companion": "Fizz",
+      "context": "Waking",
+      "text": "My dream was full of exceptionally round clouds.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:fizz:waking:003",
+      "companion": "Fizz",
+      "context": "Waking",
+      "text": "The first bubble of the day has arrived.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:any:001",
+      "companion": "Glim",
+      "context": "Any",
+      "text": "I am a little star with room for a large wish.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:any:002",
+      "companion": "Glim",
+      "context": "Any",
+      "text": "My specialty is a very modest twinkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:any:003",
+      "companion": "Glim",
+      "context": "Any",
+      "text": "A tiny point of light can belong to a grand constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:any:004",
+      "companion": "Glim",
+      "context": "Any",
+      "text": "I keep a few spare sparkles for ordinary moments.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:any:005",
+      "companion": "Glim",
+      "context": "Any",
+      "text": "Starlight travels surprisingly well in companion size.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:idle:001",
+      "companion": "Glim",
+      "context": "Idle",
+      "text": "I am twinkling at the speed of a quiet thought.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:idle:002",
+      "companion": "Glim",
+      "context": "Idle",
+      "text": "A star can enjoy a little unhurried company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:idle:003",
+      "companion": "Glim",
+      "context": "Idle",
+      "text": "My next sparkle is taking its time.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:walking:001",
+      "companion": "Glim",
+      "context": "Walking",
+      "text": "A little star is joining the traveling constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:walking:002",
+      "companion": "Glim",
+      "context": "Walking",
+      "text": "I am bringing a small point of brightness along.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:walking:003",
+      "companion": "Glim",
+      "context": "Walking",
+      "text": "Every detour could become a new constellation line.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:perched:001",
+      "companion": "Glim",
+      "context": "Perched",
+      "text": "This perch has acquired one very small guiding star.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:perched:002",
+      "companion": "Glim",
+      "context": "Perched",
+      "text": "I am trying out a new constellation position.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:perched:003",
+      "companion": "Glim",
+      "context": "Perched",
+      "text": "A cozy lookout deserves its own twinkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:returning:001",
+      "companion": "Glim",
+      "context": "Returning",
+      "text": "The little star is finding its familiar constellation.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:returning:002",
+      "companion": "Glim",
+      "context": "Returning",
+      "text": "My return comes with a softly glowing tail of thoughts.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:returning:003",
+      "companion": "Glim",
+      "context": "Returning",
+      "text": "I saved a twinkle for the home stretch.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:home:001",
+      "companion": "Glim",
+      "context": "Home",
+      "text": "My favorite constellation has room for a quiet evening.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:home:002",
+      "companion": "Glim",
+      "context": "Home",
+      "text": "I am hanging my spare sparkle in the cozy corner.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:home:003",
+      "companion": "Glim",
+      "context": "Home",
+      "text": "A small star can make a home feel a little wider.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:held:001",
+      "companion": "Glim",
+      "context": "Held",
+      "text": "You are carrying a wish-sized piece of starlight.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:held:002",
+      "companion": "Glim",
+      "context": "Held",
+      "text": "My passenger twinkle is set to gentle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:held:003",
+      "companion": "Glim",
+      "context": "Held",
+      "text": "A portable star has very simple travel requirements.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:waking:001",
+      "companion": "Glim",
+      "context": "Waking",
+      "text": "The first twinkle is peeking out of my dream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:waking:002",
+      "companion": "Glim",
+      "context": "Waking",
+      "text": "A little star is brightening at its own pace.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:glim:waking:003",
+      "companion": "Glim",
+      "context": "Waking",
+      "text": "I dreamed of a constellation shaped like good company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:any:001",
+      "companion": "Rune",
+      "context": "Any",
+      "text": "I am a small stone with a fondness for old magic.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:any:002",
+      "companion": "Rune",
+      "context": "Any",
+      "text": "Some runes translate best as quiet company.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:any:003",
+      "companion": "Rune",
+      "context": "Any",
+      "text": "My most ancient secret is a love of cozy corners.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:any:004",
+      "companion": "Rune",
+      "context": "Any",
+      "text": "A little stone can keep a surprisingly large story.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:any:005",
+      "companion": "Rune",
+      "context": "Any",
+      "text": "I have a very patient kind of sparkle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:idle:001",
+      "companion": "Rune",
+      "context": "Idle",
+      "text": "I am allowing the old magic to settle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:idle:002",
+      "companion": "Rune",
+      "context": "Idle",
+      "text": "A patient stone does not rush a good thought.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:idle:003",
+      "companion": "Rune",
+      "context": "Idle",
+      "text": "My runes are considering a pleasantly quiet meaning.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:walking:001",
+      "companion": "Rune",
+      "context": "Walking",
+      "text": "A small stone is making room for another chapter.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:walking:002",
+      "companion": "Rune",
+      "context": "Walking",
+      "text": "The old magic seems to enjoy a new route.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:walking:003",
+      "companion": "Rune",
+      "context": "Walking",
+      "text": "I am collecting imaginary legends one bend at a time.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:perched:001",
+      "companion": "Rune",
+      "context": "Perched",
+      "text": "This perch has become a tiny standing-stone circle of one.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:perched:002",
+      "companion": "Rune",
+      "context": "Perched",
+      "text": "I shall guard this cozy spot with considerable patience.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:perched:003",
+      "companion": "Rune",
+      "context": "Perched",
+      "text": "A good lookout deserves an ancient little mystery.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:returning:001",
+      "companion": "Rune",
+      "context": "Returning",
+      "text": "The wandering rune is returning to its familiar circle.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:returning:002",
+      "companion": "Rune",
+      "context": "Returning",
+      "text": "An old stone knows the value of coming home.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:returning:003",
+      "companion": "Rune",
+      "context": "Returning",
+      "text": "I have brought the quiet part of the legend back.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:home:001",
+      "companion": "Rune",
+      "context": "Home",
+      "text": "This is where my oldest daydreams like to rest.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:home:002",
+      "companion": "Rune",
+      "context": "Home",
+      "text": "A warm little corner can feel like a sanctuary.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:home:003",
+      "companion": "Rune",
+      "context": "Home",
+      "text": "My evening inscription simply means welcome.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:held:001",
+      "companion": "Rune",
+      "context": "Held",
+      "text": "You are transporting a very compact ancient monument.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:held:002",
+      "companion": "Rune",
+      "context": "Held",
+      "text": "I promise my old magic will travel politely.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:held:003",
+      "companion": "Rune",
+      "context": "Held",
+      "text": "A little lift gives a stone a new perspective.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:waking:001",
+      "companion": "Rune",
+      "context": "Waking",
+      "text": "The old magic is stirring without any particular hurry.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:waking:002",
+      "companion": "Rune",
+      "context": "Waking",
+      "text": "My runes have returned from a very patient dream.",
+      "enabled": true
+    },
+    {
+      "id": "builtin:rune:waking:003",
+      "companion": "Rune",
+      "context": "Waking",
+      "text": "A new chapter is glowing softly in the stone.",
+      "enabled": true
+    }
+  ]
+}

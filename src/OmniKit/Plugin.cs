@@ -3,6 +3,8 @@ using Dalamud.Game.Command;
 using Dalamud.Plugin.Services;
 using OmniKit.Assistant;
 using OmniKit.Automation;
+using OmniKit.Unlocks;
+using OmniKit.Companions;
 using OmniKit.Integration;
 using OmniKit.Interaction;
 using OmniKit.Jobs;
@@ -25,6 +27,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly JobSwitchService jobSwitches;
     private readonly CharacterWindowJobSwitcher characterJobSwitcher;
     private readonly NomNomService nomNom;
+    private readonly AetheryteUnlockService unlocks;
+    private readonly SayingLibrary? sayings;
     private bool requestedWebCapture;
     private readonly ShortcutInput shortcuts = new();
     private bool disposed;
@@ -36,6 +40,14 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = store.Load() ?? store.Upgrade(pluginInterface.GetPluginConfig() as Configuration ?? new Configuration());
         Configuration.Persist = store.Save;
         Configuration.Save();
+        try
+        {
+            sayings = new SayingLibrary(pluginInterface.ConfigDirectory.FullName, Path.Combine(pluginInterface.AssemblyLocation.DirectoryName!, "assets", "companion-sayings.json"));
+        }
+        catch (Exception exception)
+        {
+            Services.Log.Warning(exception, "The local sayings library could not be opened; existing data was preserved.");
+        }
         sources = new SourceRegistry();
         interaction = new SoftInteractionService(Configuration);
         jobSwitches = new JobSwitchService(Configuration);
@@ -46,10 +58,12 @@ public sealed class Plugin : IDalamudPlugin
         };
         characterJobSwitcher = new CharacterWindowJobSwitcher(Configuration, jobSwitches);
         nomNom = new NomNomService(Configuration);
-        jobSwitches.ExternalBusy = () => nomNom.Busy;
+        unlocks = new AetheryteUnlockService();
+        jobSwitches.ExternalBusy = () => nomNom.Busy || unlocks.Busy;
         chat = new ChatService(Configuration, WebLinkInterceptor.Bypass);
         voice = new VoiceInput();
         ui = new PluginUi(Configuration, interaction, chat, voice, store, sources);
+        ui.SayingsLibrary = sayings;
         ui.JobSwitchStatus = () => jobSwitches.Busy ? jobSwitches.Status : characterJobSwitcher.Status + " " + jobSwitches.Status;
         ui.JobSwitcherWarning = () => characterJobSwitcher.ConflictWarning;
         ui.ConfirmOtherSwitchersDisabled = characterJobSwitcher.ConfirmOtherSwitchersDisabled;
@@ -58,6 +72,14 @@ public sealed class Plugin : IDalamudPlugin
         ui.NomNomFoods = nomNom.GetFoodOptions;
         ui.NomNomAutomaticFoodId = () => nomNom.AutomaticFoodId;
         ui.RefreshNomNomFoods = nomNom.RefreshFoods;
+        ui.Aetherytes = unlocks.GetOptions;
+        ui.AetheryteUnlockStatus = () => unlocks.Status;
+        ui.AetheryteUnlockBusy = () => unlocks.Busy;
+        ui.AetheryteUnlockProgress = () => unlocks.Progress;
+        ui.AetheryteCurrentTerritory = () => unlocks.CurrentTerritory;
+        ui.StartAetheryteUnlocks = () => unlocks.Start();
+        ui.StartAetheryteZoneUnlocks = unlocks.Start;
+        ui.StopAetheryteUnlocks = unlocks.Stop;
         actionHud = new QuestActionHud(Configuration, interaction);
         webLinks = new WebLinkInterceptor(Services.Interop, TryQueueWebLink);
         ui.BrowserInterceptionStatus = () => webLinks.IsEnabled && !ui.BrowserReady
@@ -76,6 +98,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         var request = args.Trim();
         if (request.Equals("settings", StringComparison.OrdinalIgnoreCase)) OpenSettings();
+        else if (request.Equals("unlock stop", StringComparison.OrdinalIgnoreCase)) unlocks.Stop();
         else if (request.Equals("browser", StringComparison.OrdinalIgnoreCase)) ui.OpenBrowser();
         else if (request.Equals("browser controls", StringComparison.OrdinalIgnoreCase)) ui.ToggleBrowserControls();
         else if (request.Equals("browser hide", StringComparison.OrdinalIgnoreCase)) ui.HideBrowser();
@@ -103,10 +126,11 @@ public sealed class Plugin : IDalamudPlugin
         }
         ui.SuppressBindingKeys();
         var browserInput = ui.BrowserCapturesInput;
-        nomNom.Update(ui.IsOpen || browserInput || jobSwitches.Busy);
+        unlocks.Update(ui.CapturesText || browserInput || ui.CapturingBinding || jobSwitches.Busy || nomNom.Busy);
+        nomNom.Update(ui.IsOpen || browserInput || jobSwitches.Busy || unlocks.Busy);
         shortcuts.Update(Configuration, ui.CapturesText || browserInput, ui.SearchHasFocus && !browserInput, ui.ToggleMain, OpenSettings, ui.CapturingBinding);
         ui.Update();
-        interaction.Update(ui.IsOpen || browserInput || jobSwitches.Busy || nomNom.Busy);
+        interaction.Update(ui.IsOpen || browserInput || jobSwitches.Busy || nomNom.Busy || unlocks.Busy);
     }
     private void Draw()
     {
@@ -126,6 +150,7 @@ public sealed class Plugin : IDalamudPlugin
         builder.OpenConfigUi -= OpenSettings;
         Services.Commands.RemoveHandler("/omnikit");
         characterJobSwitcher.Dispose();
+        unlocks.Dispose();
         nomNom.Dispose();
         jobSwitches.Dispose();
         webLinks.Dispose();

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <Compile Include="../../src/OmniKit/Companions/SayingLibrary.cs" Link="SayingLibrary.cs" />
+    <Compile Include="../../src/OmniKit/Companions/SayingController.cs" Link="SayingController.cs" />
+  </ItemGroup>
+</Project>

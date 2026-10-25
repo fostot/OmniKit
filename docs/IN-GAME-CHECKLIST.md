@@ -3,6 +3,33 @@
 These checks require the actual game. A compiler or isolated state test cannot
 establish them. None is marked passed until observed.
 
+- Open each of the four navigation folders in narrow and wide layouts. Exercise
+  every inner tab, tree shortcut and search jump, including Appearance → AI →
+  Appearance, Soft Interact HUD Text/Effects/Position, NomNom and expanded More
+  options. Hidden binding capture must cancel when changing panes. Check gutters,
+  text wrapping, revealed controls and footer at 480×330 and scales 1/1.5/2.
+- In Companion → Sayings, enable Comments, browse Universal and each creature,
+  and search/filter contexts. Add/edit/disable/remove/restore a line; reload and
+  confirm all changes persist. Check visible-companion filtering during rotation
+  and a draft's captured scope. Verify matching activity bubbles, repeat avoidance,
+  sleep/fitting suppression, dismissal and long Unicode text at the screen edges.
+  Preview/merge a synthetic JSON export; invalid input must preserve the library.
+  Settings-only JSON must not contain sayings or grant provider consent. No
+  saying or idle bubble may invoke AI, voice recording or a game command.
+- In Unlocks → Aetheryte, compare main crystals and physical shards with the
+  game's unlocked list. Confirm Current zone follows the actual area while manual
+  browsing stays selected. Test zone tabs, area search and All areas. Virtual
+  exits must show no attunement box and remain outside the attuned count.
+- Start a small current-zone route with vnavmesh idle. Confirm nearest-target
+  selection, a verified hard target, one interaction and a tick only after the
+  game sets attunement. A path ending out of range must not count. Test a supported
+  walking exit and expected loading/mesh warmup; unsupported travel must stop.
+- Stop during pathfinding, movement and attunement. Test Esc, manual movement,
+  focus loss, combat, logout, wrong-zone travel and another navigation caller.
+  Late queries must not start movement after cancellation. No unrelated navigator
+  may be stopped. Verify NomNom, job changes and soft-interaction actions remain
+  excluded while a route is active. Boats/paid travel must not be attempted.
+
 - Install or update from the custom feed; confirm load/unload, first-run setup,
   author Zero and the compiled version/hash shown in the footer.
 - At minimum window size and UI scale 1.0 / 1.5 / 2.0, inspect every settings
@@ -33,7 +60,7 @@ establish them. None is marked passed until observed.
   and verify the new set retains the recommended outfit. Existing custom-named
   sets must retain their names and contents. Blocked recommendation/finalization
   must stop once and leave the new minimal target set identified for review.
-- In Automations, confirm Nom Nom starts off with Automatic selected. Check food
+- In Automations, confirm NomNom starts off with Automatic selected. Check food
   detection and NQ/HQ counts using bags, then remove/re-add the selected food.
   Choose an eligible +EXP food and enable both switches: with no Well Fed, one
   usable request should consume the selected quality and produce the buff.

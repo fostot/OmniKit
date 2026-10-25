@@ -11,6 +11,8 @@ using OmniKit.Search;
 using OmniKit.Storage;
 using OmniKit.Input;
 using OmniKit.Automation;
+using OmniKit.Unlocks;
+using OmniKit.Companions;
 
 namespace OmniKit.Ui;
 
@@ -56,7 +58,34 @@ internal sealed class PluginUi : IDisposable
     private bool gearFeedback;
     private int section;
     private int companionTab;
+    private int launcherTab;
+    private int interactionTab;
+    private int hudTab;
+    private int questItemsTab;
+    private int dataTab;
+    private int aboutTab;
+    private Dictionary<string, int>? shownPanelTabs;
+    private SayingLibrary? sayingsLibrary;
+    private string sayingScope = "Universal";
+    private string sayingContext = "All moments";
+    private string sayingSearch = "";
+    private int sayingState;
+    private string selectedSayingId = "";
+    private string sayingStatus = "";
+    private string sayingEditingId = "";
+    private string sayingEditingCompanion = "Universal";
+    private string sayingEditingContext = "Any";
+    private string sayingEditingText = "";
+    private string sayingJson = "";
+    private SayingImportPreview? sayingImportPreview;
+    private bool openSayingEditor;
+    private bool openSayingDetails;
     private bool selectSettingsTab;
+    private float settingsTreeWidth = 174;
+    private int aetheryteView;
+    private uint aetheryteBrowseTerritory;
+    private bool selectAetheryteZoneTab;
+    private string aetheryteZoneFilter = "";
     private bool resetHudScroll;
     private int shownCompanionTab = -1;
     private long refreshedAt;
@@ -70,8 +99,7 @@ internal sealed class PluginUi : IDisposable
     private bool refreshModelsAfterConnection;
     private AiModelOption[] chatGptModels = [];
     private string connectionStatus = "";
-    private static readonly string[] Sections = ["Launcher", "Interact", "HUD", "Companion", "Data", "About", "Quest Items", "Automations"];
-    private static readonly int[] SectionOrder = [0, 1, 6, 7, 2, 3, 4, 5];
+    private static readonly string[] Sections = ["Launcher", "Interact", "Soft Interact HUD", "Companion", "Data", "About", "Quest Items", "Automations", "Aetheryte"];
     private static readonly Vector4 Gold = new(.48f, .78f, .74f, 1);
     private static readonly Vector4 Muted = new(.63f, .65f, .69f, 1);
     public bool IsOpen => mainOpen || settingsOpen || companionOpen || hotkeys.IsCapturing || roaming.IsChoosingArea || accessoryEditor?.IsOpen == true;
@@ -87,6 +115,23 @@ internal sealed class PluginUi : IDisposable
     public Action? RefreshNomNomFoods { get; set; }
     public Func<string>? NomNomStatus { get; set; }
     public Func<uint>? NomNomAutomaticFoodId { get; set; }
+    public Func<IReadOnlyList<AetheryteUnlockOption>>? Aetherytes { get; set; }
+    public Func<string>? AetheryteUnlockStatus { get; set; }
+    public Func<bool>? AetheryteUnlockBusy { get; set; }
+    public Func<(int Done, int Total)>? AetheryteUnlockProgress { get; set; }
+    public Action? StartAetheryteUnlocks { get; set; }
+    public Action? StopAetheryteUnlocks { get; set; }
+    public Func<uint>? AetheryteCurrentTerritory { get; set; }
+    public Action<uint>? StartAetheryteZoneUnlocks { get; set; }
+    public SayingLibrary? SayingsLibrary
+    {
+        get => sayingsLibrary;
+        set
+        {
+            sayingsLibrary = value;
+            if (roaming != null) roaming.Sayings = value == null ? null : new SayingController(value.GetAll);
+        }
+    }
     public bool TryQueueCapturedWebsite(string url)
     {
         if (!wiki.TryOpenUrl(url, requireReady: false)) return false;
@@ -125,7 +170,7 @@ internal sealed class PluginUi : IDisposable
     public void OpenMain() { query = ""; status = ""; gearFeedback = false; mainOpen = true; launcher.Focus(); Refresh(); }
     public void ToggleMain() { if (mainOpen) mainOpen = false; else OpenMain(); }
     public void OpenSettings() { hotkeys.Cancel(); settingsOpen = true; selectSettingsTab = true; Refresh(); }
-    private void OpenHudSettings() { section = 2; settingsSearch = ""; resetHudScroll = true; OpenSettings(); }
+    private void OpenHudSettings() { section = 2; hudTab = 0; settingsSearch = ""; resetHudScroll = true; OpenSettings(); }
     private void OpenCompanion(string text = "") { question = text; companionOpen = true; mainOpen = false; focusSearch = true; }
     private void Refresh()
     {
@@ -393,7 +438,7 @@ internal sealed class PluginUi : IDisposable
         trackingBrowserRequest = false;
         // An explicit browser action can close Search before its helper reports a failure.
         // Reveal its own status once, leaving unrelated footer messages intact.
-        hotkeys.Cancel(); section = 4; settingsOpen = true; selectSettingsTab = true; expandBrowserSettings = true;
+        hotkeys.Cancel(); section = 4; dataTab = 2; settingsOpen = true; selectSettingsTab = true; expandBrowserSettings = true;
     }
 
     private void StartVoice(bool practice)
@@ -417,14 +462,17 @@ internal sealed class PluginUi : IDisposable
                 hotkeys.Cancel();
                 var filter = settingsSearch.ToLowerInvariant();
                 if (new[] { "about", "version", "author", "credits", "commit" }.Any(filter.Contains)) section = 5;
+                else if (new[] { "unlock", "aetheryte", "attune" }.Any(filter.Contains)) section = 8;
+                else if (filter.Contains("hud")) section = 2;
+                else if (new[] { "job switcher", "gearset", "class job" }.Any(filter.Contains)) section = 0;
                 else if (filter == "eat" || new[] { "nom nom", "nomnom", "food", "exp buff", "automation" }.Any(filter.Contains)) section = 7;
                 else if (new[] { "quest item", "item bar", "next action" }.Any(filter.Contains)) section = 6;
                 else if (new[] { "interact", "gather", "gear", "enemy", "enemies", "category", "categories", "target type", "attack", "quest", "shovel", "emote", "soothe" }.Any(filter.Contains)) section = 1;
                 else if (new[] { "hud", "target", "font", "text size", "outline", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "effect", "intensity" }.Any(filter.Contains)) section = 2;
-                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab", "look", "holiday", "seasonal", "hat", "style", "ring", "hop", "flat surface", "motion", "animation", "magic", "scene", "scale", "nap", "costume", "bow" }.Any(filter.Contains))
+                else if (new[] { "voice", "ai", "avatar", "companion", "brain", "bind", "train", "box", "frame", "pickup", "perch", "fall", "chatgpt", "codex", "claude", "provider", "account", "home", "house", "comment", "blink", "hand", "grab", "look", "holiday", "seasonal", "hat", "style", "ring", "hop", "flat surface", "motion", "animation", "magic", "scene", "scale", "nap", "costume", "bow", "saying", "phrase", "bubble" }.Any(filter.Contains))
                 {
                     section = 3;
-                    companionTab = new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0;
+                    companionTab = new[] { "saying", "phrase", "bubble" }.Any(filter.Contains) ? 3 : new[] { "ai", "brain", "chatgpt", "codex", "claude", "provider", "account" }.Any(filter.Contains) ? 2 : filter.Contains("voice") || filter.Contains("train") ? 1 : 0;
                     companionAppearanceSection = new[] { "holiday", "seasonal", "hat", "costume", "bow" }.Any(filter.Contains) ? 4
                         : new[] { "home", "house", "nap", "comment" }.Any(filter.Contains) ? 3
                         : new[] { "blink", "frame", "perch", "fall", "hop", "flat surface", "motion", "animation", "magic" }.Any(filter.Contains) ? 2
@@ -432,41 +480,180 @@ internal sealed class PluginUi : IDisposable
                 }
                 else if (new[] { "data", "export", "import", "json", "source", "umbra", "wiki", "browser", "extension" }.Any(filter.Contains)) section = 4;
                 else if (new[] { "key", "shortcut", "launcher", "width", "height", "result count" }.Any(filter.Contains)) section = 0;
+                SelectSettingsSubsection(filter);
                 selectSettingsTab = true;
             }
-            if (ImGui.BeginTabBar("settings-tabs", ImGuiTabBarFlags.FittingPolicyScroll))
+            if (ImGui.GetWindowWidth() < 720 * ImGuiHelpers.GlobalScale)
             {
-                var requestedSection = selectSettingsTab ? section : -1;
-                foreach (var i in SectionOrder)
+                if (UiText.Button("Settings")) ImGui.OpenPopup("settings-navigation");
+                ImGui.SameLine();
+                UiText.Line(SettingsBreadcrumb(), Gold);
+                var popupHeight = Math.Min(360 * ImGuiHelpers.GlobalScale, ImGui.GetMainViewport().WorkSize.Y - 120 * ImGuiHelpers.GlobalScale);
+                ImGui.SetNextWindowSize(new Vector2(224 * ImGuiHelpers.GlobalScale, Math.Max(100 * ImGuiHelpers.GlobalScale, popupHeight)), ImGuiCond.Appearing);
+                ImGui.PushStyleColor(ImGuiCol.PopupBg, new Vector4(.065f, .075f, .085f, 1));
+                if (ImGui.BeginPopup("settings-navigation"))
                 {
-                    var flags = requestedSection == i ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
-                    if (!UiText.BeginTabItem(Sections[i], flags)) continue;
-                    if (section != i) hotkeys.Cancel();
-                    section = i;
-                    ImGui.BeginChild("settings-body-" + i, new Vector2(0, -FooterHeight));
-                    switch (i)
-                    {
-                        case 0: DrawShortcuts(); break;
-                        case 1: DrawInteraction(); break;
-                        case 2: DrawHudSettings(); break;
-                        case 3: DrawCompanion(); break;
-                        case 4: DrawData(); break;
-                        case 5: DrawAbout(); break;
-                        case 6: DrawQuestItems(); break;
-                        case 7: DrawAutomations(); break;
-                    }
-                    ImGui.EndChild(); ImGui.EndTabItem();
+                    DrawSettingsTree(true);
+                    ImGui.EndPopup();
                 }
-                ImGui.EndTabBar(); selectSettingsTab = false;
+                ImGui.PopStyleColor();
+                ImGui.BeginChild("settings-body-" + section, new Vector2(0, -FooterHeight));
+                DrawSettingsSection();
+                ImGui.EndChild();
+            }
+            else
+            {
+                var scale = ImGuiHelpers.GlobalScale;
+                var maximum = Math.Min(220, ImGui.GetContentRegionAvail().X / scale - 420);
+                settingsTreeWidth = Math.Clamp(settingsTreeWidth, 140, Math.Max(140, maximum));
+                var height = Math.Max(60 * scale, ImGui.GetContentRegionAvail().Y - FooterHeight);
+                ImGui.BeginChild("settings-navigation-tree", new Vector2(settingsTreeWidth * scale, height));
+                DrawSettingsTree(false);
+                ImGui.EndChild();
+                ImGui.SameLine(0, 8 * scale);
+                ImGui.InvisibleButton("##settings-tree-resize", new Vector2(4 * scale, height));
+                if (ImGui.IsItemHovered() || ImGui.IsItemActive()) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeEw);
+                if (ImGui.IsItemActive()) settingsTreeWidth = Math.Clamp(settingsTreeWidth + ImGui.GetIO().MouseDelta.X / scale, 140, Math.Max(140, maximum));
+                ImGui.SameLine(0, 8 * scale);
+                ImGui.BeginChild("settings-body-" + section, new Vector2(0, height));
+                UiText.Line(SettingsBreadcrumb(), Gold);
+                ImGui.Spacing();
+                DrawSettingsSection();
+                ImGui.EndChild();
             }
             Footer(status);
         }
         finally { ImGui.End(); if (!settingsOpen) hotkeys.Cancel(); }
     }
 
+    private string SettingsBreadcrumb() => section == 8 ? "Unlocks / Aetheryte" : section == 3
+        ? "Companion / " + (companionTab == 3 ? "Sayings" : companionTab == 1 ? "Voice" : companionTab == 2 ? "AI" : "Appearance / " + new[] { "Look", "Scene", "Motion", "Home", "Seasonal" }[Math.Clamp(companionAppearanceSection, 0, 4)])
+        : Sections[Math.Clamp(section, 0, Sections.Length - 1)];
+
+    private void DrawSettingsSection()
+    {
+        switch (section)
+        {
+            case 0: DrawShortcuts(); break;
+            case 1: DrawInteraction(); break;
+            case 2: DrawHudSettings(); break;
+            case 3: DrawCompanion(); break;
+            case 4: DrawData(); break;
+            case 5: DrawAbout(); break;
+            case 6: DrawQuestItems(); break;
+            case 7: DrawAutomations(); break;
+            case 8: DrawAetheryteUnlocks(); break;
+        }
+    }
+
+    private void SelectSettingsSubsection(string filter)
+    {
+        bool Has(params string[] words) => words.Any(filter.Contains);
+        switch (section)
+        {
+            case 0: launcherTab = Has("job", "gearset", "class") ? 2 : Has("key", "shortcut", "binding") ? 1 : 0; break;
+            case 1: interactionTab = Has("gather", "outfit") ? 2 : Has("quest", "emote", "shovel", "soothe") ? 3 : Has("target", "enemy", "category", "categories") ? 1 : 0; break;
+            case 2: hudTab = Has("effect", "glow", "shimmer", "rainbow", "neon", "glitch", "hologram", "flame", "frost", "sweep", "intensity", "speed") ? 1 : Has("position", "offset", "lock", "move") ? 2 : 0; break;
+            case 4: dataTab = Has("browser", "wiki", "extension") ? 2 : Has("source", "umbra", "plugin") ? 1 : 0; break;
+            case 5: aboutTab = Has("link", "project url") ? 1 : 0; break;
+            case 6: questItemsTab = Has("item bar", "button size", "item coverage") ? 1 : 0; break;
+        }
+    }
+
+    private void PanelTabs(string id, ref int selected, params string[] labels)
+    {
+        var previous = selected;
+        shownPanelTabs ??= new();
+        var requested = !shownPanelTabs.TryGetValue(id, out var shown) || shown != selected ? selected : -1;
+        if (!ImGui.BeginTabBar(id, ImGuiTabBarFlags.FittingPolicyScroll)) return;
+        var active = selected;
+        var clicked = -1;
+        for (var index = 0; index < labels.Length; index++)
+        {
+            var visible = UiText.BeginTabItem(labels[index], requested == index ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None);
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) clicked = index;
+            if (!visible) continue;
+            active = index;
+            ImGui.EndTabItem();
+        }
+        ImGui.EndTabBar();
+        selected = clicked >= 0 ? clicked : requested >= 0 ? requested : active;
+        if (selected != previous) hotkeys.Cancel();
+        shownPanelTabs[id] = active;
+    }
+
+    private void DrawSettingsTree(bool closeOnSelection)
+    {
+        if (selectSettingsTab && section is 0 or 1 or 6 or 8) ImGui.SetNextItemOpen(true);
+        if (SettingsTreeBranch("Game tools", ImGuiTreeNodeFlags.SpanAvailWidth | (section is 0 or 1 or 6 or 8 ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
+        {
+            foreach (var index in new[] { 0, 1, 6 }) SettingsTreeLeaf(Sections[index], index, closeOnSelection);
+            if (selectSettingsTab && section == 8) ImGui.SetNextItemOpen(true);
+            if (SettingsTreeBranch("Unlocks", ImGuiTreeNodeFlags.DefaultOpen | ImGuiTreeNodeFlags.SpanAvailWidth))
+            {
+                SettingsTreeLeaf("Aetheryte", 8, closeOnSelection);
+                ImGui.TreePop();
+            }
+            ImGui.TreePop();
+        }
+        if (selectSettingsTab && section == 3) ImGui.SetNextItemOpen(true);
+        if (SettingsTreeBranch("Companion", ImGuiTreeNodeFlags.SpanAvailWidth | (section == 3 ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
+        {
+            if (selectSettingsTab && companionTab == 0) ImGui.SetNextItemOpen(true);
+            if (SettingsTreeBranch("Appearance", ImGuiTreeNodeFlags.SpanAvailWidth | (companionTab == 0 ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
+            {
+                var titles = new[] { "Look", "Scene", "Motion", "Home", "Seasonal" };
+                for (var index = 0; index < titles.Length; index++) SettingsTreeLeaf(titles[index], 3, closeOnSelection, 0, index);
+                ImGui.TreePop();
+            }
+            SettingsTreeLeaf("Voice", 3, closeOnSelection, 1);
+            SettingsTreeLeaf("AI", 3, closeOnSelection, 2);
+            SettingsTreeLeaf("Sayings", 3, closeOnSelection, 3);
+            ImGui.TreePop();
+        }
+        if (selectSettingsTab && section == 7) ImGui.SetNextItemOpen(true);
+        if (SettingsTreeBranch("Automations", ImGuiTreeNodeFlags.SpanAvailWidth | (section == 7 ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
+        {
+            SettingsTreeLeaf("NomNom", 7, closeOnSelection);
+            ImGui.TreePop();
+        }
+        if (selectSettingsTab && section is 2 or 4 or 5) ImGui.SetNextItemOpen(true);
+        if (SettingsTreeBranch("Settings", ImGuiTreeNodeFlags.SpanAvailWidth | (section is 2 or 4 or 5 ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
+        {
+            foreach (var index in new[] { 2, 4, 5 }) SettingsTreeLeaf(Sections[index], index, closeOnSelection);
+            ImGui.TreePop();
+        }
+        selectSettingsTab = false;
+    }
+
+    private static bool SettingsTreeBranch(string label, ImGuiTreeNodeFlags flags)
+    {
+        var open = ImGui.TreeNodeEx(label, flags);
+        if (UiText.ItemMeasured != null)
+        {
+            var draw = ImGui.GetWindowDrawList();
+            var minimum = Vector2.Max(ImGui.GetItemRectMin(), draw.GetClipRectMin());
+            var maximum = Vector2.Min(ImGui.GetItemRectMax(), draw.GetClipRectMax());
+            UiText.ItemMeasured("tree:" + label, minimum, maximum, ImGui.IsItemVisible() && minimum.X < maximum.X && minimum.Y < maximum.Y);
+        }
+        return open;
+    }
+
+    private void SettingsTreeLeaf(string title, int target, bool closeOnSelection, int tab = 0, int appearance = 0)
+    {
+        var selected = section == target && (target != 3 || companionTab == tab && (tab != 0 || companionAppearanceSection == appearance));
+        var clicked = UiText.Selectable(FitLabel(title, ImGui.GetContentRegionAvail().X - 8 * ImGuiHelpers.GlobalScale) + "##settings-tree", selected);
+        UiText.Hint(title);
+        if (!clicked) return;
+        hotkeys.Cancel();
+        section = target;
+        if (target == 3) { companionTab = tab; companionAppearanceSection = appearance; }
+        if (closeOnSelection) ImGui.CloseCurrentPopup();
+    }
+
     private void DrawAutomations()
     {
-        if (ImGui.Checkbox("Nom Nom", ref config.NomNomEnabled)) Save();
+        if (ImGui.Checkbox("NomNom", ref config.NomNomEnabled)) Save();
         UiText.Hint("Automatically eat your selected food after the food buff expires.");
         var foods = NomNomFoods?.Invoke() ?? Array.Empty<NomNomFoodOption>();
         var automatic = config.NomNomFoodId == 0;
@@ -498,14 +685,118 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.Checkbox("Keep +EXP buff active", ref config.NomNomKeepExpBuff)) Save();
         UiText.Hint("Pauses automatic eating when unchecked. The selected food must grant an experience bonus.");
         if (UiText.Button("Refresh food")) RefreshNomNomFoods?.Invoke();
-        UiText.Status(NomNomStatus?.Invoke() ?? (config.NomNomEnabled ? "Waiting for eligible +EXP food." : "Nom Nom is off."));
-        UiText.Help("Nom Nom help", "Automatic ranks owned food by +EXP bonus, then item level, then your quality preference. It can use valuable food; choose a specific food to reserve the rest. Eats after Well Fed expires, when the game is ready. Uncheck Keep +EXP buff active to pause.");
+        UiText.Status(NomNomStatus?.Invoke() ?? (config.NomNomEnabled ? "Waiting for eligible +EXP food." : "NomNom is off."));
+        UiText.Help("NomNom help", "Automatic ranks owned food by +EXP bonus, then item level, then your quality preference. It can use valuable food; choose a specific food to reserve the rest. Eats after Well Fed expires, when the game is ready. Uncheck Keep +EXP buff active to pause.");
+    }
+
+    private void DrawAetheryteUnlocks()
+    {
+        var options = Aetherytes?.Invoke() ?? Array.Empty<AetheryteUnlockOption>();
+        var currentTerritory = AetheryteCurrentTerritory?.Invoke() ?? 0;
+        var zones = options.Where(option => option.TerritoryId != 0).GroupBy(option => option.TerritoryId)
+            .Select(group => (Id: group.Key, Name: group.First().Territory)).OrderBy(zone => zone.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var requestedView = aetheryteView;
+        var requestedZone = aetheryteBrowseTerritory;
+        if (ImGui.BeginTabBar("aetheryte-areas", ImGuiTabBarFlags.FittingPolicyScroll))
+        {
+            void AreaTab(string label, int view, uint territory)
+            {
+                var flags = selectAetheryteZoneTab && requestedView == view && (view != 2 || requestedZone == territory)
+                    ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
+                if (!UiText.BeginTabItem(label, flags)) return;
+                aetheryteView = view;
+                if (view == 2) aetheryteBrowseTerritory = territory;
+                ImGui.EndTabItem();
+            }
+            AreaTab("Current zone", 0, 0);
+            AreaTab("All areas", 1, 0);
+            foreach (var zone in zones) AreaTab(zone.Name + "##zone-" + zone.Id, 2, zone.Id);
+            ImGui.EndTabBar();
+        }
+        selectAetheryteZoneTab = false;
+        var width = ImGui.GetContentRegionAvail().X;
+        ImGui.SetNextItemWidth(-1);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(width, 0), new Vector2(width, 240 * ImGuiHelpers.GlobalScale));
+        if (UiText.BeginCombo("##aetheryte-area-picker", "Find an area..."))
+        {
+            ImGui.SetNextItemWidth(-1);
+            ImGui.InputTextWithHint("##aetheryte-zone-search", "Search zones...", ref aetheryteZoneFilter, 100);
+            foreach (var zone in zones.Where(zone => zone.Name.Contains(aetheryteZoneFilter, StringComparison.CurrentCultureIgnoreCase)))
+                if (UiText.Selectable(FitLabel(zone.Name, width - 24 * ImGuiHelpers.GlobalScale) + "##pick-zone-" + zone.Id,
+                    aetheryteView == 2 && aetheryteBrowseTerritory == zone.Id))
+                {
+                    aetheryteView = 2;
+                    aetheryteBrowseTerritory = zone.Id;
+                    selectAetheryteZoneTab = true;
+                }
+            ImGui.EndCombo();
+        }
+        var scope = aetheryteView == 1 ? 0 : aetheryteView == 0 ? currentTerritory : aetheryteBrowseTerritory;
+        var visible = aetheryteView == 1 ? options : options.Where(option => option.TerritoryId == scope).ToArray();
+        var busy = AetheryteUnlockBusy?.Invoke() == true;
+        var progress = AetheryteUnlockProgress?.Invoke() ?? (0, 0);
+        UiText.Line($"Attuned {visible.Count(option => !option.IsVirtual && option.Unlocked)} / {visible.Count(option => !option.IsVirtual)} · Route {progress.Item1} / {progress.Item2}", Gold);
+        UiText.Hint("Routes are limited to supported reachable connections; unsupported or gated travel stops with a reason.");
+        if (busy) ImGui.ProgressBar(progress.Item2 > 0 ? Math.Clamp((float)progress.Item1 / progress.Item2, 0, 1) : 0,
+            new Vector2(-1, 6 * ImGuiHelpers.GlobalScale), "");
+        var reserve = ImGui.GetFrameHeightWithSpacing() + ImGui.GetTextLineHeightWithSpacing() + 12 * ImGuiHelpers.GlobalScale;
+        var height = Math.Max(ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().Y - reserve);
+        ImGui.BeginChild("aetheryte-catalogue", new Vector2(0, height));
+        UiText.ItemMeasured?.Invoke("aetheryte-catalogue", ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize(), true);
+        if (visible.Count == 0) UiText.Line(scope == 0 && aetheryteView == 0 ? "Current zone is unavailable." : "No aetherytes in this area.", Muted);
+        foreach (var option in visible)
+        {
+            ImGui.PushID((int)option.Id);
+            var unlocked = option.Unlocked;
+            if (option.IsVirtual) ImGui.Dummy(new Vector2(ImGui.GetFrameHeight()));
+            else
+            {
+                ImGui.BeginDisabled();
+                ImGui.Checkbox("##attuned", ref unlocked);
+                ImGui.EndDisabled();
+            }
+            ImGui.SameLine();
+            UiText.Line((option.IsVirtual ? "Travel exit: " : "") + option.Name + " · " + option.Territory, option.Unlocked && !option.IsVirtual ? Gold : Muted,
+                detail: option.Name + "\n" + option.Territory + "\n" + (option.IsVirtual ? "Travel exit / no attunement" : option.Unlocked ? "Attuned" : option.Eligible ? "Available to route" : "Not currently reachable")
+                    + (string.IsNullOrWhiteSpace(option.Detail) ? "" : "\n" + option.Detail));
+            if (option.IsVirtual && UiText.ItemMeasured != null)
+            {
+                var draw = ImGui.GetWindowDrawList();
+                var minimum = Vector2.Max(ImGui.GetItemRectMin(), draw.GetClipRectMin());
+                var maximum = Vector2.Min(ImGui.GetItemRectMax(), draw.GetClipRectMax());
+                UiText.ItemMeasured("travel-exit-" + option.Id, minimum, maximum, ImGui.IsItemVisible() && minimum.X < maximum.X && minimum.Y < maximum.Y);
+            }
+            ImGui.PopID();
+        }
+        ImGui.EndChild();
+        ImGui.Spacing();
+        ImGui.BeginDisabled(busy || aetheryteView != 1 && scope == 0);
+        if (UiText.Button("Start unlock"))
+        {
+            if (StartAetheryteZoneUnlocks != null) StartAetheryteZoneUnlocks(scope);
+            else if (scope == 0) StartAetheryteUnlocks?.Invoke();
+        }
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+        ImGui.BeginDisabled(!busy);
+        if (UiText.Button("Stop")) StopAetheryteUnlocks?.Invoke();
+        ImGui.EndDisabled();
+        UiText.Hint("Esc or /omnikit unlock stop also stops.");
+        UiText.Status(AetheryteUnlockStatus?.Invoke() ?? "Ready to check reachable aetherytes.");
     }
 
     private void DrawShortcuts()
     {
+        PanelTabs("launcher-options", ref launcherTab, "Search", "Keys", "Jobs");
+        if (launcherTab == 0)
+        {
         if (ImGui.Checkbox("Enable launcher shortcut", ref config.LauncherEnabled)) Save();
-        LauncherAppearanceUi.Draw(config, () => Save());
+        if (UiText.Button("Open Search")) OpenMain();
+        if (UiText.CollapsingHeader("More options")) LauncherAppearanceUi.Draw(config, () => Save());
+        UiText.Help("Search examples", "community · guild · free company\njob paladin · job miner · a saved gearset name\ninventory · crafting log · a plugin name");
+        }
+        if (launcherTab == 1)
+        {
         var old = (config.LauncherKey, config.LauncherModifier, config.SettingsKey, config.SettingsModifier);
         var changed = hotkeys.Draw("Search menu", ref config.LauncherKey, ref config.LauncherModifier);
         changed |= hotkeys.Draw("Open settings", ref config.SettingsKey, ref config.SettingsModifier);
@@ -520,10 +811,9 @@ internal sealed class PluginUi : IDisposable
             }
             else Save();
         }
-        if (UiText.Button("Open Search")) OpenMain();
         UiText.Help("Shortcut help", "Click a binding, hold Ctrl/Alt/Shift if needed, press a key, then release all keys. Escape cancels. /omnikit and /omnikit settings always work. Change Alt + Space if another desktop launcher uses it.");
-        UiText.Help("Search examples", "community · guild · free company\njob paladin · job miner · a saved gearset name\ninventory · crafting log · a plugin name");
-        ImGui.Spacing();
+        }
+        if (launcherTab != 2) return;
         if (ImGui.Checkbox("Character window job switcher", ref config.CharacterJobSwitcherEnabled)) Save();
         UiText.Help("Job switcher help", "Click a class or job in Character > Classes/Jobs to switch. OmniKit preserves your current equipment in a separate class-named gearset when needed. Missing target sets are created from owned weapons/tools and required soul crystals. Existing gearsets are never overwritten. Free gearset slots are required.");
         if (config.CharacterJobSwitcherEnabled)
@@ -572,12 +862,18 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawQuestItems()
     {
+        PanelTabs("quest-item-options", ref questItemsTab, "Next action", "Item bar");
+        if (questItemsTab == 0)
+        {
         if (ImGui.Checkbox("Show next action", ref config.NextActionEnabled)) Save();
         if (config.NextActionEnabled)
         {
             if (ImGui.Checkbox("Lock next action", ref config.NextActionLocked)) Save();
             UiText.Hint("Shows the item or emote Interact will attempt. Unlock to move; lock for the single icon.");
         }
+        }
+        else
+        {
         if (ImGui.Checkbox("Show quest items bar", ref config.QuestItemsBarEnabled)) Save();
         if (config.QuestItemsBarEnabled)
         {
@@ -586,17 +882,21 @@ internal sealed class PluginUi : IDisposable
             UiText.Hint("Usable key items and verified quest-linked bag items. Select a target before clicking an item.");
             if (interaction.Inventory?.Status is { Length: > 0 } message) UiText.Status(message);
         }
+        }
         if (UiText.Button("Reset action-bar positions"))
         {
             config.NextActionX = config.QuestItemsBarX = .5f;
             config.NextActionY = .76f; config.QuestItemsBarY = .84f;
             Save();
         }
-        UiText.Help("Item coverage", "An item on the bar is a manual choice, not proof it belongs to your current target. Interact only auto-uses the narrow verified quest mappings. Ground-targeted items are not supported. The arrows show more items when the bar has another page.");
+        if (questItemsTab == 1) UiText.Help("Item coverage", "An item on the bar is a manual choice, not proof it belongs to your current target. Interact only auto-uses the narrow verified quest mappings. Ground-targeted items are not supported. The arrows show more items when the bar has another page.");
     }
 
     private void DrawInteraction()
     {
+        PanelTabs("interaction-options", ref interactionTab, "General", "Targets", "Gathering", "Quest actions");
+        if (interactionTab == 0)
+        {
         if (ImGui.Checkbox("Enable soft interaction", ref config.SoftInteractEnabled)) { hotkeys.Cancel(); Save(); }
         UiText.Hint("Look toward a target, then press the interact key. Looking alone never performs an action.");
         if (!config.SoftInteractEnabled) return;
@@ -610,15 +910,24 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.SliderFloat("Detection distance", ref config.InteractionDistance,
             Configuration.MinimumDetectionDistance, Configuration.MaximumDetectionDistance, "%.1f yalms")) Save();
         UiText.Hint("Detection range only. The game still controls interaction reach.");
-        DrawInteractionTargets();
+        VisibleTarget();
+        if (UiText.CollapsingHeader("Fine-tune targeting"))
+        {
+            if (ImGui.SliderFloat("Aim area", ref config.InteractionCone, .025f, .30f, "%.3f")) Save();
+            UiText.Hint("A smaller aim area is more precise. Native range and usability checks still apply.");
+        }
+        }
+        if (interactionTab == 1) DrawInteractionTargets();
+        if (interactionTab == 3)
+        {
         if (ImGui.Checkbox("Use verified quest items", ref config.QuestItemUseEnabled)) Save();
         UiText.Hint("On Interact, use a proven quest item after selecting its target. First supported case: Tiller's Shovel on the cumbersome rocks in Rocks in a Hard Place. Debris keeps ordinary interaction. Unknown quests require manual item use.");
         if (config.QuestItemUseEnabled && interaction.QuestItems?.Status is { Length: > 0 } questItemStatus) UiText.Status(questItemStatus);
         if (ImGui.Checkbox("Use verified quest emotes", ref config.QuestEmoteUseEnabled)) Save();
         UiText.Hint("On Interact, perform a proven required emote after selecting its target. First supported case: /soothe the irate coachmen in A Bridge Too Full. Unknown quests require a manual emote.");
         if (config.QuestEmoteUseEnabled && interaction.QuestEmotes?.Status is { Length: > 0 } questEmoteStatus) UiText.Status(questEmoteStatus);
-        VisibleTarget();
-        if (UiText.CollapsingHeader("Gathering outfits"))
+        }
+        if (interactionTab == 2 && UiText.CollapsingHeader("Gathering outfits"))
         {
         if (ImGui.Checkbox("Switch to gathering gear when I interact", ref config.GatheringAutoSwitch)) Save();
         if (config.GatheringAutoSwitch)
@@ -631,36 +940,32 @@ internal sealed class PluginUi : IDisposable
             UiText.Status(interaction.Gathering.Status);
         }
         }
-        if (UiText.CollapsingHeader("Fine-tune targeting"))
-        {
-            if (ImGui.SliderFloat("Aim area", ref config.InteractionCone, .025f, .30f, "%.3f")) Save();
-            UiText.Hint("A smaller aim area is more precise. Native range and usability checks still apply.");
-        }
     }
 
     private void DrawInteractionTargets()
     {
-        if (!UiText.CollapsingHeader("Target types", ImGuiTreeNodeFlags.DefaultOpen)) return;
-        if (ImGui.BeginTable("world-targets", 2, ImGuiTableFlags.SizingStretchSame))
+        foreach (var (group, entries) in new[]
         {
-            foreach (var (kind, label) in new[]
-            {
+            ("People & places", new[] {
                 (InteractionTargets.Npcs, "NPCs / vendors"),
-                (InteractionTargets.QuestObjects, "Quest objects"),
-                (InteractionTargets.Loot, "Loot / treasure"),
                 (InteractionTargets.Aetherytes, "Aetherytes"),
-                (InteractionTargets.GatheringNodes, "Gathering nodes"),
                 (InteractionTargets.Retainers, "Retainers"),
                 (InteractionTargets.Housing, "Housing"),
+            }),
+            ("Objects", new[] {
+                (InteractionTargets.QuestObjects, "Quest objects"),
+                (InteractionTargets.Loot, "Loot / treasure"),
+                (InteractionTargets.GatheringNodes, "Gathering nodes"),
                 (InteractionTargets.OtherUsableObjects, "Other usable objects"),
-            })
-            {
-                ImGui.TableNextColumn();
-                TargetToggle(label, kind);
-            }
-            ImGui.EndTable();
+            }),
+        })
+        {
+            if (!UiText.CollapsingHeader(group)) continue;
+            foreach (var (kind, label) in entries) TargetToggle(label, kind);
         }
-        Heading("Enemies");
+        if (UiText.CollapsingHeader("Enemies", (config.InteractionTargets & (InteractionTargets.HostileEnemies | InteractionTargets.NeutralEnemies)) != 0
+            ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None))
+        {
         TargetToggle("Hostile enemies", InteractionTargets.HostileEnemies);
         TargetToggle("Neutral enemies", InteractionTargets.NeutralEnemies);
         UiText.Hint("Neutral means attackable but not currently marked hostile. This can change with game state.");
@@ -675,6 +980,7 @@ internal sealed class PluginUi : IDisposable
                 UiText.Status("Choose an enemy action.");
             }
             UiText.Help("Enemy behavior", "Press your interact key to use the selected action. Target only does not start auto-attack, but an existing auto-attack stays active. The game's normal range and target rules apply.");
+        }
         }
         if (config.InteractionTargets == InteractionTargets.None)
             UiText.Status("All target types are off.");
@@ -697,8 +1003,11 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawHudSettings()
     {
+        PanelTabs("soft-interact-hud-options", ref hudTab, "Text", "Effects", "Position");
         interaction.HudPreviewEnabled = true;
         if (resetHudScroll) { ImGui.SetScrollY(0); resetHudScroll = false; }
+        if (hudTab == 0)
+        {
         var fontPercent = config.InteractionHudScale * 100f;
         if (ImGui.SliderFloat("Font size", ref fontPercent, 50, 200, "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
         { config.InteractionHudScale = fontPercent / 100f; Save(); }
@@ -706,6 +1015,9 @@ internal sealed class PluginUi : IDisposable
         if (config.InteractionHudOutline && ImGui.SliderFloat("Outline thickness", ref config.InteractionHudOutlineThickness,
                 .5f, 4f, "%.1f", ImGuiSliderFlags.AlwaysClamp)) Save();
         UiText.Hint("Thickness follows the visible letters in every effect. Colored echoes and particles keep their own styling.");
+        }
+        if (hudTab == 1)
+        {
         var effectLabel = config.InteractionHudEffect switch
         {
             HudTextEffect.SoftGlow => "Soft glow", HudTextEffect.GentleShimmer => "Gentle shimmer",
@@ -730,12 +1042,19 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.SliderFloat("Speed", ref config.InteractionHudEffectSpeed, .1f, 3, "%.2f", ImGuiSliderFlags.AlwaysClamp)) Save();
             ImGui.EndDisabled();
         }
+        }
+        if (hudTab == 2)
+        {
         if (ImGui.Checkbox("Show HUD", ref config.InteractionHudEnabled)) Save();
         UiText.Hint("An editing preview is shown here even when the HUD is disabled. Active interactions hide both.");
         if (ImGui.Checkbox("Lock position", ref config.InteractionHudLocked)) Save();
+        if (UiText.CollapsingHeader("Fine-tune position"))
+        {
         if (ImGui.SliderFloat("Horizontal offset", ref config.InteractionHudOffsetX, -800, 800, "%.0f")) Save();
         if (ImGui.SliderFloat("Vertical offset", ref config.InteractionHudOffsetY, -500, 500, "%.0f")) Save();
+        }
         if (UiText.Button("Reset HUD position")) { config.InteractionHudOffsetX = 0; config.InteractionHudOffsetY = 120; Save(); }
+        }
         UiText.Line(interaction.HudHiddenForInteraction ? "Preview hidden · interaction active" : config.InteractionHudEnabled ? "Preview active" : "Preview only · HUD off",
             interaction.HudHiddenForInteraction ? UiText.Warning : Muted);
         UiText.Help("HUD help", "Changes preview immediately. Shift + right-click the HUD to move, lock, modify or hide it. Text is temporarily hidden during NPC, vendor, quest, retainer and gathering interactions or cutscenes. No action runs while you edit.");
@@ -759,38 +1078,17 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawCompanion()
     {
-        if (!ImGui.BeginTabBar("companion-options")) return;
-        // Snapshot programmatic selection before drawing: a clicked earlier tab
-        // must not make a later tab force itself selected in the same frame.
-        var requestedTab = shownCompanionTab != companionTab ? companionTab : -1;
-        var clickedTab = -1;
-        foreach (var (index, title) in new[] { (0, "Appearance"), (1, "Voice"), (2, "AI") })
-        {
-            var flags = requestedTab == index ? ImGuiTabItemFlags.SetSelected : ImGuiTabItemFlags.None;
-            var visible = UiText.BeginTabItem(title, flags);
-            if (ImGui.IsItemClicked(ImGuiMouseButton.Left)) clickedTab = index;
-            if (!visible) continue;
-            shownCompanionTab = index;
-            switch (index) { case 0: DrawAppearance(); break; case 1: DrawVoiceSettings(); break; case 2: DrawAiSettings(); break; }
-            ImGui.EndTabItem();
-        }
-        ImGui.EndTabBar();
-        companionTab = clickedTab >= 0 ? clickedTab : shownCompanionTab;
+        PanelTabs("companion-options", ref companionTab, "Appearance", "Voice", "AI", "Sayings");
+        shownCompanionTab = companionTab;
+        switch (companionTab) { case 0: DrawAppearance(); break; case 1: DrawVoiceSettings(); break; case 2: DrawAiSettings(); break; case 3: DrawSayings(); break; }
     }
 
     private int companionAppearanceSection;
 
     private void DrawAppearance()
     {
+        PanelTabs("companion-appearance-options", ref companionAppearanceSection, "Look", "Scene", "Motion", "Home", "Seasonal");
         if (ImGui.Checkbox("Show companion", ref config.AvatarEnabled)) Save();
-        var sections = new[] { "Look", "Scene", "Motion", "Home", "Seasonal" };
-        for (var i = 0; i < sections.Length; i++)
-        {
-            if (i > 0) ImGui.SameLine();
-            if (ImGui.Selectable(sections[i] + "##companion-section", companionAppearanceSection == i,
-                ImGuiSelectableFlags.None, new Vector2(72 * ImGuiHelpers.GlobalScale, 0))) companionAppearanceSection = i;
-        }
-        ImGui.Spacing();
         ImGui.BeginDisabled(!config.AvatarEnabled);
         ImGui.PushItemWidth(Math.Max(120 * ImGuiHelpers.GlobalScale, ImGui.GetContentRegionAvail().X * .56f));
         switch (companionAppearanceSection)
@@ -930,11 +1228,6 @@ internal sealed class PluginUi : IDisposable
             if (ImGui.Checkbox("Chimney Zs", ref config.CompanionNapZsEnabled)) Save();
         }
         ImGui.EndDisabled();
-        if (ImGui.Checkbox("Local comments", ref config.CompanionCommentsEnabled)) Save();
-        CompanionTip("Occasional local text phrases. No AI request, microphone or speech playback.");
-        ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
-        if (ImGui.SliderFloat("Comment interval", ref config.CompanionCommentInterval, 30, 600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
-        ImGui.EndDisabled();
     }
 
     private void DrawCompanionSeasonalSettings()
@@ -963,6 +1256,199 @@ internal sealed class PluginUi : IDisposable
                 30, 3600, "%.0f sec", ImGuiSliderFlags.AlwaysClamp)) Save();
         CompanionTip("Auto follows verified game festivals. Rotation picks another companion locally; your saved selection stays unchanged.");
         if (roaming.SeasonalStatus is { Length: > 0 } seasonStatus) UiText.Status(seasonStatus);
+    }
+
+    private void DrawSayings()
+    {
+        var library = SayingsLibrary;
+        if (library == null) { UiText.Status("Sayings are unavailable."); return; }
+        ImGui.PushStyleColor(ImGuiCol.PopupBg, new Vector4(.065f, .075f, .085f, 1));
+        try
+        {
+        if (sayingScope.Length == 0) sayingScope = "Universal";
+        if (sayingContext.Length == 0) sayingContext = "All moments";
+        var all = library.GetAll();
+        var width = ImGui.GetContentRegionAvail().X;
+        ImGui.SetNextItemWidth((width - ImGui.GetStyle().ItemSpacing.X) * .54f);
+        SayingChoice("##sayings-scope", ref sayingScope, new[] { "Current companion", "All companions" }.Concat(SayingLibrary.Companions));
+        UiText.Hint("Current companion: " + CurrentSayingCompanion + ". Universal sayings can be used by every companion.");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(-1);
+        SayingChoice("##sayings-context", ref sayingContext, new[] { "All moments" }.Concat(SayingLibrary.Contexts));
+        ImGui.SetNextItemWidth(-(64 * ImGuiHelpers.GlobalScale + ImGui.GetStyle().ItemSpacing.X));
+        ImGui.InputTextWithHint("##sayings-search", "Find a saying...", ref sayingSearch, 200);
+        ImGui.SameLine();
+        if (UiText.Button("Add", new Vector2(64 * ImGuiHelpers.GlobalScale, 0))) OpenSayingEditor(null);
+        if (UiText.CollapsingHeader("More options##sayings"))
+        {
+            if (ImGui.Checkbox("Local comments", ref config.CompanionCommentsEnabled)) Save();
+            UiText.Hint("Occasional local text phrases. No AI request, microphone or speech playback.");
+            ImGui.BeginDisabled(!config.CompanionCommentsEnabled);
+            if (UiText.SliderFloat("Comment interval", ref config.CompanionCommentInterval, 30, 600, "%.0f sec")) Save();
+            ImGui.EndDisabled();
+            ImGui.SetNextItemWidth(-1);
+            if (UiText.BeginCombo("##sayings-state", new[] { "Enabled", "Disabled", "Removed", "All sayings" }[Math.Clamp(sayingState, 0, 3)]))
+            {
+                for (var index = 0; index < 4; index++)
+                    if (UiText.Selectable(new[] { "Enabled", "Disabled", "Removed", "All sayings" }[index], sayingState == index)) sayingState = index;
+                ImGui.EndCombo();
+            }
+            if (UiText.Button("Copy sayings JSON")) ChangeSayings(value => ImGui.SetClipboardText(value.ExportJson()), "Sayings JSON copied.");
+            ImGui.SameLine();
+            if (UiText.Button("Import JSON")) { sayingImportPreview = null; sayingStatus = ""; ImGui.OpenPopup("Import sayings"); }
+        }
+        var activeScope = sayingScope == "Current companion" ? CurrentSayingCompanion : sayingScope;
+        var filtered = all.Where(entry => (sayingScope == "All companions" || entry.Companion == activeScope)
+                && (sayingContext == "All moments" || entry.Context == sayingContext)
+                && entry.Text.Contains(sayingSearch, StringComparison.OrdinalIgnoreCase)
+                && (sayingState switch { 0 => !entry.Deleted && entry.Enabled, 1 => !entry.Deleted && !entry.Enabled, 2 => entry.Deleted, _ => true }))
+            .OrderBy(entry => entry.Companion).ThenBy(entry => entry.Context).ThenBy(entry => entry.Text).ToArray();
+        var reserve = ImGui.GetTextLineHeightWithSpacing() + 4 * ImGuiHelpers.GlobalScale;
+        var height = Math.Max(ImGuiHelpers.GlobalScale, Math.Min(8 * ImGui.GetFrameHeightWithSpacing(), ImGui.GetContentRegionAvail().Y - reserve));
+        ImGui.BeginChild("sayings-list", new Vector2(0, height));
+        UiText.ItemMeasured?.Invoke("sayings-list", ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize(), true);
+        if (filtered.Length == 0) UiText.Line("No sayings here. Add one or change the filters.", Muted);
+        foreach (var entry in filtered)
+        {
+            ImGui.PushID(entry.Id);
+            var enabled = entry.Enabled;
+            if (entry.Deleted) ImGui.Dummy(new Vector2(ImGui.GetFrameHeight()));
+            else if (ImGui.Checkbox("##saying-enabled", ref enabled)) ChangeSayings(value => value.SetEnabled(entry.Id, enabled), "Saying updated.");
+            if (!entry.Deleted && UiText.ItemMeasured != null)
+            {
+                var clip = ImGui.GetWindowDrawList();
+                UiText.ItemMeasured("saying-enabled-" + entry.Id, Vector2.Max(ImGui.GetItemRectMin(), clip.GetClipRectMin()),
+                    Vector2.Min(ImGui.GetItemRectMax(), clip.GetClipRectMax()), ImGui.IsItemVisible());
+            }
+            ImGui.SameLine();
+            var text = FitLabel(entry.Text, ImGui.GetContentRegionAvail().X - 6 * ImGuiHelpers.GlobalScale);
+            if (UiText.Selectable("##saying-" + entry.Id, selectedSayingId == entry.Id))
+            {
+                selectedSayingId = entry.Id;
+                sayingStatus = "";
+                openSayingDetails = true;
+            }
+            ImGui.GetWindowDrawList().AddText(ImGui.GetItemRectMin(), ImGui.GetColorU32(ImGuiCol.Text), text);
+            ImGui.PopID();
+        }
+        ImGui.EndChild();
+        UiText.Status(sayingStatus.Length > 0 ? sayingStatus : $"{filtered.Length} shown · {all.Count(entry => !entry.Deleted && !entry.Enabled)} disabled");
+        if (openSayingDetails) { ImGui.OpenPopup("Saying details"); openSayingDetails = false; }
+        DrawSayingDetails(all);
+        if (openSayingEditor) { ImGui.OpenPopup("Edit saying"); openSayingEditor = false; }
+        DrawSayingEditor();
+        DrawSayingImport();
+        }
+        finally { ImGui.PopStyleColor(); }
+    }
+
+    private static bool SayingChoice(string label, ref string value, IEnumerable<string> choices)
+    {
+        if (!UiText.BeginCombo(label, value == "Any" ? "Any moment" : value)) return false;
+        var changed = false;
+        foreach (var choice in choices)
+            if (UiText.Selectable(choice == "Any" ? "Any moment" : choice, choice == value)) { value = choice; changed = true; }
+        ImGui.EndCombo();
+        return changed;
+    }
+
+    private void OpenSayingEditor(SayingEntry? entry)
+    {
+        sayingEditingId = entry?.Id ?? "";
+        sayingEditingCompanion = entry?.Companion ?? (SayingLibrary.Companions.Contains(sayingScope) ? sayingScope : CurrentSayingCompanion);
+        sayingEditingContext = entry?.Context ?? (SayingLibrary.Contexts.Contains(sayingContext) ? sayingContext : "Any");
+        sayingEditingText = entry?.Text ?? "";
+        sayingStatus = "";
+        openSayingEditor = true;
+    }
+
+    private string CurrentSayingCompanion => roaming?.DisplayAvatar is { Length: > 0 } visible ? visible : config.Avatar;
+
+    private bool ChangeSayings(Action<SayingLibrary> change, string message)
+    {
+        if (SayingsLibrary == null) { sayingStatus = "Sayings are unavailable."; return false; }
+        try { change(SayingsLibrary); sayingStatus = message; return true; }
+        catch (InvalidOperationException exception) { sayingStatus = exception.Message; return false; }
+        catch { sayingStatus = "Could not update sayings. Try again."; return false; }
+    }
+
+    private static void SayingPopupPosition()
+    {
+        var viewport = ImGui.GetMainViewport();
+        ImGui.SetNextWindowPos(viewport.WorkPos + viewport.WorkSize / 2, ImGuiCond.Appearing, new Vector2(.5f));
+        ImGui.SetNextWindowSize(new Vector2(Math.Min(420 * ImGuiHelpers.GlobalScale, viewport.WorkSize.X - 32 * ImGuiHelpers.GlobalScale), 0), ImGuiCond.Always);
+    }
+
+    private void DrawSayingDetails(IReadOnlyList<SayingEntry> entries)
+    {
+        SayingPopupPosition();
+        if (!ImGui.BeginPopupModal("Saying details", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar)) return;
+        var selected = entries.FirstOrDefault(entry => entry.Id == selectedSayingId);
+        if (selected == null) ImGui.CloseCurrentPopup();
+        else
+        {
+            UiText.Line(selected.Companion + " · " + selected.Context + (selected.BuiltIn ? " · Default" : " · Custom"), Gold);
+            ImGui.TextWrapped(selected.Text);
+            ImGui.Spacing();
+            if (!selected.Deleted)
+            {
+                if (UiText.Button("Edit")) { OpenSayingEditor(selected); ImGui.CloseCurrentPopup(); }
+                ImGui.SameLine();
+                if (UiText.Button("Remove") && ChangeSayings(value => value.Remove(selected.Id), "Saying removed. Restore it from the Removed filter.")) ImGui.CloseCurrentPopup();
+            }
+            else if (UiText.Button("Restore") && ChangeSayings(value => value.Restore(selected.Id), "Saying restored.")) ImGui.CloseCurrentPopup();
+            ImGui.SameLine();
+            if (UiText.Button("Close")) ImGui.CloseCurrentPopup();
+            if (sayingStatus.Length > 0) UiText.Status(sayingStatus);
+        }
+        ImGui.EndPopup();
+    }
+
+    private void DrawSayingEditor()
+    {
+        SayingPopupPosition();
+        if (!ImGui.BeginPopupModal("Edit saying", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar)) return;
+        UiText.Line(sayingEditingId.Length == 0 ? "New saying" : "Edit saying", Gold);
+        ImGui.SetNextItemWidth(-1);
+        SayingChoice("##saying-edit-companion", ref sayingEditingCompanion, SayingLibrary.Companions);
+        ImGui.SetNextItemWidth(-1);
+        SayingChoice("##saying-edit-context", ref sayingEditingContext, SayingLibrary.Contexts);
+        ImGui.SetNextItemWidth(-1);
+        ImGui.InputTextWithHint("##saying-edit-text", "One line, up to 240 characters", ref sayingEditingText, 2048);
+        if (UiText.Button("Save saying"))
+        {
+            if (ChangeSayings(value =>
+                {
+                    if (sayingEditingId.Length == 0) selectedSayingId = value.Add(sayingEditingCompanion, sayingEditingContext, sayingEditingText).Id;
+                    else value.Edit(sayingEditingId, sayingEditingCompanion, sayingEditingContext, sayingEditingText);
+                }, "Saying saved.")) ImGui.CloseCurrentPopup();
+        }
+        ImGui.SameLine();
+        if (UiText.Button("Cancel")) ImGui.CloseCurrentPopup();
+        if (sayingStatus.Length > 0) UiText.Status(sayingStatus);
+        ImGui.EndPopup();
+    }
+
+    private void DrawSayingImport()
+    {
+        SayingPopupPosition();
+        if (!ImGui.BeginPopupModal("Import sayings", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar)) return;
+        UiText.Line("Import sayings JSON", Gold);
+        if (ImGui.InputTextMultiline("##sayings-json", ref sayingJson, SayingLibrary.MaximumJsonBytes, new Vector2(-1, 110 * ImGuiHelpers.GlobalScale))) sayingImportPreview = null;
+        if (UiText.Button("Preview")) { sayingImportPreview = null; ChangeSayings(value => sayingImportPreview = value.PreviewImport(sayingJson), "Preview ready."); }
+        ImGui.SameLine();
+        ImGui.BeginDisabled(sayingImportPreview == null);
+        if (UiText.Button("Apply") && ChangeSayings(value => value.MergeImport(sayingJson), "Sayings imported.")) ImGui.CloseCurrentPopup();
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+        if (UiText.Button("Cancel")) ImGui.CloseCurrentPopup();
+        if (sayingImportPreview is { } preview)
+        {
+            UiText.Line($"{preview.Added} new · {preview.Updated} updated · {preview.Unchanged} unchanged", Muted);
+            if (preview.Deleted > 0) UiText.Line($"{preview.Deleted} marked removed", UiText.Warning);
+        }
+        if (sayingStatus.Length > 0) UiText.Status(sayingStatus);
+        ImGui.EndPopup();
     }
 
     private void DrawVoiceSettings()
@@ -1228,6 +1714,7 @@ internal sealed class PluginUi : IDisposable
         if (ImGui.CalcTextSize(value).X <= maximum) return value;
         var length = value.Length;
         while (length > 1 && ImGui.CalcTextSize(value[..length] + "...").X > maximum) length--;
+        if (length > 0 && char.IsHighSurrogate(value[length - 1])) length--;
         return value[..length] + "...";
     }
 
@@ -1272,7 +1759,13 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawData()
     {
-        ImGui.TextWrapped("Exports preferences, gearsets and voice phrases. No credentials, recordings or chat history.");
+        if (confirmImport) dataTab = 0;
+        if (expandBrowserSettings) { dataTab = 2; expandBrowserSettings = false; }
+        PanelTabs("data-options", ref dataTab, "Settings", "Sources", "Browser");
+        if (dataTab == 0)
+        {
+        UiText.Line("Export or restore your preferences.", Muted);
+        UiText.Hint("Exports preferences, gearsets and voice phrases. No credentials, recordings or chat history.");
         ImGui.SetNextItemWidth(-1); ImGui.InputTextWithHint("##export-name", "Settings filename", ref exportName, 80);
         if (UiText.Button("Export settings to JSON"))
         {
@@ -1287,8 +1780,11 @@ internal sealed class PluginUi : IDisposable
             }
             catch { status = "Export failed. Check available disk space and folder access."; }
         }
-        if (UiText.Button("Copy settings JSON")) { ImGui.SetClipboardText(store.Export(config)); status = "Settings JSON copied. It contains no saved credentials."; }
-        ImGui.SameLine(); if (UiText.Button("Open settings folder")) Util.OpenLink(Services.PluginInterface.ConfigDirectory.FullName);
+        if (UiText.CollapsingHeader("More export options"))
+        {
+            if (UiText.Button("Copy settings JSON")) { ImGui.SetClipboardText(store.Export(config)); status = "Settings JSON copied. It contains no saved credentials."; }
+            if (UiText.Button("Open settings folder")) Util.OpenLink(Services.PluginInterface.ConfigDirectory.FullName);
+        }
         if (confirmImport) ImGui.SetNextItemOpen(true);
         if (UiText.CollapsingHeader("Import settings"))
         {
@@ -1334,15 +1830,15 @@ internal sealed class PluginUi : IDisposable
             ImGui.EndPopup();
         }
         }
-        UiText.Help("Plugins & Umbra", "Loaded plugin windows appear in Search. Plugins may share named actions without collecting private plugin data. OmniKit appears in Umbra's Plugins menu; load the OmniKit.Umbra sidecar in Umbra Settings → Plugins for its own toolbar widget.");
-        var revealBrowser = expandBrowserSettings;
-        if (revealBrowser) { ImGui.SetNextItemOpen(true); expandBrowserSettings = false; }
-        if (UiText.CollapsingHeader("In-game browser"))
-        {
-            if (revealBrowser) ImGui.SetScrollHereY(.1f);
-            DrawBrowserSettings();
-        }
         if (UiText.Button("Open setup again")) { config.SetupCompleted = false; Save(); OpenCompanion(); }
+        }
+        if (dataTab == 1)
+        {
+            UiText.Line("Plugins & Umbra", Gold);
+            ImGui.TextWrapped("Loaded plugin windows appear in Search. OmniKit also integrates with Umbra.");
+            UiText.Help("Umbra setup", "Load the OmniKit.Umbra sidecar in Umbra Settings > Plugins for its own toolbar widget. Named plugin actions are shared without collecting private plugin data.");
+        }
+        if (dataTab == 2) DrawBrowserSettings();
     }
 
     private void DrawBrowserSettings()
@@ -1359,6 +1855,9 @@ internal sealed class PluginUi : IDisposable
 
     private void DrawAbout()
     {
+        PanelTabs("about-options", ref aboutTab, "Info", "Links");
+        if (aboutTab == 0)
+        {
         Heading("OmniKit · by Zero");
         UiText.Line(BuildVersion.Display, Gold, outline: true);
         if (UiText.Button("Copy build details"))
@@ -1366,11 +1865,15 @@ internal sealed class PluginUi : IDisposable
             ImGui.SetClipboardText($"OmniKit {BuildVersion.Display}\nby Zero\nSource revision: {BuildVersion.CommitCount}\nCommit: {BuildVersion.CommitSha}");
             status = "Complete build details copied.";
         }
+        UiText.Help("Source details", "Source revision " + BuildVersion.CommitCount + "\n" + BuildVersion.CommitSha);
+        UiText.Help("Credits", "Built for Dalamud, with native Umbra integration. Companion artwork was generated with OpenAI image tools. Dependency licenses and artwork provenance are included in the project.");
+        }
+        if (aboutTab == 1)
+        {
         const string projectUrl = "https://github.com/fostot/OmniKit";
         if (UiText.Button("Copy project link")) { ImGui.SetClipboardText(projectUrl); status = "Project link copied."; }
         UiText.Hint(projectUrl);
-        UiText.Help("Source details", "Source revision " + BuildVersion.CommitCount + "\n" + BuildVersion.CommitSha);
-        UiText.Help("Credits", "Built for Dalamud, with native Umbra integration. Companion artwork was generated with OpenAI image tools. Dependency licenses and artwork provenance are included in the project.");
+        }
     }
 
     private static void Heading(string title) { ImGui.Spacing(); UiText.Line(title, Gold, outline: true); }

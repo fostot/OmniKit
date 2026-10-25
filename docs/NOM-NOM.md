@@ -1,8 +1,8 @@
-# Nom Nom
+# NomNom
 
-Open **Automations**, enable **Nom Nom** and leave **Keep +EXP buff active** on.
+Open **Automations**, enable **NomNom** and leave **Keep +EXP buff active** on.
 **Automatic: best +EXP food** is the default choice. Both switches and an
-available eligible food are required. Nom Nom starts off; manually selected food
+available eligible food are required. NomNom starts off; manually selected food
 IDs remain unchanged after updates. Stored food ID zero now means Automatic.
 
 The dropdown detects supported food and drinks in the four personal inventory
@@ -25,7 +25,7 @@ duration. Unchecking **Keep +EXP buff active** pauses all eating.
 Each attempt rechecks the character, item, exact bag slot, quantity, quality and
 native usability before requesting one self-targeted item action. It waits for
 Well Fed to appear. A rejection or missing confirmation pauses further attempts;
-toggle Nom Nom or change the selection to retry deliberately. A meaningful stock
+toggle NomNom or change the selection to retry deliberately. A meaningful stock
 change can also re-enable checking. Its own delayed one-item decrease cannot
 re-arm a failed attempt. In Automatic mode, the same guard spans all eligible food
 stock: exhausting one kind cannot trigger repeated eating of the next kind when
@@ -34,7 +34,7 @@ the buff never appeared.
 Combat, casting, death, loading, dialogue, cutscenes, crafting, gathering,
 mounting, text input, lost focus and OmniKit configuration/input pause eating.
 Food use and Character-window job switching exclude each other while pending;
-soft interaction also pauses while food use awaits confirmation. Nom Nom makes
+soft interaction also pauses while food use awaits confirmation. NomNom makes
 no AI requests and does not spend provider tokens.
 
 ## Verification and data

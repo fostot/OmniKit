@@ -64,7 +64,7 @@ $runtimeFiles = @(
     'assets/nova-wardrobe.png', 'assets/mochi-wardrobe.png', 'assets/puff-wardrobe.png', 'assets/orbit-wardrobe.png',
     'assets/ember-wardrobe.png', 'assets/prism-wardrobe.png', 'assets/nib-wardrobe.png', 'assets/echo-wardrobe.png',
     'assets/fizz-wardrobe.png', 'assets/glim-wardrobe.png', 'assets/rune-wardrobe.png',
-    'assets/companion-homeposes.frames.json', 'assets/companion-homeposes-newcomers.png',
+    'assets/companion-homeposes.frames.json', 'assets/companion-homeposes-newcomers.png', 'assets/companion-sayings.json',
     'assets/companion-homeposes-moonblob-a.png', 'assets/companion-homeposes-moonblob-b.png',
     'assets/companion-homeposes-wink-a.png', 'assets/companion-homeposes-wink-b.png',
     'assets/companion-homeposes-nova-a.png', 'assets/companion-homeposes-nova-b.png',

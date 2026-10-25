@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Keys;
 using OmniKit.Input;
+using OmniKit.Companions;
 
 namespace OmniKit.Ui;
 
@@ -68,7 +69,8 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     private double nextCommentAt;
     private double commentUntil;
     private string comment = string.Empty;
-    private int commentIndex;
+    private SayingEntry? commentEntry;
+    private string commentAvatar = string.Empty;
     private bool housePressed;
     private bool houseDragging;
     private bool houseMirrored;
@@ -86,6 +88,7 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
 
     public bool IsChoosingArea { get; private set; }
     public bool IsEditingAccessories { get; set; }
+    public SayingController? Sayings { get; set; }
     public string DisplayAvatar => displayAvatar;
     public string CurrentLookId => currentLook?.Choice ?? "Default";
     private float BodyVisualPadding => CurrentLookId.StartsWith("Costume", StringComparison.Ordinal)
@@ -1018,34 +1021,33 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
     {
         if (homeRoutine.UsesNapArt) return false;
         var now = ImGui.GetTime();
+        if (commentAvatar != displayAvatar || commentEntry != null && (Sayings == null || !Sayings.IsAvailable(commentEntry, displayAvatar)))
+        { commentAvatar = displayAvatar; commentEntry = null; comment = string.Empty; commentUntil = 0; }
         if (!config.CompanionCommentsEnabled)
         { nextCommentAt = commentUntil = 0; comment = string.Empty; return false; }
         var interval = Math.Clamp(float.IsFinite(config.CompanionCommentInterval) ? config.CompanionCommentInterval : 120, 30, 600);
         if (nextCommentAt == 0) nextCommentAt = now + interval;
-        if (now >= nextCommentAt && !physics.IsCarried && PreviewPose == CompanionPose.Automatic)
+        if (now >= nextCommentAt && PreviewPose == CompanionPose.Automatic && !IsEditingAccessories)
         {
-            comment = physics.Placement switch
-            {
-                CompanionPlacement.Falling => "Tiny moon landing incoming!",
-                CompanionPlacement.Returning => "My cushion is calling.",
-                CompanionPlacement.Perched => "Excellent view from up here.",
-                CompanionPlacement.Contained => "Who put this wall here?",
-                _ => (++commentIndex % 4) switch
-                {
-                    0 => "One small hop for a moon friend.",
-                    1 => "You quest. I'll supervise the stars.",
-                    2 => "A little adventure, then a little nap.",
-                    _ => "All systems cozy.",
-                },
-            };
+            var context = physics.IsCarried ? "Held"
+                : homeRoutine.State == CompanionHomeState.Leaving ? "Waking"
+                : homeRoutine.State == CompanionHomeState.Approaching ? "Home"
+                : homeRoutine.State == CompanionHomeState.Returning || physics.Placement == CompanionPlacement.Returning ? "Returning"
+                : physics.Placement == CompanionPlacement.Contained || physics.Placement == CompanionPlacement.Perched && !physics.IsOnRoamingPlane ? "Perched"
+                : lastPose == CompanionPose.Walk ? "Walking" : "Idle";
+            commentEntry = Sayings?.GetNext(displayAvatar, context);
+            comment = commentEntry?.Text ?? string.Empty;
             commentUntil = now + 7;
             nextCommentAt = now + interval;
         }
-        if (now >= commentUntil || comment.Length == 0 || physics.IsCarried || housePressed) return false;
+        if (now >= commentUntil || comment.Length == 0 || housePressed || IsEditingAccessories) return false;
         scale = Math.Clamp(float.IsFinite(scale) ? scale : 1, .5f, 2);
         var padding = new Vector2(10, 7) * scale;
         var wrap = Math.Max(1, Math.Min(220 * scale, viewportSize.X - padding.X * 2 - 16));
-        var textSize = ImGui.CalcTextSize(comment, false, wrap);
+        var fitted = CompanionSpeechLayout.Fit(comment, wrap, viewportSize.Y - padding.Y * 2 - 16,
+            (text, width) => ImGui.CalcTextSize(text, false, width));
+        if (fitted.Text.Length == 0) return false;
+        var textSize = fitted.Size;
         var bubbleSize = textSize + padding * 2;
         var wanted = position + new Vector2((size.X - bubbleSize.X) * .5f, -bubbleSize.Y - 6 * scale);
         if (wanted.Y < viewportPosition.Y + 8) wanted.Y = position.Y + size.Y + 6 * scale;
@@ -1054,12 +1056,14 @@ internal sealed class RoamingCompanion(Configuration config, Action openCompanio
         draw.PushClipRect(viewportPosition, viewportPosition + viewportSize, true);
         draw.AddRectFilled(bubblePosition, bubblePosition + bubbleSize, 0xF21E1923, 9 * scale);
         draw.AddRect(bubblePosition, bubblePosition + bubbleSize, 0xBE9BC9DD, 9 * scale);
-        draw.AddText(ImGui.GetFont(), ImGui.GetFontSize(), bubblePosition + padding, 0xFFF0F3F6, comment, wrap);
+        draw.AddText(ImGui.GetFont(), ImGui.GetFontSize(), bubblePosition + padding, 0xFFF0F3F6, fitted.Text, wrap);
         draw.PopClipRect();
+        if (physics.IsCarried) return false; // A speech bubble never captures the pickup/release gesture.
         if (!ImGui.IsMouseHoveringRect(bubblePosition, bubblePosition + bubbleSize, false)) return false;
         if (BeginOverlay("##OmniKitCompanionComment", bubblePosition, bubbleSize))
         {
             if (ImGui.InvisibleButton("##dismiss", bubbleSize)) commentUntil = 0;
+            if (fitted.Text != comment) UiText.Hint(comment);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
         ImGui.End();
