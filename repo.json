@@ -3,11 +3,11 @@
     "Author": "Zero",
     "Name": "OmniKit",
     "InternalName": "OmniKit",
-    "AssemblyVersion": "0.1.0.44",
+    "AssemblyVersion": "0.1.0.45",
     "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
     "Punchline": "Your everyday toolkit for XIV.",
-    "Description": "A searchable game launcher, job tools, food automation and in-game browser, with native Umbra integration. Hover Bind offers blueprint preview and per-bar detection diagnostics; native game behavior still requires in-game validation.",
+    "Description": "A searchable game launcher, job tools, food automation and in-game browser, with native Umbra integration. Hover Bind offers a compact panel and overlays for detected hotbar buttons; live game behavior requires verification.",
     "RepoUrl": "https://github.com/fostot/OmniKit",
     "Tags": [
       "search",
@@ -15,10 +15,10 @@
       "accessibility",
       "umbra"
     ],
-    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0044/OmniKit-0.1.0.0044-b61c67d.zip",
-    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0044/OmniKit-0.1.0.0044-b61c67d.zip",
-    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0044/OmniKit-0.1.0.0044-b61c67d.zip",
-    "LastUpdate": 1793046436,
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0045/OmniKit-0.1.0.0045-c3c1e87.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0045/OmniKit-0.1.0.0045-c3c1e87.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0045/OmniKit-0.1.0.0045-c3c1e87.zip",
+    "LastUpdate": 1793052898,
     "IsHide": false,
     "IsTestingExclusive": false
   },
