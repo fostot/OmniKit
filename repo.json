@@ -51,10 +51,10 @@
     "Author": "Zero",
     "Name": "Soft Interact HUD",
     "InternalName": "SoftInteractHUD",
-    "AssemblyVersion": "0.1.0.5",
+    "AssemblyVersion": "0.1.0.6",
     "Description": "SoftInteractHUD: camera targeting, interaction key, quest actions and gathering outfits.",
     "ApplicableVersion": "any",
-    "RepoUrl": "https://github.com/fostot/OmniKit/releases/tag/softinteracthud-v0.1.0.0005",
+    "RepoUrl": "https://github.com/fostot/OmniKit/releases/tag/softinteracthud-v0.1.0.0006",
     "Tags": [
       "SoftInteractHUD",
       "Soft Interact HUD",
@@ -71,10 +71,10 @@
     "LoadPriority": 0,
     "Punchline": "Camera-directed interaction and quiet quest controls.",
     "AcceptsFeedback": true,
-    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0005/SoftInteractHUD-0.1.0.0005-759e121.zip",
-    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0005/SoftInteractHUD-0.1.0.0005-759e121.zip",
-    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0005/SoftInteractHUD-0.1.0.0005-759e121.zip",
-    "LastUpdate": 1793048016,
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0006/SoftInteractHUD-0.1.0.0006-82bc3d2.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0006/SoftInteractHUD-0.1.0.0006-82bc3d2.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/softinteracthud-v0.1.0.0006/SoftInteractHUD-0.1.0.0006-82bc3d2.zip",
+    "LastUpdate": 1793053323,
     "IsHide": false,
     "IsTestingExclusive": false
   }
