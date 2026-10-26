@@ -3,11 +3,11 @@
     "Author": "Zero",
     "Name": "OmniKit",
     "InternalName": "OmniKit",
-    "AssemblyVersion": "0.1.0.37",
+    "AssemblyVersion": "0.1.0.38",
     "DalamudApiLevel": 15,
     "ApplicableVersion": "any",
     "Punchline": "Your everyday toolkit for XIV.",
-    "Description": "Preview 0.1.0.0037 (65f8f24) by Zero. Game launcher, job tools, NomNom, Unlocks and in-game browser, with native Umbra integration.",
+    "Description": "Preview 0.1.0.0038 (abf7d92) by Zero. Game search, hover hotbar binding, job tools, optional food/Chocobo/recommended-gear maintenance, unlock routing, in-game browser and Umbra integration.",
     "RepoUrl": "https://github.com/fostot/OmniKit",
     "Tags": [
       "search",
@@ -15,10 +15,10 @@
       "accessibility",
       "umbra"
     ],
-    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0037/OmniKit-0.1.0.0037-65f8f24.zip",
-    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0037/OmniKit-0.1.0.0037-65f8f24.zip",
-    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0037/OmniKit-0.1.0.0037-65f8f24.zip",
-    "LastUpdate": 1792994999,
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0038/OmniKit-0.1.0.0038-abf7d92.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0038/OmniKit-0.1.0.0038-abf7d92.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/v0.1.0.0038/OmniKit-0.1.0.0038-abf7d92.zip",
+    "LastUpdate": 1793041896,
     "IsHide": false,
     "IsTestingExclusive": false
   },
