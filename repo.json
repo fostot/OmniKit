@@ -22,5 +22,30 @@
     "LastUpdate": 1792969005,
     "IsHide": false,
     "IsTestingExclusive": false
+  },
+  {
+    "Author": "Zero",
+    "Name": "The Blob",
+    "InternalName": "TheBlob",
+    "AssemblyVersion": "0.1.0.3",
+    "DalamudApiLevel": 15,
+    "ApplicableVersion": "any",
+    "Punchline": "Your XIV companion.",
+    "Description": "The Blob (TheBlob): thirteen animated companions, local sayings, optional voice input and explicitly requested AI chat. Standalone preview by Zero. Use /theblob to open.",
+    "RepoUrl": "https://github.com/fostot/OmniKit/releases/tag/theblob-v0.1.0.0003",
+    "Tags": [
+      "TheBlob",
+      "The Blob",
+      "blob",
+      "companion",
+      "utility",
+      "accessibility"
+    ],
+    "DownloadLinkInstall": "https://github.com/fostot/OmniKit/releases/download/theblob-v0.1.0.0003/TheBlob-0.1.0.0003-147355f-preview.zip",
+    "DownloadLinkUpdate": "https://github.com/fostot/OmniKit/releases/download/theblob-v0.1.0.0003/TheBlob-0.1.0.0003-147355f-preview.zip",
+    "DownloadLinkTesting": "https://github.com/fostot/OmniKit/releases/download/theblob-v0.1.0.0003/TheBlob-0.1.0.0003-147355f-preview.zip",
+    "LastUpdate": 1792976085,
+    "IsHide": false,
+    "IsTestingExclusive": false
   }
 ]
